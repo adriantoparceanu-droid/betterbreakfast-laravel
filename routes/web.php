@@ -42,6 +42,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users',                       [AdminUser::class, 'index'])->name('users');
     Route::post('/users/{userId}/grant',       [AdminUser::class, 'grantAccess'])->name('users.grant');
     Route::delete('/users/{userId}/revoke',    [AdminUser::class, 'revokeAccess'])->name('users.revoke');
+    Route::patch('/users/{userId}/role',       [AdminUser::class, 'toggleRole'])->name('users.role');
     Route::delete('/users/{userId}',           [AdminUser::class, 'destroy'])->name('users.destroy');
 
     Route::get('/recipes',                     [AdminRecipe::class, 'index'])->name('recipes');

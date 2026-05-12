@@ -15,14 +15,15 @@ class UserController extends Controller
 {
     public function index(): Response
     {
-        $users = User::where('role', 'user')
-            ->with('modules')
+        $users = User::with('modules')
+            ->orderByRaw("role = 'admin' DESC")
             ->orderByDesc('created_at')
             ->get()
             ->map(fn ($u) => [
                 'id'        => $u->id,
                 'username'  => $u->username,
                 'email'     => $u->email,
+                'role'      => $u->role,
                 'hasAccess' => $u->modules->contains(fn ($m) => $m->slug === 'breakfast-10-day'),
                 'createdAt' => $u->created_at->toIso8601String(),
             ]);
@@ -44,13 +45,28 @@ class UserController extends Controller
     public function revokeAccess(int $userId): RedirectResponse
     {
         $module = Module::where('slug', 'breakfast-10-day')->firstOrFail();
-        DB::table('user_modules')->where('user_id', $userId)->where('module_id', $module->id)->delete();
+        DB::table('user_modules')
+            ->where('user_id', $userId)
+            ->where('module_id', $module->id)
+            ->delete();
         return back();
     }
 
-    public function destroy(int $userId): RedirectResponse
+    public function toggleRole(Request $request, int $userId): RedirectResponse
     {
-        User::where('id', $userId)->where('role', 'user')->delete();
+        abort_if($userId === $request->user()->id, 403, 'Cannot change your own role.');
+
+        $user = User::findOrFail($userId);
+        $user->update(['role' => $user->role === 'admin' ? 'user' : 'admin']);
+
+        return back();
+    }
+
+    public function destroy(Request $request, int $userId): RedirectResponse
+    {
+        abort_if($userId === $request->user()->id, 403, 'Cannot delete your own account.');
+
+        User::findOrFail($userId)->delete();
         return back();
     }
 }
