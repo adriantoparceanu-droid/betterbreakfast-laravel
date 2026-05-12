@@ -21,6 +21,11 @@ use Inertia\Inertia;
 // ─── Public ───────────────────────────────────────────────────────────────────
 
 Route::get('/', function () {
+    if (auth()->check()) {
+        $user = auth()->user();
+        if ($user->isAdmin()) return redirect()->route('admin.dashboard');
+        return redirect()->route('today');
+    }
     return redirect()->route('login');
 });
 
