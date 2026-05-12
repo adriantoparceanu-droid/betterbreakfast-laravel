@@ -1,9 +1,22 @@
 import { useState } from 'react';
-import { useForm, useFieldArray, type SubmitHandler } from 'react-hook-form';
+import { useForm, useFieldArray, Controller, type SubmitHandler } from 'react-hook-form';
 import { router } from '@inertiajs/react';
+import {
+    DndContext, closestCenter,
+    KeyboardSensor, PointerSensor,
+    useSensor, useSensors,
+    type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    SortableContext, sortableKeyboardCoordinates,
+    useSortable, verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Input } from '@/Components/ui/Input';
+import RichTextEditor from '@/Components/ui/RichTextEditor';
 import {
     METRIC_UNITS, IMPERIAL_UNITS, UNIVERSAL_UNITS,
     convertForForm, toGrams,
@@ -18,6 +31,7 @@ const CATEGORIES: IngredientCategory[] = [
 
 const SELECT_CLS = 'h-9 rounded-xl border border-gray-200 bg-white px-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500';
 const INLINE_INPUT_CLS = 'h-9 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500';
+const ING_GRID = 'grid grid-cols-[1.25rem_1fr_5rem_5rem_9rem_2.25rem] gap-2 items-center';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,6 +42,8 @@ interface RecipeData {
     baseServings: number;
     ingredients: Ingredient[];
     steps: string[];
+    substitutions: string;
+    whyThisWorks: string;
     nutrition: Nutrition;
     tags: string[];
     isActive: boolean;
@@ -67,37 +83,95 @@ type FormValues = {
     nutrition: Nutrition;
     ingredients: Ingredient[];
     steps: { value: string }[];
+    substitutions: string;
+    why_this_works: string;
 };
 
 function toDefaults(recipe: RecipeData | null): FormValues {
     if (recipe) {
         return {
-            name:          recipe.name,
-            image:         recipe.image,
-            base_servings: recipe.baseServings,
-            sort_order:    recipe.sortOrder,
-            module_id:     recipe.module?.id ?? '',
-            category_id:   recipe.category?.id ?? '',
-            is_active:     recipe.isActive,
-            tags:          recipe.tags.join(', '),
-            nutrition:     recipe.nutrition,
-            ingredients:   recipe.ingredients,
-            steps:         recipe.steps.map(v => ({ value: v })),
+            name:           recipe.name,
+            image:          recipe.image,
+            base_servings:  recipe.baseServings,
+            sort_order:     recipe.sortOrder,
+            module_id:      recipe.module?.id ?? '',
+            category_id:    recipe.category?.id ?? '',
+            is_active:      recipe.isActive,
+            tags:           recipe.tags.join(', '),
+            nutrition:      recipe.nutrition,
+            ingredients:    recipe.ingredients,
+            steps:          recipe.steps.map(v => ({ value: v })),
+            substitutions:  recipe.substitutions,
+            why_this_works: recipe.whyThisWorks,
         };
     }
     return {
-        name:          '',
-        image:         '',
-        base_servings: 1,
-        sort_order:    10,
-        module_id:     '',
-        category_id:   '',
-        is_active:     true,
-        tags:          '',
-        nutrition:     { calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0 },
-        ingredients:   [{ name: '', quantity: 1, unit: 'g', category: 'Proteins' }],
-        steps:         [{ value: '' }],
+        name:           '',
+        image:          '',
+        base_servings:  1,
+        sort_order:     10,
+        module_id:      '',
+        category_id:    '',
+        is_active:      true,
+        tags:           '',
+        nutrition:      { calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0 },
+        ingredients:    [{ name: '', quantity: 1, unit: 'g', category: 'Proteins' }],
+        steps:          [{ value: '' }],
+        substitutions:  '',
+        why_this_works: '',
     };
+}
+
+// ─── Sortable rows ────────────────────────────────────────────────────────────
+
+interface SortableRowProps { id: string; children: React.ReactNode; }
+
+function SortableStepRow({ id, children }: SortableRowProps) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+        useSortable({ id });
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={{ transform: CSS.Transform.toString(transform), transition }}
+            className={`flex gap-2 items-start${isDragging ? ' opacity-50' : ''}`}
+        >
+            <button
+                type="button"
+                {...attributes}
+                {...listeners}
+                tabIndex={-1}
+                className="mt-2.5 h-5 w-5 flex items-center justify-center text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none shrink-0"
+            >
+                <GripVertical size={14} />
+            </button>
+            {children}
+        </div>
+    );
+}
+
+function SortableIngredientRow({ id, children }: SortableRowProps) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+        useSortable({ id });
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={{ transform: CSS.Transform.toString(transform), transition }}
+            className={`${ING_GRID}${isDragging ? ' opacity-50' : ''}`}
+        >
+            <button
+                type="button"
+                {...attributes}
+                {...listeners}
+                tabIndex={-1}
+                className="h-9 w-5 flex items-center justify-center text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none"
+            >
+                <GripVertical size={14} />
+            </button>
+            {children}
+        </div>
+    );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -115,10 +189,31 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
     const selectedModuleId   = watch('module_id');
     const filteredCategories = categories.filter(c => c.module_id === selectedModuleId);
 
-    const { fields: ingFields, append: addIng, remove: removeIng } =
+    const { fields: ingFields, append: addIng, remove: removeIng, move: moveIng } =
         useFieldArray({ control, name: 'ingredients' });
-    const { fields: stepFields, append: addStep, remove: removeStep } =
+    const { fields: stepFields, append: addStep, remove: removeStep, move: moveStep } =
         useFieldArray({ control, name: 'steps' });
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
+
+    // ─── DnD reorder ─────────────────────────────────────────────────────────
+
+    function handleIngredientDragEnd({ active, over }: DragEndEvent) {
+        if (!over || active.id === over.id) return;
+        const from = ingFields.findIndex(f => f.id === active.id);
+        const to   = ingFields.findIndex(f => f.id === over.id);
+        if (from !== -1 && to !== -1) moveIng(from, to);
+    }
+
+    function handleStepDragEnd({ active, over }: DragEndEvent) {
+        if (!over || active.id === over.id) return;
+        const from = stepFields.findIndex(f => f.id === active.id);
+        const to   = stepFields.findIndex(f => f.id === over.id);
+        if (from !== -1 && to !== -1) moveStep(from, to);
+    }
 
     // ─── Unit system toggle ───────────────────────────────────────────────────
 
@@ -145,19 +240,10 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
 
         for (const ing of ingredients) {
             const master = masterMap.get(ing.name.toLowerCase());
-            if (!master) {
-                warnings.push(`"${ing.name}" not in ingredient list`);
-                continue;
-            }
-            if (master.caloriesPer100g === null) {
-                warnings.push(`"${ing.name}" has no nutrition data`);
-                continue;
-            }
+            if (!master) { warnings.push(`"${ing.name}" not in ingredient list`); continue; }
+            if (master.caloriesPer100g === null) { warnings.push(`"${ing.name}" has no nutrition data`); continue; }
             const grams = toGrams(Number(ing.quantity), ing.unit);
-            if (grams === null) {
-                warnings.push(`"${ing.name}" uses unit "${ing.unit}" — can't convert to grams`);
-                continue;
-            }
+            if (grams === null) { warnings.push(`"${ing.name}" uses unit "${ing.unit}" — can't convert to grams`); continue; }
             const factor = grams / 100;
             totalCals  += (master.caloriesPer100g ?? 0) * factor;
             totalProt  += (master.proteinPer100g  ?? 0) * factor;
@@ -180,12 +266,14 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
     const onSubmit: SubmitHandler<FormValues> = (data) => {
         const payload = {
             ...data,
-            tags:         data.tags.split(',').map(t => t.trim()).filter(Boolean),
-            steps:        data.steps.map(s => s.value),
-            module_id:    data.module_id || null,
-            category_id:  data.category_id || null,
-            base_servings: Number(data.base_servings),
-            sort_order:   Number(data.sort_order),
+            tags:           data.tags.split(',').map(t => t.trim()).filter(Boolean),
+            steps:          data.steps.map(s => s.value),
+            module_id:      data.module_id || null,
+            category_id:    data.category_id || null,
+            base_servings:  Number(data.base_servings),
+            sort_order:     Number(data.sort_order),
+            substitutions:  data.substitutions || null,
+            why_this_works: data.why_this_works || null,
             nutrition: {
                 calories: Number(data.nutrition.calories),
                 protein:  Number(data.nutrition.protein),
@@ -292,7 +380,6 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
                 <section className="bg-white rounded-2xl border border-gray-200 p-6">
                     <div className="flex items-center justify-between mb-4">
                         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ingredients</p>
-                        {/* Metric / Imperial toggle */}
                         <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
                             {(['metric', 'imperial'] as UnitSystem[]).map(sys => (
                                 <button
@@ -313,7 +400,8 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
 
                     <div className="flex flex-col gap-2">
                         {/* Column headers */}
-                        <div className="grid grid-cols-[1fr_5rem_5rem_9rem_2.25rem] gap-2 px-1">
+                        <div className={`${ING_GRID} px-1`}>
+                            <span />
                             <span className="text-xs text-gray-400">Name</span>
                             <span className="text-xs text-gray-400">Qty</span>
                             <span className="text-xs text-gray-400">Unit</span>
@@ -321,49 +409,70 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
                             <span />
                         </div>
 
-                        {ingFields.map((field, idx) => (
-                            <div key={field.id} className="grid grid-cols-[1fr_5rem_5rem_9rem_2.25rem] gap-2 items-center">
-                                <input
-                                    placeholder="Name"
-                                    list="master-ingredients-list"
-                                    {...register(`ingredients.${idx}.name`, { required: true })}
-                                    className={INLINE_INPUT_CLS}
-                                />
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    placeholder="Qty"
-                                    {...register(`ingredients.${idx}.quantity`, { required: true })}
-                                    className={`text-center ${INLINE_INPUT_CLS}`}
-                                />
-                                <select
-                                    {...register(`ingredients.${idx}.unit`, { required: true })}
-                                    className={SELECT_CLS}
-                                >
-                                    <optgroup label="Metric">
-                                        {METRIC_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                                    </optgroup>
-                                    <optgroup label="Imperial">
-                                        {IMPERIAL_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                                    </optgroup>
-                                    <optgroup label="Universal">
-                                        {UNIVERSAL_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                                    </optgroup>
-                                </select>
-                                <select
-                                    {...register(`ingredients.${idx}.category`)}
-                                    className={SELECT_CLS}
-                                >
-                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                                <button
-                                    type="button"
-                                    onClick={() => removeIng(idx)}
-                                    className="h-9 w-9 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-xl leading-none"
-                                >×</button>
-                            </div>
-                        ))}
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleIngredientDragEnd}
+                        >
+                            <SortableContext
+                                items={ingFields.map(f => f.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                {ingFields.map((field, idx) => (
+                                    <SortableIngredientRow key={field.id} id={field.id}>
+                                        <input
+                                            placeholder="Name"
+                                            list="master-ingredients-list"
+                                            {...register(`ingredients.${idx}.name`, {
+                                                required: true,
+                                                onChange: (e) => {
+                                                    const match = masterIngredients.find(
+                                                        m => m.name.toLowerCase() === e.target.value.toLowerCase()
+                                                    );
+                                                    if (match) {
+                                                        setValue(`ingredients.${idx}.category`, match.category as IngredientCategory);
+                                                    }
+                                                },
+                                            })}
+                                            className={INLINE_INPUT_CLS}
+                                        />
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="Qty"
+                                            {...register(`ingredients.${idx}.quantity`, { required: true })}
+                                            className={`text-center ${INLINE_INPUT_CLS}`}
+                                        />
+                                        <select
+                                            {...register(`ingredients.${idx}.unit`, { required: true })}
+                                            className={SELECT_CLS}
+                                        >
+                                            <optgroup label="Metric">
+                                                {METRIC_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                                            </optgroup>
+                                            <optgroup label="Imperial">
+                                                {IMPERIAL_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                                            </optgroup>
+                                            <optgroup label="Universal">
+                                                {UNIVERSAL_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                                            </optgroup>
+                                        </select>
+                                        <select
+                                            {...register(`ingredients.${idx}.category`)}
+                                            className={SELECT_CLS}
+                                        >
+                                            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeIng(idx)}
+                                            className="h-9 w-9 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-xl leading-none"
+                                        >×</button>
+                                    </SortableIngredientRow>
+                                ))}
+                            </SortableContext>
+                        </DndContext>
 
                         <button
                             type="button"
@@ -374,7 +483,6 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
                         </button>
                     </div>
 
-                    {/* Autocomplete datalist */}
                     <datalist id="master-ingredients-list">
                         {masterIngredients.map(m => (
                             <option key={m.name} value={m.name} />
@@ -429,22 +537,33 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
                 <section className="bg-white rounded-2xl border border-gray-200 p-6">
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Steps</p>
                     <div className="flex flex-col gap-3">
-                        {stepFields.map((field, idx) => (
-                            <div key={field.id} className="flex gap-3 items-start">
-                                <span className="text-xs text-gray-400 pt-2.5 w-5 shrink-0 text-right font-semibold">{idx + 1}.</span>
-                                <textarea
-                                    {...register(`steps.${idx}.value`, { required: true })}
-                                    placeholder={`Step ${idx + 1}…`}
-                                    rows={2}
-                                    className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => removeStep(idx)}
-                                    className="h-9 w-9 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-xl leading-none mt-0.5"
-                                >×</button>
-                            </div>
-                        ))}
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleStepDragEnd}
+                        >
+                            <SortableContext
+                                items={stepFields.map(f => f.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                {stepFields.map((field, idx) => (
+                                    <SortableStepRow key={field.id} id={field.id}>
+                                        <span className="text-xs text-gray-400 pt-2.5 w-5 shrink-0 text-right font-semibold">{idx + 1}.</span>
+                                        <textarea
+                                            {...register(`steps.${idx}.value`, { required: true })}
+                                            placeholder={`Step ${idx + 1}…`}
+                                            rows={2}
+                                            className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeStep(idx)}
+                                            className="h-9 w-9 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors text-xl leading-none mt-0.5"
+                                        >×</button>
+                                    </SortableStepRow>
+                                ))}
+                            </SortableContext>
+                        </DndContext>
                         <button
                             type="button"
                             onClick={() => addStep({ value: '' })}
@@ -454,6 +573,48 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
                         </button>
                     </div>
                 </section>
+
+                {/* ─── Substitutions ─────────────────────────────────────── */}
+                <details className="group bg-white rounded-2xl border border-gray-200">
+                    <summary className="flex items-center justify-between p-6 cursor-pointer select-none [list-style:none] [&::-webkit-details-marker]:hidden">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Substitutions</p>
+                        <span className="text-gray-400 text-sm transition-transform duration-200 group-open:rotate-180">▾</span>
+                    </summary>
+                    <div className="px-6 pb-6">
+                        <Controller
+                            control={control}
+                            name="substitutions"
+                            render={({ field }) => (
+                                <RichTextEditor
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="e.g. Swap oat milk for any plant-based milk, or use maple syrup instead of honey…"
+                                />
+                            )}
+                        />
+                    </div>
+                </details>
+
+                {/* ─── Why this works ─────────────────────────────────────── */}
+                <details className="group bg-white rounded-2xl border border-gray-200">
+                    <summary className="flex items-center justify-between p-6 cursor-pointer select-none [list-style:none] [&::-webkit-details-marker]:hidden">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Why this works</p>
+                        <span className="text-gray-400 text-sm transition-transform duration-200 group-open:rotate-180">▾</span>
+                    </summary>
+                    <div className="px-6 pb-6">
+                        <Controller
+                            control={control}
+                            name="why_this_works"
+                            render={({ field }) => (
+                                <RichTextEditor
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="e.g. Chia seeds absorb liquid overnight, creating a pudding-like texture that keeps you full…"
+                                />
+                            )}
+                        />
+                    </div>
+                </details>
 
                 {/* ─── Footer actions ────────────────────────────────────── */}
                 <div className="flex items-center justify-between pb-8">

@@ -715,6 +715,10 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] Recipe form: "Calculate from ingredients" button — estimates nutrition from master_ingredients per-100g data
 - [x] master_ingredients: added 5 nullable nutrition columns (per 100g)
 - [x] Admin Ingredients page: inline edit now includes all 5 nutrition fields
+- [x] (2026-05-12) Fix: Recipe form ingredient category auto-fills from master ingredients list on select
+- [x] (2026-05-12) Feature: Recipe form — Substitutions + Why this works collapsible sections cu rich text editor (TipTap v3, Bold/Italic/Liste)
+- [x] (2026-05-12) Feature: Recipe form — drag-and-drop reordering pentru ingrediente și pași (dnd-kit)
+- [x] (2026-05-12) DB: Adăugat coloanele `substitutions` și `why_this_works` (TEXT nullable) pe tabela `recipes`
 
 ### In Progress / Planned
 

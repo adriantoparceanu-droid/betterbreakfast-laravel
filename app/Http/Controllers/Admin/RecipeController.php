@@ -60,20 +60,22 @@ class RecipeController extends Controller
 
         return Inertia::render('Admin/RecipeForm', array_merge($this->formProps(), [
             'recipe' => [
-                'id'           => $r->id,
-                'name'         => $r->name,
-                'image'        => $r->image,
-                'baseServings' => $r->base_servings,
-                'ingredients'  => $r->ingredients,
-                'steps'        => $r->steps,
-                'nutrition'    => $r->nutrition,
-                'tags'         => $r->tags ?? [],
-                'isActive'     => (bool) $r->is_active,
-                'sortOrder'    => $r->sort_order,
-                'module'       => $r->module
+                'id'            => $r->id,
+                'name'          => $r->name,
+                'image'         => $r->image,
+                'baseServings'  => $r->base_servings,
+                'ingredients'   => $r->ingredients,
+                'steps'         => $r->steps,
+                'substitutions' => $r->substitutions ?? '',
+                'whyThisWorks'  => $r->why_this_works ?? '',
+                'nutrition'     => $r->nutrition,
+                'tags'          => $r->tags ?? [],
+                'isActive'      => (bool) $r->is_active,
+                'sortOrder'     => $r->sort_order,
+                'module'        => $r->module
                     ? ['id' => $r->module->id, 'name' => $r->module->name, 'slug' => $r->module->slug]
                     : null,
-                'category'     => $r->category
+                'category'      => $r->category
                     ? ['id' => $r->category->id, 'name' => $r->category->name]
                     : null,
             ],
@@ -143,13 +145,15 @@ class RecipeController extends Controller
             'nutrition.fat'      => 'required|numeric|min:0',
             'nutrition.carbs'    => 'required|numeric|min:0',
             'nutrition.fiber'    => 'required|numeric|min:0',
-            'ingredients'        => 'required|array|min:1',
+            'ingredients'            => 'required|array|min:1',
             'ingredients.*.name'     => 'required|string',
             'ingredients.*.quantity' => 'required|numeric|min:0',
             'ingredients.*.unit'     => 'required|string',
             'ingredients.*.category' => 'required|string',
-            'steps'              => 'required|array|min:1',
-            'steps.*'            => 'required|string',
+            'steps'                  => 'required|array|min:1',
+            'steps.*'                => 'required|string',
+            'substitutions'          => 'nullable|string',
+            'why_this_works'         => 'nullable|string',
         ]);
 
         $data['image']       = $data['image'] ?? '';

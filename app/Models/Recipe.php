@@ -11,8 +11,8 @@ class Recipe extends Model
 
     protected $fillable = [
         'id', 'name', 'image', 'base_servings',
-        'ingredients', 'steps', 'nutrition', 'tags',
-        'is_active', 'sort_order', 'module_id', 'category_id',
+        'ingredients', 'steps', 'substitutions', 'why_this_works',
+        'nutrition', 'tags', 'is_active', 'sort_order', 'module_id', 'category_id',
     ];
 
     protected function casts(): array
