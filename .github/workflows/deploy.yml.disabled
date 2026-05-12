@@ -1,0 +1,42 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      # Upload only the compiled assets — PHP/Laravel files are pulled via git on the server
+      - name: Upload build assets via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./public/build/
+          server-dir: /betterbreakfast.eu/public/build/
+          dangerous-clean-slate: false
+
+      # Trigger server-side deploy (git pull + migrate + cache)
+      - name: Trigger deploy webhook
+        run: |
+          curl -s -X POST \
+            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
+            https://betterbreakfast.eu/deploy.php
