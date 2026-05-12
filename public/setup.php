@@ -53,11 +53,34 @@ function findPhp(): string
     return PHP_BINARY;
 }
 
-$root = dirname(__DIR__);
-$php  = findPhp();
+function findComposer(string $php): string
+{
+    $candidates = [
+        '/usr/local/bin/composer',
+        '/usr/bin/composer',
+        '/opt/cpanel/composer/bin/composer',
+    ];
+    foreach ($candidates as $path) {
+        if (is_executable($path)) return $path;
+    }
+    $out = '';
+    $desc = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $proc = proc_open('which composer', $desc, $pipes);
+    if (is_resource($proc)) {
+        $out = trim(stream_get_contents($pipes[1]));
+        fclose($pipes[1]); fclose($pipes[2]);
+        proc_close($proc);
+    }
+    if ($out && is_executable($out)) return $out;
+    return "$php /usr/local/bin/composer.phar";
+}
+
+$root     = dirname(__DIR__);
+$php      = findPhp();
+$composer = findComposer($php);
 
 $steps = [
-    "cd $root && composer install --no-dev --optimize-autoloader 2>&1",
+    "cd $root && $composer install --no-dev --optimize-autoloader 2>&1",
     "$php $root/artisan key:generate --force",
     "$php $root/artisan migrate --force",
     "$php $root/artisan db:seed --force",

@@ -74,6 +74,22 @@ function findGit(): string
     return $which ?: 'git';
 }
 
+function findComposer(string $php): string
+{
+    $candidates = [
+        '/usr/local/bin/composer',
+        '/usr/bin/composer',
+        '/opt/cpanel/composer/bin/composer',
+    ];
+    foreach ($candidates as $path) {
+        if (is_executable($path)) return $path;
+    }
+    $which = trim(run('which composer')['out']);
+    if ($which && is_executable($which)) return $which;
+    // Fallback: run composer.phar directly with the found PHP binary
+    return "$php /usr/local/bin/composer.phar";
+}
+
 // ── Diagnostic routes ─────────────────────────────────────────────────────────
 
 $root = dirname(__DIR__);
@@ -91,13 +107,14 @@ if (isset($_GET['info'])) { phpinfo(); exit; }
 
 // ── Deploy ────────────────────────────────────────────────────────────────────
 
-$php = findPhp();
-$git = findGit();
+$php      = findPhp();
+$git      = findGit();
+$composer = findComposer($php);
 
 $commands = [
     "$git -C $root reset --hard HEAD",
     "$git -C $root pull origin main",
-    "cd $root && composer install --no-dev --optimize-autoloader 2>&1",
+    "cd $root && $composer install --no-dev --optimize-autoloader 2>&1",
     "$php $root/artisan migrate --force",
     "$php $root/artisan optimize",
 ];
