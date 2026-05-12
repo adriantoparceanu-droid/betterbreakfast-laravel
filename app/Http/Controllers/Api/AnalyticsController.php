@@ -24,7 +24,7 @@ class AnalyticsController extends Controller
             'user_id'      => $userId,
             'anonymous_id' => $e['anonymousId'],
             'event'        => $e['event'],
-            'properties'   => $e['properties'] ?? [],
+            'properties'   => json_encode($e['properties'] ?? []),
         ], $request->events);
 
         AnalyticsEvent::insert($rows);
