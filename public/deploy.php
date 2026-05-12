@@ -156,7 +156,6 @@ $commands = [
     "$git -C $root pull origin main",
     "cd $root && HOME=" . dirname($root) . " $composer install --no-dev --optimize-autoloader 2>&1",
     "$php $root/artisan migrate --force",
-    "$php $root/artisan session:flush",
     "$php $root/artisan config:clear",
     "$php $root/artisan optimize",
 ];
