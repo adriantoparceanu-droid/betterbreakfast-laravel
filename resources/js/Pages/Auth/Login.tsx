@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
+import { type PageProps } from '@/types';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { Button } from '@/Components/ui/Button';
 import { Input } from '@/Components/ui/Input';
 import { Card, CardBody } from '@/Components/ui/Card';
@@ -32,15 +34,27 @@ type RegisterFields = z.infer<typeof registerSchema>;
 
 // ─── Login form ───────────────────────────────────────────────────────────────
 
-function LoginForm() {
+function LoginForm({ siteKey }: { siteKey: string }) {
+    const captchaRef = useRef<HCaptcha>(null);
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+    const [captchaError, setCaptchaError] = useState<string | null>(null);
+
     const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<LoginFields>({
         resolver: zodResolver(loginSchema),
     });
 
     const onSubmit = (data: LoginFields) => {
-        router.post(route('login'), data, {
+        if (!captchaToken) {
+            setCaptchaError('Please complete the CAPTCHA.');
+            return;
+        }
+        setCaptchaError(null);
+
+        router.post(route('login'), { ...data, hcaptcha_token: captchaToken }, {
             onError: (errs) => {
                 if (errs.login) setError('login', { message: errs.login });
+                captchaRef.current?.resetCaptcha();
+                setCaptchaToken(null);
             },
         });
     };
@@ -63,6 +77,17 @@ function LoginForm() {
                 error={errors.password?.message}
                 {...register('password')}
             />
+            <div className="flex flex-col items-center gap-1">
+                <HCaptcha
+                    ref={captchaRef}
+                    sitekey={siteKey}
+                    onVerify={(token) => { setCaptchaToken(token); setCaptchaError(null); }}
+                    onExpire={() => setCaptchaToken(null)}
+                />
+                {captchaError && (
+                    <p className="text-sm text-red-500">{captchaError}</p>
+                )}
+            </div>
             <Button type="submit" fullWidth loading={isSubmitting} size="lg" className="mt-1">
                 Continue
             </Button>
@@ -72,17 +97,29 @@ function LoginForm() {
 
 // ─── Register form ────────────────────────────────────────────────────────────
 
-function RegisterForm() {
+function RegisterForm({ siteKey }: { siteKey: string }) {
+    const captchaRef = useRef<HCaptcha>(null);
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+    const [captchaError, setCaptchaError] = useState<string | null>(null);
+
     const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<RegisterFields>({
         resolver: zodResolver(registerSchema),
     });
 
     const onSubmit = (data: RegisterFields) => {
-        router.post(route('register'), data, {
+        if (!captchaToken) {
+            setCaptchaError('Please complete the CAPTCHA.');
+            return;
+        }
+        setCaptchaError(null);
+
+        router.post(route('register'), { ...data, hcaptcha_token: captchaToken }, {
             onError: (errs) => {
                 if (errs.email)    setError('email',    { message: errs.email });
                 if (errs.username) setError('username', { message: errs.username });
                 if (errs.password) setError('password', { message: errs.password });
+                captchaRef.current?.resetCaptcha();
+                setCaptchaToken(null);
             },
         });
     };
@@ -121,6 +158,17 @@ function RegisterForm() {
                 error={errors.password_confirmation?.message}
                 {...register('password_confirmation')}
             />
+            <div className="flex flex-col items-center gap-1">
+                <HCaptcha
+                    ref={captchaRef}
+                    sitekey={siteKey}
+                    onVerify={(token) => { setCaptchaToken(token); setCaptchaError(null); }}
+                    onExpire={() => setCaptchaToken(null)}
+                />
+                {captchaError && (
+                    <p className="text-sm text-red-500">{captchaError}</p>
+                )}
+            </div>
             <Button type="submit" fullWidth loading={isSubmitting} size="lg" className="mt-1">
                 Continue
             </Button>
@@ -137,6 +185,7 @@ interface Props {
 
 export default function AuthPage({ mode: initialMode = 'login', status }: Props) {
     const [mode, setMode] = useState<Mode>(initialMode);
+    const { hcaptcha_site_key } = usePage<PageProps<{ hcaptcha_site_key: string }>>().props;
 
     return (
         <div className="min-h-screen bg-surface-raised flex flex-col items-center justify-center p-4">
@@ -184,7 +233,10 @@ export default function AuthPage({ mode: initialMode = 'login', status }: Props)
                                 exit={{ opacity: 0, y: -6 }}
                                 transition={{ duration: 0.15 }}
                             >
-                                {mode === 'login' ? <LoginForm /> : <RegisterForm />}
+                                {mode === 'login'
+                                    ? <LoginForm siteKey={hcaptcha_site_key} />
+                                    : <RegisterForm siteKey={hcaptcha_site_key} />
+                                }
                             </motion.div>
                         </AnimatePresence>
                     </CardBody>

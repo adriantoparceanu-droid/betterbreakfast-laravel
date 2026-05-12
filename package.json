@@ -7,6 +7,7 @@
         "dev": "vite"
     },
     "dependencies": {
+        "@hcaptcha/react-hcaptcha": "^2.0.2",
         "@hookform/resolvers": "^5.2.2",
         "@inertiajs/react": "^2.0.0",
         "axios": "^1.16.0",

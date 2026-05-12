@@ -34,6 +34,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'hcaptcha_site_key' => config('services.hcaptcha.site_key'),
         ];
     }
 }

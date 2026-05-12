@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\User;
+use App\Rules\ValidHCaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -20,8 +21,9 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'login'    => ['required', 'string'],
-            'password' => ['required', 'string'],
+            'login'           => ['required', 'string'],
+            'password'        => ['required', 'string'],
+            'hcaptcha_token'  => ['required', new ValidHCaptcha],
         ];
     }
 
