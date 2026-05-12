@@ -69,14 +69,24 @@ function LoginForm({ siteKey }: { siteKey: string }) {
                 error={errors.login?.message}
                 {...register('login')}
             />
-            <Input
-                label="Password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                error={errors.password?.message}
-                {...register('password')}
-            />
+            <div className="flex flex-col gap-1">
+                <Input
+                    label="Password"
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    error={errors.password?.message}
+                    {...register('password')}
+                />
+                <div className="text-right">
+                    <a
+                        href={route('password.request')}
+                        className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        Forgot password?
+                    </a>
+                </div>
+            </div>
             <div className="flex flex-col items-center gap-1">
                 <HCaptcha
                     ref={captchaRef}

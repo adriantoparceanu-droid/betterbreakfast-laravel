@@ -17,25 +17,51 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_users_can_authenticate_using_the_login_screen(): void
+    public function test_users_can_authenticate_with_email(): void
     {
         $user = User::factory()->create();
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'login'    => $user->email,
             'password' => 'password',
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('today'));
     }
 
-    public function test_users_can_not_authenticate_with_invalid_password(): void
+    public function test_users_can_authenticate_with_username(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->post('/login', [
+            'login'    => $user->username,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('today'));
+    }
+
+    public function test_admin_is_redirected_to_admin_dashboard(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->post('/login', [
+            'login'    => $admin->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_users_cannot_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();
 
         $this->post('/login', [
-            'email' => $user->email,
+            'login'    => $user->email,
             'password' => 'wrong-password',
         ]);
 
@@ -49,6 +75,6 @@ class AuthenticationTest extends TestCase
         $response = $this->actingAs($user)->post('/logout');
 
         $this->assertGuest();
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('login'));
     }
 }

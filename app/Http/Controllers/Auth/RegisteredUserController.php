@@ -22,11 +22,13 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $captchaRules = app()->environment('testing') ? [] : ['required', new ValidHCaptcha];
+
         $request->validate([
             'email'          => 'required|string|lowercase|email|max:255|unique:users',
             'username'       => 'required|string|min:2|max:30|unique:users|alpha_dash',
             'password'       => ['required', 'confirmed', Rules\Password::defaults()],
-            'hcaptcha_token' => ['required', new ValidHCaptcha],
+            'hcaptcha_token' => $captchaRules,
         ]);
 
         $user = User::create([

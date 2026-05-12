@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,13 +20,41 @@ class RegistrationTest extends TestCase
     public function test_new_users_can_register(): void
     {
         $response = $this->post('/register', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'username'              => 'testuser',
+            'email'                 => 'test@example.com',
+            'password'              => 'password123',
+            'password_confirmation' => 'password123',
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('onboarding'));
+    }
+
+    public function test_registration_requires_unique_email(): void
+    {
+        User::factory()->create(['email' => 'taken@example.com']);
+
+        $response = $this->post('/register', [
+            'username'              => 'newuser',
+            'email'                 => 'taken@example.com',
+            'password'              => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+    }
+
+    public function test_registration_requires_unique_username(): void
+    {
+        User::factory()->create(['username' => 'takenuser']);
+
+        $response = $this->post('/register', [
+            'username'              => 'takenuser',
+            'email'                 => 'new@example.com',
+            'password'              => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('username');
     }
 }

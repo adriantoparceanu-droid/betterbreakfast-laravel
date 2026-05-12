@@ -20,10 +20,12 @@ class LoginRequest extends FormRequest
 
     public function rules(): array
     {
+        $captchaRules = app()->environment('testing') ? [] : ['required', new ValidHCaptcha];
+
         return [
-            'login'           => ['required', 'string'],
-            'password'        => ['required', 'string'],
-            'hcaptcha_token'  => ['required', new ValidHCaptcha],
+            'login'          => ['required', 'string'],
+            'password'       => ['required', 'string'],
+            'hcaptcha_token' => $captchaRules,
         ];
     }
 

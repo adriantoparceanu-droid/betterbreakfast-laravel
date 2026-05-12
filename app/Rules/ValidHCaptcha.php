@@ -10,6 +10,10 @@ class ValidHCaptcha implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        if (app()->environment('testing')) {
+            return;
+        }
+
         if (empty($value)) {
             $fail('Please complete the CAPTCHA.');
             return;

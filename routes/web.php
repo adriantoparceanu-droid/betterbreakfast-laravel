@@ -45,6 +45,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/users/{userId}',           [AdminUser::class, 'destroy'])->name('users.destroy');
 
     Route::get('/recipes',                     [AdminRecipe::class, 'index'])->name('recipes');
+    Route::post('/recipes',                    [AdminRecipe::class, 'store'])->name('recipes.store');
+    Route::put('/recipes/{id}',                [AdminRecipe::class, 'update'])->name('recipes.update');
+    Route::delete('/recipes/{id}',             [AdminRecipe::class, 'destroy'])->name('recipes.destroy');
     Route::patch('/recipes/{id}/toggle',       [AdminRecipe::class, 'toggleActive'])->name('recipes.toggle');
 
     Route::get('/ingredients',                 [AdminIngredient::class, 'index'])->name('ingredients');
