@@ -118,6 +118,25 @@ if (isset($_GET['log'])) {
 
 if (isset($_GET['info'])) { phpinfo(); exit; }
 
+if (isset($_GET['seed'])) {
+    $php  = findPhp();
+    $root = dirname(__DIR__);
+    $seeders = [
+        'ModuleSeeder',
+        'CategorySeeder',
+        'RecipeSeeder',
+    ];
+    $results = [];
+    foreach ($seeders as $seeder) {
+        $r = run("$php $root/artisan db:seed --class=$seeder --force");
+        $results[] = ['seeder' => $seeder, 'out' => $r['out'], 'code' => $r['code']];
+        if ($r['code'] !== 0) break;
+    }
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if (isset($_GET['keycheck'])) {
     header('Content-Type: text/plain; charset=utf-8');
     $envFile = $root . '/.env';
