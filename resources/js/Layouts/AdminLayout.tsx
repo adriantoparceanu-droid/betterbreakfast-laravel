@@ -7,6 +7,7 @@ const navItems = [
     { label: 'Recipes',     routeName: 'admin.recipes',     icon: '🥣' },
     { label: 'Ingredients', routeName: 'admin.ingredients', icon: '🧂' },
     { label: 'Modules',     routeName: 'admin.modules',     icon: '📦' },
+    { label: 'Categories',  routeName: 'admin.categories',  icon: '🏷️' },
     { label: 'Stats',       routeName: 'admin.stats',       icon: '📊' },
 ];
 

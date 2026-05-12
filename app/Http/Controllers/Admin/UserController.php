@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Module;
+use App\Models\RecipeCategory;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,20 +16,28 @@ class UserController extends Controller
 {
     public function index(): Response
     {
-        $users = User::with('modules')
+        $users = User::with(['modules', 'categories'])
             ->orderByRaw("role = 'admin' DESC")
             ->orderByDesc('created_at')
             ->get()
             ->map(fn ($u) => [
-                'id'        => $u->id,
-                'username'  => $u->username,
-                'email'     => $u->email,
-                'role'      => $u->role,
-                'hasAccess' => $u->modules->contains(fn ($m) => $m->slug === 'breakfast-10-day'),
-                'createdAt' => $u->created_at->toIso8601String(),
+                'id'                  => $u->id,
+                'username'            => $u->username,
+                'email'               => $u->email,
+                'role'                => $u->role,
+                'hasAccess'           => $u->modules->contains(fn ($m) => $m->slug === 'breakfast-10-day'),
+                'unlockedCategoryIds' => $u->categories->pluck('id')->values(),
+                'createdAt'           => $u->created_at->toIso8601String(),
             ]);
 
-        return Inertia::render('Admin/Users', ['users' => $users]);
+        $premiumCategories = RecipeCategory::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'price']);
+
+        return Inertia::render('Admin/Users', [
+            'users'             => $users,
+            'premiumCategories' => $premiumCategories,
+        ]);
     }
 
     public function grantAccess(int $userId): RedirectResponse
@@ -48,6 +57,26 @@ class UserController extends Controller
         DB::table('user_modules')
             ->where('user_id', $userId)
             ->where('module_id', $module->id)
+            ->delete();
+        return back();
+    }
+
+    public function grantCategoryAccess(int $userId, string $categoryId): RedirectResponse
+    {
+        RecipeCategory::findOrFail($categoryId);
+        DB::table('user_categories')->insertOrIgnore([
+            'user_id'      => $userId,
+            'category_id'  => $categoryId,
+            'purchased_at' => now(),
+        ]);
+        return back();
+    }
+
+    public function revokeCategoryAccess(int $userId, string $categoryId): RedirectResponse
+    {
+        DB::table('user_categories')
+            ->where('user_id', $userId)
+            ->where('category_id', $categoryId)
             ->delete();
         return back();
     }

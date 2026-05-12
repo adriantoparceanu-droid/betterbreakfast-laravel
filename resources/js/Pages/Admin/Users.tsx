@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import type { PageProps } from '@/types';
@@ -9,14 +9,22 @@ interface UserRow {
     email: string;
     role: 'admin' | 'user';
     hasAccess: boolean;
+    unlockedCategoryIds: string[];
     createdAt: string;
 }
 
-interface Props { users: UserRow[]; }
+interface CategoryOption {
+    id: string;
+    name: string;
+    price: number;
+}
 
-export default function AdminUsers({ users }: Props) {
+interface Props { users: UserRow[]; premiumCategories: CategoryOption[]; }
+
+export default function AdminUsers({ users, premiumCategories }: Props) {
     const { auth } = usePage<PageProps>().props;
     const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+    const [expandedUser, setExpandedUser] = useState<number | null>(null);
 
     const grant       = (id: number) => router.post(route('admin.users.grant',   { userId: id }));
     const revoke      = (id: number) => router.delete(route('admin.users.revoke', { userId: id }));
@@ -24,6 +32,11 @@ export default function AdminUsers({ users }: Props) {
     const destroy     = (id: number) => router.delete(route('admin.users.destroy', { userId: id }), {
         onSuccess: () => setConfirmDelete(null),
     });
+
+    const grantCategory  = (userId: number, catId: string) =>
+        router.post(route('admin.users.categories.grant', { userId, categoryId: catId }));
+    const revokeCategory = (userId: number, catId: string) =>
+        router.delete(route('admin.users.categories.revoke', { userId, categoryId: catId }));
 
     const admins = users.filter(u => u.role === 'admin');
     const regular = users.filter(u => u.role === 'user');
@@ -41,7 +54,8 @@ export default function AdminUsers({ users }: Props) {
                         <tr className="text-xs text-gray-500">
                             <th className="text-left px-5 py-3 font-medium">User</th>
                             <th className="text-left px-5 py-3 font-medium">Role</th>
-                            <th className="text-left px-5 py-3 font-medium">Access</th>
+                            <th className="text-left px-5 py-3 font-medium">Plan 1</th>
+                            <th className="text-left px-5 py-3 font-medium">Premium</th>
                             <th className="text-left px-5 py-3 font-medium">Joined</th>
                             <th className="px-5 py-3" />
                         </tr>
@@ -55,7 +69,8 @@ export default function AdminUsers({ users }: Props) {
                             users.map((u) => {
                                 const isSelf = u.id === auth.user.id;
                                 return (
-                                    <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${u.role === 'admin' ? 'bg-blue-50/30' : ''}`}>
+                                    <Fragment key={u.id}>
+                                    <tr className={`hover:bg-gray-50 transition-colors ${u.role === 'admin' ? 'bg-blue-50/30' : ''}`}>
                                         <td className="px-5 py-3">
                                             <p className="font-medium text-gray-900">
                                                 {u.username}
@@ -78,6 +93,18 @@ export default function AdminUsers({ users }: Props) {
                                             }`}>
                                                 {u.hasAccess ? 'Active' : 'No access'}
                                             </span>
+                                        </td>
+                                        <td className="px-5 py-3">
+                                            {premiumCategories.length === 0 ? (
+                                                <span className="text-xs text-gray-300">—</span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => setExpandedUser(expandedUser === u.id ? null : u.id)}
+                                                    className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                                                >
+                                                    {u.unlockedCategoryIds.length}/{premiumCategories.length} unlocked
+                                                </button>
+                                            )}
                                         </td>
                                         <td className="px-5 py-3 text-gray-400 text-xs">
                                             {new Date(u.createdAt).toLocaleDateString('en-GB', {
@@ -131,6 +158,37 @@ export default function AdminUsers({ users }: Props) {
                                             </div>
                                         </td>
                                     </tr>
+                                    {/* Expandable category access row */}
+                                    {expandedUser === u.id && premiumCategories.length > 0 && (
+                                        <tr className="bg-purple-50/40">
+                                            <td colSpan={6} className="px-5 py-3">
+                                                <p className="text-xs font-semibold text-gray-500 mb-2">Premium Categories — {u.username}</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {premiumCategories.map(cat => {
+                                                        const has = u.unlockedCategoryIds.includes(cat.id);
+                                                        return (
+                                                            <div key={cat.id} className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-1.5">
+                                                                <span className="text-xs text-gray-700 font-medium">{cat.name}</span>
+                                                                <span className="text-xs text-gray-400">€{cat.price.toFixed(2)}</span>
+                                                                {has ? (
+                                                                    <button onClick={() => revokeCategory(u.id, cat.id)}
+                                                                        className="text-xs px-2 py-0.5 rounded-lg bg-green-100 text-green-700 hover:bg-red-50 hover:text-red-600 transition-colors">
+                                                                        Revoke
+                                                                    </button>
+                                                                ) : (
+                                                                    <button onClick={() => grantCategory(u.id, cat.id)}
+                                                                        className="text-xs px-2 py-0.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-brand-50 hover:text-brand-700 transition-colors">
+                                                                        Grant
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    </Fragment>
                                 );
                             })
                         )}

@@ -42,6 +42,12 @@ class User extends Authenticatable
             ->withPivot('purchased_at');
     }
 
+    public function categories()
+    {
+        return $this->belongsToMany(RecipeCategory::class, 'user_categories', 'user_id', 'category_id')
+            ->withPivot('purchased_at');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

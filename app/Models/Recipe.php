@@ -12,7 +12,7 @@ class Recipe extends Model
     protected $fillable = [
         'id', 'name', 'image', 'base_servings',
         'ingredients', 'steps', 'nutrition', 'tags',
-        'is_active', 'sort_order', 'module_id',
+        'is_active', 'sort_order', 'module_id', 'category_id',
     ];
 
     protected function casts(): array
@@ -29,5 +29,10 @@ class Recipe extends Model
     public function module()
     {
         return $this->belongsTo(Module::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(RecipeCategory::class, 'category_id');
     }
 }

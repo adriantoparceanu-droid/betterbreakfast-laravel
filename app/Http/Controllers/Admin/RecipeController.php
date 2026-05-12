@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\MasterIngredient;
 use App\Models\Module;
 use App\Models\Recipe;
+use App\Models\RecipeCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -15,31 +17,67 @@ class RecipeController extends Controller
 {
     public function index(): Response
     {
-        $recipes = Recipe::with('module:id,name,slug')
+        $recipes = Recipe::with(['module:id,name,slug', 'category:id,name'])
             ->orderBy('sort_order')
             ->get()
             ->map(fn ($r) => [
-                'id'          => $r->id,
-                'name'        => $r->name,
-                'image'       => $r->image,
+                'id'           => $r->id,
+                'name'         => $r->name,
+                'image'        => $r->image,
                 'baseServings' => $r->base_servings,
-                'ingredients' => $r->ingredients,
-                'steps'       => $r->steps,
-                'nutrition'   => $r->nutrition,
-                'tags'        => $r->tags ?? [],
-                'isActive'    => (bool) $r->is_active,
-                'sortOrder'   => $r->sort_order,
-                'module'      => $r->module
+                'ingredients'  => $r->ingredients,
+                'steps'        => $r->steps,
+                'nutrition'    => $r->nutrition,
+                'tags'         => $r->tags ?? [],
+                'isActive'     => (bool) $r->is_active,
+                'sortOrder'    => $r->sort_order,
+                'module'       => $r->module
                     ? ['id' => $r->module->id, 'name' => $r->module->name, 'slug' => $r->module->slug]
+                    : null,
+                'category'     => $r->category
+                    ? ['id' => $r->category->id, 'name' => $r->category->name]
                     : null,
             ]);
 
-        $modules = Module::orderBy('name')->get(['id', 'name']);
+        $modules    = Module::orderBy('name')->get(['id', 'name']);
+        $categories = RecipeCategory::where('is_active', true)->orderBy('sort_order')->get(['id', 'name', 'module_id']);
 
         return Inertia::render('Admin/Recipes', [
-            'recipes' => $recipes,
-            'modules' => $modules,
+            'recipes'    => $recipes,
+            'modules'    => $modules,
+            'categories' => $categories,
         ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Admin/RecipeForm', $this->formProps());
+    }
+
+    public function edit(string $id): Response
+    {
+        $r = Recipe::with(['module:id,name,slug', 'category:id,name'])->findOrFail($id);
+
+        return Inertia::render('Admin/RecipeForm', array_merge($this->formProps(), [
+            'recipe' => [
+                'id'           => $r->id,
+                'name'         => $r->name,
+                'image'        => $r->image,
+                'baseServings' => $r->base_servings,
+                'ingredients'  => $r->ingredients,
+                'steps'        => $r->steps,
+                'nutrition'    => $r->nutrition,
+                'tags'         => $r->tags ?? [],
+                'isActive'     => (bool) $r->is_active,
+                'sortOrder'    => $r->sort_order,
+                'module'       => $r->module
+                    ? ['id' => $r->module->id, 'name' => $r->module->name, 'slug' => $r->module->slug]
+                    : null,
+                'category'     => $r->category
+                    ? ['id' => $r->category->id, 'name' => $r->category->name]
+                    : null,
+            ],
+        ]));
     }
 
     public function store(Request $request): RedirectResponse
@@ -47,13 +85,13 @@ class RecipeController extends Controller
         $data = $this->validatedData($request);
         $data['id'] = (string) Str::uuid();
         Recipe::create($data);
-        return back();
+        return redirect()->route('admin.recipes');
     }
 
     public function update(Request $request, string $id): RedirectResponse
     {
         Recipe::findOrFail($id)->update($this->validatedData($request));
-        return back();
+        return redirect()->route('admin.recipes');
     }
 
     public function destroy(string $id): RedirectResponse
@@ -69,6 +107,24 @@ class RecipeController extends Controller
         return back();
     }
 
+    private function formProps(): array
+    {
+        return [
+            'recipe'      => null,
+            'modules'     => Module::orderBy('name')->get(['id', 'name']),
+            'categories'  => RecipeCategory::where('is_active', true)->orderBy('sort_order')->get(['id', 'name', 'module_id']),
+            'masterIngredients' => MasterIngredient::orderBy('name')->get()->map(fn ($i) => [
+                'name'            => $i->name,
+                'category'        => $i->category,
+                'caloriesPer100g' => $i->calories_per_100g,
+                'proteinPer100g'  => $i->protein_per_100g,
+                'fatPer100g'      => $i->fat_per_100g,
+                'carbsPer100g'    => $i->carbs_per_100g,
+                'fiberPer100g'    => $i->fiber_per_100g,
+            ]),
+        ];
+    }
+
     private function validatedData(Request $request): array
     {
         $data = $request->validate([
@@ -80,6 +136,7 @@ class RecipeController extends Controller
             'tags'               => 'nullable|array',
             'tags.*'             => 'string',
             'module_id'          => 'nullable|string|exists:modules,id',
+            'category_id'        => 'nullable|string|exists:recipe_categories,id',
             'nutrition'          => 'required|array',
             'nutrition.calories' => 'required|numeric|min:0',
             'nutrition.protein'  => 'required|numeric|min:0',
@@ -95,8 +152,9 @@ class RecipeController extends Controller
             'steps.*'            => 'required|string',
         ]);
 
-        $data['image']     = $data['image'] ?? '';
-        $data['module_id'] = $data['module_id'] ?: null;
+        $data['image']       = $data['image'] ?? '';
+        $data['module_id']   = $data['module_id'] ?: null;
+        $data['category_id'] = ($data['category_id'] ?? null) ?: null;
 
         return $data;
     }

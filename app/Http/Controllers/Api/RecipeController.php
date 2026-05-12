@@ -12,7 +12,17 @@ class RecipeController extends Controller
     {
         $recipes = Recipe::where('is_active', true)
             ->orderBy('sort_order')
-            ->get(['id', 'name', 'image', 'base_servings', 'ingredients', 'steps', 'nutrition', 'tags']);
+            ->get(['id', 'name', 'image', 'base_servings', 'ingredients', 'steps', 'nutrition', 'tags'])
+            ->map(fn ($r) => [
+                'id'           => $r->id,
+                'name'         => $r->name,
+                'image'        => $r->image,
+                'baseServings' => $r->base_servings,
+                'ingredients'  => $r->ingredients,
+                'steps'        => $r->steps,
+                'nutrition'    => $r->nutrition,
+                'tags'         => $r->tags ?? [],
+            ]);
 
         return response()->json(['ok' => true, 'recipes' => $recipes]);
     }

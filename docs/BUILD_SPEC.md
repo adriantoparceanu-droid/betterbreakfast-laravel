@@ -1,4 +1,4 @@
-# BETTER BREAKFAST — BUILD SPEC (V4 MVP, WEB APP)
+# BETTER BREAKFAST — BUILD SPEC (V5 MVP, WEB APP)
 
 ## 1. Product Overview
 
@@ -20,9 +20,26 @@ Better Breakfast is a mobile-first web app (PWA-style) delivering a 10-day guide
 
 **Platform:** Web-based (browser), designed as PWA-style app. Users instructed to "Add to Home Screen."
 
-**Access Model:** Users must register/login with Email, Username, Password.
+**Access Model:** Users must register/login with Email, Username, Password. After registration, users must purchase access to unlock the app.
 
-**Purpose:** Restrict access to paying users. Enable account recovery.
+### Paid Access Model
+
+| Module | Slug | Price | Access |
+|--------|------|-------|--------|
+| 10-Day Breakfast Plan (Module 1) | `breakfast-10-day` | €9.99 one-time | Full app (Today, Plan, Staples) |
+| Premium Recipes (Module 2) | `breakfast-premium` | per-category | Explore screen premium categories |
+
+**Payment flow:** Email-based manual payment. User sends an email to `hello@betterbreakfast.eu`, admin grants access manually via the admin panel.
+
+**Access gate:** After registration → Onboarding → attempts to access any module-gated route → redirected to `/purchase` screen.
+
+### Registration & Onboarding Flow
+
+```
+Register → Onboarding → /staples (module.access middleware) → /purchase if no access
+```
+
+Admins bypass all access checks automatically.
 
 ### GDPR (Minimum Compliance)
 Because email is collected, this falls under GDPR. You must include:
@@ -34,6 +51,7 @@ Because email is collected, this falls under GDPR. You must include:
 
 ## 3. Core Features
 
+### Module 1 — 10-Day Breakfast Plan (paid, €9.99)
 - Auth (register/login)
 - Onboarding (system explanation + setup)
 - Today screen (main experience)
@@ -44,12 +62,20 @@ Because email is collected, this falls under GDPR. You must include:
 - Pantry checklist (precise quantities)
 - Portion scaling (global + per recipe)
 - Restart functionality
+- Purchase gate screen (before access granted)
+
+### Module 2 — Premium Recipes (paid, per-category)
+- Explore screen (accessible to all authenticated users, even without Module 1)
+- Categories with horizontal pill navigation
+- Per-category purchase via email
+- Locked/unlocked state per category
+- 3–5 categories at launch (High Protein, Quick Meals, Plant-Based, etc.)
 
 ---
 
 ## 4. Recipe System (FINAL LOGIC)
 
-**Total Recipes:** Exactly 10 recipes. No additions. No external browsing.
+**Module 1 Total Recipes:** Exactly 10 recipes. No additions. No external browsing.
 
 **Core Rule:** Each recipe can be used once per 10-day cycle.
 
@@ -60,6 +86,8 @@ Because email is collected, this falls under GDPR. You must include:
 
 **Result:** No repetition. Decreasing choice set over time. Built-in completion structure.
 
+**Module 2 Recipes:** Separate pool, organized by category. No interaction with Module 1 recipe pool.
+
 ---
 
 ## 5. Data Models
@@ -68,6 +96,8 @@ Because email is collected, this falls under GDPR. You must include:
 ```ts
 Recipe {
   id: string
+  module_id: string          // which module this recipe belongs to
+  category_id: string | null // Module 2 only — which premium category
   name: string
   image: string
   baseServings: number
@@ -85,6 +115,20 @@ Recipe {
     carbs: number
     fiber: number
   }
+}
+```
+
+### RecipeCategory (Module 2 premium categories)
+```ts
+RecipeCategory {
+  id: string           // e.g. "cat-highprotein"
+  module_id: string    // always "module-breakfast-premium"
+  name: string
+  slug: string         // unique
+  description: string | null
+  price: number        // per-category purchase price
+  sort_order: number
+  is_active: boolean
 }
 ```
 
@@ -129,6 +173,15 @@ UserProgress {
 }
 ```
 
+### DB Tables (pivot / access)
+
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| `modules` | id (string PK), name, slug, description, price, is_active | Content modules |
+| `user_modules` | user_id FK, module_id FK, purchased_at | Module 1 access grants |
+| `recipe_categories` | id (string PK), module_id FK, name, slug, description, price, sort_order, is_active | Module 2 categories |
+| `user_categories` | user_id FK, category_id FK, purchased_at | Per-category access grants |
+
 ---
 
 ## 6. Portion Logic (FINALIZED)
@@ -154,11 +207,13 @@ UserProgress {
 
 ## 7. Navigation Structure
 
-Bottom navigation: **Today** | **Plan** | **Staples**
+Bottom navigation: **Today** | **Plan** | **Staples** | **Explore**
 
 Default = Today
 
 Settings icon (⚙) in header — top right, accessible from all app screens.
+
+**Explore** tab is visible to all authenticated users, even those without Module 1 access. It shows premium categories from Module 2.
 
 ---
 
@@ -169,8 +224,10 @@ Settings icon (⚙) in header — top right, accessible from all app screens.
 **Inputs:** Email, Username, Password
 
 **Elements:**
-- Login / Register toggle
+- Login / Register toggle (animated tabs)
 - Privacy note: *"Used only for access and account recovery"*
+- hCaptcha (bypassed in `APP_ENV=testing`)
+- Login accepts `login` field (email OR username)
 - CTA: "Continue"
 
 ---
@@ -302,6 +359,59 @@ Settings icon (⚙) in header — top right, accessible from all app screens.
 
 ---
 
+### 8.9 PURCHASE SCREEN (gate — no app layout)
+
+Shown to authenticated users without Module 1 access when they try to access any module-gated route.
+
+**Layout:** Standalone page (no bottom nav, no app header — gate experience).
+
+**Elements:**
+- Brand logo / bowl emoji
+- Module name + description
+- "What's included" checklist:
+  - 10 simple, nutritious breakfast recipes
+  - Day-by-day guided 10-day plan
+  - Shopping list (Staples)
+  - Offline access — works without internet
+  - Swap recipes you don't like
+- Price: `€9.99 one-time`
+- CTA button: `Purchase access — €9.99` → opens mailto link to `hello@betterbreakfast.eu` with pre-filled subject/body (user fills in their registered email)
+- Footer note: *"Send us an email and we'll activate your account within 24h."*
+- "Already purchased? Contact us to activate" link
+- Sign out button
+
+**Redirect logic (PurchaseController):**
+- Admin → redirect to `today`
+- User with module access → redirect to `today`
+- User without access → render Purchase screen
+
+---
+
+### 8.10 EXPLORE SCREEN
+
+Accessible to all authenticated users (even without Module 1 access). Shows Module 2 premium categories.
+
+**Layout:** Uses AppLayout (bottom nav visible).
+
+**Navigation:**
+- Horizontal scrollable category pills at top
+- Active pill highlighted in brand color
+- Lock icon on pills for categories the user hasn't purchased
+
+**Category content:**
+- **Unlocked:** Full recipe cards (image, name, nutrition, ingredients, steps)
+- **Locked:** Blurred recipe cards with lock icon overlay; category pill triggers Unlock modal
+
+**UnlockModal (bottom sheet):**
+- Category name + description
+- Price badge
+- "Unlock — €X.XX" CTA → opens mailto to `hello@betterbreakfast.eu` with pre-filled purchase request
+- Admin contact note
+
+**Data source:** `/api/explore` — returns categories with `has_access` flag; locked categories return recipes with `locked: true` and no detail data.
+
+---
+
 ## 9. UX Constraints
 
 - Max 2 taps to complete a day
@@ -314,12 +424,13 @@ Settings icon (⚙) in header — top right, accessible from all app screens.
 
 ## 10. What NOT to Build
 
-- ❌ No extra recipes
+- ❌ No extra recipes (Module 1 is fixed at 10)
 - ❌ No AI
 - ❌ No social features
 - ❌ No inventory tracking
 - ❌ No gamification
 - ❌ No prep time displayed anywhere
+- ❌ No Stripe/online payments — email-based manual payment only
 
 ---
 
@@ -406,11 +517,37 @@ Admin routes are under `/admin/*`, accessible only to users with `role = "admin"
 | Tab | Route | Purpose |
 |-----|-------|---------|
 | Dashboard | `/admin` | Overview stats |
-| Recipes | `/admin/recipes` | List, create, edit recipes |
+| Recipes | `/admin/recipes` | List, create, edit recipes (all modules) |
 | Ingredients | `/admin/ingredients` | Master ingredient list — CRUD |
-| Users | `/admin/users` | Manage user access |
-| Modules | `/admin/modules` | Manage content modules |
+| Users | `/admin/users` | Manage user access + grant/revoke module & category access |
+| Modules | `/admin/modules` | Manage content modules (name, price) |
+| Categories | `/admin/categories` | Manage Module 2 premium categories |
 | Stats | `/admin/stats` | Analytics |
+
+---
+
+### Admin — Users page (`/admin/users`)
+
+**Module 1 access:** Grant / Revoke button per user.
+
+**Module 2 category access:** Expandable row per user showing all premium categories. Grant/Revoke per category. Summary badge: "X/Y unlocked".
+
+**Role toggle:** Promote to admin / demote from admin.
+
+**Shows all users including admins.**
+
+---
+
+### Admin — Categories page (`/admin/categories`)
+
+Manages the `recipe_categories` table (Module 2 premium categories).
+
+**Features:**
+- List categories with: module badge, active status, recipe count, price
+- Add new category (name, slug auto-derived, description, price, sort_order)
+- Inline edit (name, description, price, sort_order)
+- Toggle active/inactive
+- Delete (only if no recipes assigned)
 
 ---
 
@@ -420,12 +557,17 @@ Manages the `MasterIngredient` table.
 
 **Features:**
 - Filter list by name or category (live, client-side)
-- Inline edit (click Edit → fields become editable, Save/Cancel)
+- Inline edit (click Edit → all fields become editable in-row, Save/Cancel)
 - Delete with browser `confirm()` dialog
-- Add new ingredient via form at top of list (Name + Category → Save)
-- **"Seed from recipes"** button — one-time import of all unique ingredients from existing recipe data (hardcoded + DB); admin cleans up duplicates after
+- Add new ingredient via form at top of list
+- **"Seed from recipes"** button — one-time import of all unique ingredients from existing recipe data; admin fills in nutrition data afterward
 
-**Fields per ingredient:** Name (unique), Category (dropdown from `INGREDIENT_CATEGORIES`)
+**Fields per ingredient:**
+- Name (unique)
+- Category (dropdown from `INGREDIENT_CATEGORIES`)
+- Calories / Protein / Fat / Carbs / Fiber per 100g (all nullable — shown as `—` until filled in)
+
+**Purpose of nutrition data:** Used by the "Calculate from ingredients" button in the recipe form to auto-estimate nutrition values.
 
 ---
 
@@ -455,9 +597,70 @@ Units are defined in `data/units.ts`.
   - Does NOT block saving the recipe — adding to master is optional
 - Master list updates in real-time within the form (no page reload needed)
 
+#### Category field (Module 2 recipes)
+- Dropdown showing active `RecipeCategory` options, filtered by selected module
+- Required when module is `breakfast-premium`, optional otherwise
+
+### Admin — Recipe form (`/admin/recipes/create`, `/admin/recipes/{id}/edit`)
+
+The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ Add Recipe" or "Edit" from the list.
+
+#### Metric / Imperial toggle
+- Toggle at the top of the Ingredients section (default: Metric)
+- When switched, **all ingredient rows auto-convert** quantity + unit simultaneously
+  - Metric → Imperial: `g→oz`, `kg→lb`, `ml→fl oz`, `l→fl oz`
+  - Imperial → Metric: `oz→g`, `lb→g`, `fl oz→ml`, `tsp→ml`, `tbsp→ml`, `cup→ml`
+  - Universal units (`whole`, `piece`, `clove`, etc.) are never converted
+- Unit input is a **dropdown** grouped into Metric / Imperial / Universal
+- New ingredient rows default to the unit system currently active
+- What is saved to DB is whatever unit the admin has in the form at save time — no internal normalization
+
+#### Calculate nutrition button
+- Button "⚡ Calculate from ingredients" in the Nutrition section
+- Reads current ingredient list from the form
+- Converts each ingredient's quantity to grams using the unit map
+- Looks up per-100g macros from `master_ingredients` table (passed as a prop)
+- Divides by `base_servings` → fills Calories/Protein/Fat/Carbs/Fiber fields
+- Ingredients not found in master list, with no nutrition data, or with universal units → skipped with amber warning list
+- Fields remain editable after calculation
+
 ---
 
-## 14. Decisions Made in Session
+## 14. Access Control & Middleware
+
+### Middleware
+
+| Alias | Class | Applied to |
+|-------|-------|------------|
+| `auth` | Laravel's built-in | All app routes |
+| `admin` | `AdminMiddleware` | `/admin/*` routes |
+| `module.access` | `EnsureModuleAccess` | Today, Plan, Staples, Swap, Complete |
+
+### EnsureModuleAccess logic
+```
+1. If user is admin → pass through
+2. If user has module 'breakfast-10-day' in user_modules → pass through
+3. Else → redirect to /purchase
+```
+
+### Route groups
+```
+/             → redirect to login (public)
+/purchase     → auth (no module.access — accessible before paying)
+/explore      → auth (no module.access — accessible without Module 1)
+/onboarding   → auth
+/today        → auth + module.access
+/plan         → auth + module.access
+/staples      → auth + module.access
+/swap/{day}   → auth + module.access
+/complete/{day} → auth + module.access
+/admin/*      → auth + admin
+/api/*        → auth (session cookie)
+```
+
+---
+
+## 15. Decisions Made in Session
 
 | Question | Answer |
 |----------|--------|
@@ -471,3 +674,51 @@ Units are defined in `data/units.ts`.
 | Unit input in recipe form | Dropdown (not free text) — split into Metric / Imperial + Universal; system is per-form toggle, not stored in recipe |
 | Unit system stored in recipe? | No — only the unit string is stored (e.g. `"tsp"`). System toggle is a UI-only helper for the admin |
 | Ingredient name blocks save? | No — adding to master list is optional; admin can type a free name and still save the recipe |
+| Module 1 price | €9.99 one-time — NOT free, never will be |
+| Payment method | Email-based manual payment → admin grants access in admin panel |
+| Module 2 structure | Per-category access at different prices |
+| Explore accessibility | `/explore` accessible without Module 1 — lets users browse before paying |
+| Category navigation | Horizontal scrolling pills |
+| Number of categories at launch | 3–5 |
+| Online payments | Not implemented — email only |
+| Admin bypass | Admins bypass `module.access` and `purchase` gate automatically |
+
+---
+
+## 16. Project Progress
+
+### Completed
+
+- [x] Auth system (login by email OR username, register, forgot password, hCaptcha)
+- [x] Onboarding screen
+- [x] Today screen (offline-first, Zustand + Dexie)
+- [x] Plan screen
+- [x] Staples screen
+- [x] Swap screen
+- [x] Complete screen (check-in flow)
+- [x] Settings (restart plan)
+- [x] Admin panel: Dashboard, Recipes, Ingredients, Users, Modules, Stats
+- [x] Admin: Categories tab (Module 2 premium categories CRUD)
+- [x] Admin: Per-user category grant/revoke
+- [x] Admin: Role toggle (admin/user)
+- [x] Module 1 paid access gate (`EnsureModuleAccess` middleware)
+- [x] Purchase screen (email CTA, standalone no-nav gate page)
+- [x] Explore screen (Module 2 categories, locked/unlocked state, unlock modal)
+- [x] DB: `recipe_categories`, `user_categories` tables + migrations
+- [x] Seeder: Module 2 `breakfast-premium` + 3 categories + 10 premium recipes
+- [x] Analytics (COMPLETE_DAY, SWAP_RECIPE events — offline queue)
+- [x] Test suite (32 tests passing)
+- [x] Fix: API /api/recipes now returns camelCase keys (`baseServings`) — nutrition displayed correctly in Today/Swap
+- [x] Admin recipe form moved from modal → dedicated page (`/admin/recipes/create`, `/admin/recipes/{id}/edit`)
+- [x] Recipe form: metric/imperial toggle auto-converts ingredient rows on switch
+- [x] Recipe form: unit input is a dropdown (Metric / Imperial / Universal groups)
+- [x] Recipe form: "Calculate from ingredients" button — estimates nutrition from master_ingredients per-100g data
+- [x] master_ingredients: added 5 nullable nutrition columns (per 100g)
+- [x] Admin Ingredients page: inline edit now includes all 5 nutrition fields
+
+### In Progress / Planned
+
+- [ ] Real recipe images (Module 1 + Module 2)
+- [ ] Production deploy to betterbreakfast.eu (cPanel via FTP + webhook)
+- [ ] Explore: fetch and cache Module 2 recipe data in Dexie for offline access
+- [ ] Privacy policy page

@@ -16,11 +16,14 @@ class IngredientController extends Controller
         $ingredients = MasterIngredient::orderBy('name')
             ->get()
             ->map(fn ($i) => [
-                'id'       => $i->id,
-                'name'     => $i->name,
-                'category' => $i->category,
-                'unit'     => $i->unit,
-                'notes'    => $i->notes,
+                'id'               => $i->id,
+                'name'             => $i->name,
+                'category'         => $i->category,
+                'caloriesPer100g'  => $i->calories_per_100g,
+                'proteinPer100g'   => $i->protein_per_100g,
+                'fatPer100g'       => $i->fat_per_100g,
+                'carbsPer100g'     => $i->carbs_per_100g,
+                'fiberPer100g'     => $i->fiber_per_100g,
             ]);
 
         return Inertia::render('Admin/Ingredients', ['ingredients' => $ingredients]);
@@ -29,10 +32,13 @@ class IngredientController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'     => 'required|string|max:100|unique:master_ingredients,name',
-            'category' => 'required|string|max:50',
-            'unit'     => 'required|string|max:30',
-            'notes'    => 'nullable|string|max:300',
+            'name'              => 'required|string|max:100|unique:master_ingredients,name',
+            'category'          => 'required|string|max:50',
+            'calories_per_100g' => 'nullable|numeric|min:0',
+            'protein_per_100g'  => 'nullable|numeric|min:0',
+            'fat_per_100g'      => 'nullable|numeric|min:0',
+            'carbs_per_100g'    => 'nullable|numeric|min:0',
+            'fiber_per_100g'    => 'nullable|numeric|min:0',
         ]);
 
         MasterIngredient::create($data);
@@ -42,10 +48,13 @@ class IngredientController extends Controller
     public function update(Request $request, int $id): RedirectResponse
     {
         $data = $request->validate([
-            'name'     => 'sometimes|string|max:100',
-            'category' => 'sometimes|string|max:50',
-            'unit'     => 'sometimes|string|max:30',
-            'notes'    => 'nullable|string|max:300',
+            'name'              => 'sometimes|string|max:100',
+            'category'          => 'sometimes|string|max:50',
+            'calories_per_100g' => 'nullable|numeric|min:0',
+            'protein_per_100g'  => 'nullable|numeric|min:0',
+            'fat_per_100g'      => 'nullable|numeric|min:0',
+            'carbs_per_100g'    => 'nullable|numeric|min:0',
+            'fiber_per_100g'    => 'nullable|numeric|min:0',
         ]);
 
         MasterIngredient::findOrFail($id)->update($data);
@@ -55,6 +64,35 @@ class IngredientController extends Controller
     public function destroy(int $id): RedirectResponse
     {
         MasterIngredient::findOrFail($id)->delete();
+        return back();
+    }
+
+    public function seedFromRecipes(): RedirectResponse
+    {
+        $existing = MasterIngredient::pluck('name')->map(fn ($n) => strtolower($n))->toArray();
+
+        $recipes = \App\Models\Recipe::all(['ingredients']);
+        $toInsert = [];
+
+        foreach ($recipes as $recipe) {
+            foreach ($recipe->ingredients as $ing) {
+                $nameLower = strtolower(trim($ing['name']));
+                if (!in_array($nameLower, $existing)) {
+                    $existing[]   = $nameLower;
+                    $toInsert[] = [
+                        'name'       => trim($ing['name']),
+                        'category'   => $ing['category'] ?? 'Condiments',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
+        }
+
+        if (!empty($toInsert)) {
+            MasterIngredient::insert($toInsert);
+        }
+
         return back();
     }
 }
