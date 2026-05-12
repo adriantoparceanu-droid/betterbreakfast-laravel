@@ -719,6 +719,11 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-12) Feature: Recipe form — Substitutions + Why this works collapsible sections cu rich text editor (TipTap v3, Bold/Italic/Liste)
 - [x] (2026-05-12) Feature: Recipe form — drag-and-drop reordering pentru ingrediente și pași (dnd-kit)
 - [x] (2026-05-12) DB: Adăugat coloanele `substitutions` și `why_this_works` (TEXT nullable) pe tabela `recipes`
+- [x] (2026-05-13) Fix: RecipeSeeder setează `module_id` + `is_active` pentru toate cele 10 rețete din Modulul 1
+- [x] (2026-05-13) Fix: API `/api/recipes` filtrează acum doar rețetele cu `module_id = module-breakfast-10day`
+- [x] (2026-05-13) Fix: `bootstrapRecipes()` curăță Dexie înainte de bulkPut (elimină rețete vechi/greșite)
+- [x] (2026-05-13) Fix: Today — auto-select robust, rezolvă zombie selection (selectedId setat pe rețetă inexistentă)
+- [x] (2026-05-13) Fix: Plan — eliminat `isLocked`/`foundationDone` care bloca toate zilele; `DEFAULT_USER_PROGRESS.foundationDone = true`
 
 ### In Progress / Planned
 

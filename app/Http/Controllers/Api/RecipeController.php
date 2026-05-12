@@ -11,6 +11,7 @@ class RecipeController extends Controller
     public function index(): JsonResponse
     {
         $recipes = Recipe::where('is_active', true)
+            ->where('module_id', 'module-breakfast-10day')
             ->orderBy('sort_order')
             ->get(['id', 'name', 'image', 'base_servings', 'ingredients', 'steps', 'nutrition', 'tags'])
             ->map(fn ($r) => [

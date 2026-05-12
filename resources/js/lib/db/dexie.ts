@@ -45,7 +45,8 @@ export async function bootstrapRecipes(): Promise<void> {
         const res = await fetch('/api/recipes');
         if (!res.ok) return;
         const data = await res.json();
-        if (data.ok && Array.isArray(data.recipes)) {
+        if (data.ok && Array.isArray(data.recipes) && data.recipes.length > 0) {
+            await db.recipes.clear();
             await db.recipes.bulkPut(data.recipes);
         }
     } catch {

@@ -53,7 +53,7 @@ export const DEFAULT_USER_PROGRESS: UserProgress = {
     defaultServings: 1,
     onboardingDone: false,
     foundationChecked: [],
-    foundationDone: false,
+    foundationDone: true,
 };
 
 export type SyncType = 'PROGRESS_UPDATE' | 'CHECK_IN' | 'SWAP_RECIPE';

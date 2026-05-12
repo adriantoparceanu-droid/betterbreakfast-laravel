@@ -32,14 +32,16 @@ export default function TodayPage() {
     useEffect(() => { setServings(defaultServings); }, [defaultServings]);
 
     useEffect(() => {
-        if (!isHydrated || selectedId || !firstAvailable) return;
+        if (!isHydrated || !firstAvailable) return;
+        // Auto-select when no recipe chosen, OR when the chosen recipe no longer exists in the recipe list
+        if (selectedId && recipe) return;
         selectRecipe(currentDay, firstAvailable.id);
         if (userId) {
             enqueueSync(userId, 'PROGRESS_UPDATE', {
                 selectedRecipes: { ...selectedRecipes, [currentDay]: firstAvailable.id },
             });
         }
-    }, [isHydrated, selectedId, firstAvailable?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isHydrated, selectedId, recipe?.id, firstAvailable?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (!isHydrated) return null;
 

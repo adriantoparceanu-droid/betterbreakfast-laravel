@@ -6,7 +6,7 @@ import AppLayout from '@/Layouts/AppLayout';
 
 export default function PlanPage() {
     const { progress } = useUserStore();
-    const { currentDay, completedDays, selectedRecipes, checkIns, foundationDone } = progress;
+    const { currentDay, completedDays, selectedRecipes, checkIns } = progress;
     const recipes = useRecipes();
     const recipeMap = new Map(recipes.map((r) => [r.id, r]));
 
@@ -31,8 +31,6 @@ export default function PlanPage() {
                     const isToday  = day === currentDay;
                     const isFuture = day > currentDay;
                     const isPast   = day < currentDay && !isDone;
-                    const isLocked = !foundationDone;
-
                     const recipeId = selectedRecipes[day];
                     const recipe   = recipeId ? recipeMap.get(recipeId) : undefined;
                     const mood     = checkIns[day];
@@ -49,14 +47,13 @@ export default function PlanPage() {
                             }}
                             className={cn('bg-white border rounded-2xl px-4 py-3 flex items-center gap-3 transition-all duration-150',
                                 isDone   && 'border-gray-100',
-                                isToday  && !isLocked && 'border-brand-300 ring-1 ring-brand-200 shadow-sm',
+                                isToday  && 'border-brand-300 ring-1 ring-brand-200 shadow-sm',
                                 isFuture && 'border-gray-100 hover:border-brand-200 hover:shadow-sm cursor-pointer',
                                 isPast   && 'border-gray-100 opacity-50',
-                                isLocked && 'opacity-40',
                             )}
                         >
                             <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0',
-                                isDone ? 'bg-brand-500 text-white' : isToday && !isLocked ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-400')}>
+                                isDone ? 'bg-brand-500 text-white' : isToday ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-400')}>
                                 {isDone ? '✓' : day}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -71,7 +68,7 @@ export default function PlanPage() {
                                     </p>
                                 )}
                             </div>
-                            {isToday && !isLocked && <span className="shrink-0 text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Today</span>}
+                            {isToday && <span className="shrink-0 text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Today</span>}
                             {isFuture && <span className="text-gray-300 text-base shrink-0">{recipe ? '→' : '+'}</span>}
                         </div>
                     );

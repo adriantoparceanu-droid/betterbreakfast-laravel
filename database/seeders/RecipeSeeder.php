@@ -32,6 +32,8 @@ class RecipeSeeder extends Seeder
                 ],
                 'nutrition'   => ['calories' => 320, 'protein' => 11, 'fat' => 7,  'carbs' => 54, 'fiber' => 8],
                 'sort_order'  => 1,
+                'module_id'   => 'module-breakfast-10day',
+                'is_active'   => true,
             ],
             [
                 'id'           => 'recipe-02',
@@ -54,6 +56,8 @@ class RecipeSeeder extends Seeder
                 ],
                 'nutrition'   => ['calories' => 290, 'protein' => 18, 'fat' => 5,  'carbs' => 42, 'fiber' => 4],
                 'sort_order'  => 2,
+                'module_id'   => 'module-breakfast-10day',
+                'is_active'   => true,
             ],
             [
                 'id'           => 'recipe-03',
@@ -78,6 +82,8 @@ class RecipeSeeder extends Seeder
                 ],
                 'nutrition'   => ['calories' => 380, 'protein' => 16, 'fat' => 22, 'carbs' => 32, 'fiber' => 9],
                 'sort_order'  => 3,
+                'module_id'   => 'module-breakfast-10day',
+                'is_active'   => true,
             ],
             [
                 'id'           => 'recipe-04',
@@ -102,6 +108,8 @@ class RecipeSeeder extends Seeder
                 ],
                 'nutrition'   => ['calories' => 270, 'protein' => 22, 'fat' => 18, 'carbs' => 3,  'fiber' => 1],
                 'sort_order'  => 4,
+                'module_id'   => 'module-breakfast-10day',
+                'is_active'   => true,
             ],
             [
                 'id'           => 'recipe-05',
@@ -126,6 +134,8 @@ class RecipeSeeder extends Seeder
                 ],
                 'nutrition'   => ['calories' => 310, 'protein' => 5,  'fat' => 10, 'carbs' => 52, 'fiber' => 7],
                 'sort_order'  => 5,
+                'module_id'   => 'module-breakfast-10day',
+                'is_active'   => true,
             ],
             [
                 'id'           => 'recipe-06',
@@ -150,6 +160,8 @@ class RecipeSeeder extends Seeder
                 ],
                 'nutrition'   => ['calories' => 340, 'protein' => 8,  'fat' => 20, 'carbs' => 32, 'fiber' => 14],
                 'sort_order'  => 6,
+                'module_id'   => 'module-breakfast-10day',
+                'is_active'   => true,
             ],
             [
                 'id'           => 'recipe-07',
@@ -177,6 +189,8 @@ class RecipeSeeder extends Seeder
                 ],
                 'nutrition'   => ['calories' => 420, 'protein' => 14, 'fat' => 10, 'carbs' => 68, 'fiber' => 8],
                 'sort_order'  => 7,
+                'module_id'   => 'module-breakfast-10day',
+                'is_active'   => true,
             ],
             [
                 'id'           => 'recipe-08',
@@ -202,6 +216,8 @@ class RecipeSeeder extends Seeder
                 ],
                 'nutrition'   => ['calories' => 220, 'protein' => 18, 'fat' => 14, 'carbs' => 5,  'fiber' => 1],
                 'sort_order'  => 8,
+                'module_id'   => 'module-breakfast-10day',
+                'is_active'   => true,
             ],
             [
                 'id'           => 'recipe-09',
@@ -225,6 +241,8 @@ class RecipeSeeder extends Seeder
                 ],
                 'nutrition'   => ['calories' => 350, 'protein' => 10, 'fat' => 14, 'carbs' => 48, 'fiber' => 6],
                 'sort_order'  => 9,
+                'module_id'   => 'module-breakfast-10day',
+                'is_active'   => true,
             ],
             [
                 'id'           => 'recipe-10',
@@ -248,6 +266,8 @@ class RecipeSeeder extends Seeder
                 ],
                 'nutrition'   => ['calories' => 250, 'protein' => 14, 'fat' => 7,  'carbs' => 36, 'fiber' => 4],
                 'sort_order'  => 10,
+                'module_id'   => 'module-breakfast-10day',
+                'is_active'   => true,
             ],
         ];
 
