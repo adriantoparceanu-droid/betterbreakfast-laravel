@@ -118,6 +118,33 @@ if (isset($_GET['log'])) {
 
 if (isset($_GET['info'])) { phpinfo(); exit; }
 
+if (isset($_GET['keycheck'])) {
+    header('Content-Type: text/plain; charset=utf-8');
+    $envFile = $root . '/.env';
+    $key = 'not found';
+    if (is_readable($envFile)) {
+        foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            if (str_starts_with(trim($line), 'APP_KEY=')) {
+                $key = trim(substr($line, strpos($line, '=') + 1));
+                break;
+            }
+        }
+    }
+    echo "APP_KEY in .env: " . substr($key, 0, 12) . "..." . substr($key, -4) . "\n";
+    echo "Length: " . strlen($key) . "\n";
+    echo "Starts with base64:: " . (str_starts_with($key, 'base64:') ? 'YES' : 'NO') . "\n";
+    $cacheFile = $root . '/bootstrap/cache/config.php';
+    if (file_exists($cacheFile)) {
+        $config = require $cacheFile;
+        $cachedKey = $config['app']['key'] ?? 'not found';
+        echo "Cached APP_KEY: " . substr($cachedKey, 0, 12) . "..." . substr($cachedKey, -4) . "\n";
+        echo "Keys match: " . ($key === $cachedKey ? 'YES' : 'NO') . "\n";
+    } else {
+        echo "No config cache found.\n";
+    }
+    exit;
+}
+
 // ── Deploy ────────────────────────────────────────────────────────────────────
 
 $php      = findPhp();
@@ -129,6 +156,7 @@ $commands = [
     "$git -C $root pull origin main",
     "cd $root && HOME=" . dirname($root) . " $composer install --no-dev --optimize-autoloader 2>&1",
     "$php $root/artisan migrate --force",
+    "$php $root/artisan config:clear",
     "$php $root/artisan optimize",
 ];
 
