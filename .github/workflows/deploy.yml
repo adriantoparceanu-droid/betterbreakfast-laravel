@@ -38,5 +38,5 @@ jobs:
       - name: Trigger deploy webhook
         run: |
           curl -s -X POST \
-            -H "X-Deploy-Token: ${{ secrets.DEPLOY_SECRET }}" \
+            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}" \
             https://betterbreakfast.eu/deploy.php

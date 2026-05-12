@@ -1,67 +1,84 @@
-# Deploy pe cPanel
+# Deploy pe cPanel (fără SSH)
 
 ## Setup inițial (o singură dată)
 
-### 1. SSH în cPanel
-
-```bash
-cd /home/username/betterbreakfast
-git clone https://github.com/yourname/betterbreakfast-laravel.git .
-composer install --no-dev --optimize-autoloader
-cp .env.production.example .env
-# Editează .env cu credențialele MySQL din cPanel
-php artisan key:generate
-php artisan migrate --force
-php artisan db:seed --class=RecipeSeeder
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+### 1. cPanel → Git™ Version Control → Clone
+```
+Clone URL:      git@github.com:adriantoparceanu-droid/betterbreakfast-laravel.git
+Repository Path: /home/andie/betterbreakfast-laravel
 ```
 
-### 2. Configurare cPanel
+### 2. cPanel → File Manager → creează `.env`
+Copiază conținutul din `.env.production.example` și completează:
+- `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` — din cPanel → MySQL Databases
+- `DEPLOY_TOKEN` — generează cu `openssl rand -hex 32` (sau orice string lung)
+- `APP_KEY` — lasă gol, va fi generat de setup.php
 
-- **Document Root**: `/home/username/betterbreakfast` (nu `/public`!)
-- `.htaccess` din rădăcină redirecționează automat spre `public/`
-- Setează variabila de mediu `DEPLOY_SECRET` în cPanel → Software → Node.js App → Environment Variables
-  (sau adaug-o direct în `.env`)
+### 3. Document Root
+cPanel → Domains → betterbreakfast.eu → Document Root:
+```
+/home/andie/betterbreakfast-laravel/public
+```
 
-### 3. GitHub Secrets necesare
+### 4. Rulează setup.php (o singură dată)
+Deschide în browser:
+```
+https://betterbreakfast.eu/setup.php?token=DEPLOY_TOKEN_DIN_ENV
+```
+Răspunsul JSON arată statusul fiecărui pas:
+- `composer install` — instalează dependențele PHP
+- `artisan key:generate` — generează APP_KEY în .env
+- `artisan migrate` — creează tabelele
+- `artisan db:seed` — adaugă rețetele și modulul
+- `artisan optimize` — cache config/routes/views
+
+### 5. Șterge setup.php
+După ce setup.php a rulat cu succes, șterge-l din File Manager:
+```
+/home/andie/betterbreakfast-laravel/public/setup.php
+```
+
+---
+
+## GitHub Actions Secrets (pentru deploy automat)
+
+GitHub repo → Settings → Secrets → Actions:
 
 | Secret | Valoare |
 |---|---|
-| `FTP_HOST` | ftp.betterbreakfast.ro |
-| `FTP_USER` | username@betterbreakfast.ro |
-| `FTP_PASSWORD` | parola FTP cPanel |
-| `DEPLOY_SECRET` | un șir random generat cu `openssl rand -hex 32` |
+| `FTP_HOST` | `ftp.betterbreakfast.eu` |
+| `FTP_USER` | userul FTP din cPanel |
+| `FTP_PASSWORD` | parola FTP din cPanel |
+| `DEPLOY_TOKEN` | același token din `.env` |
 
 ---
 
-## Deploy obișnuit (automat via GitHub Actions)
+## Deploy obișnuit (automat)
 
 La fiecare `git push origin main`:
 1. GitHub Actions face `npm run build`
-2. FTP upload doar `public/build/` pe server
-3. POST webhook la `https://betterbreakfast.ro/deploy.php` care rulează:
-   - `git pull origin main`
+2. FTP upload `public/build/` pe server
+3. Webhook POST la `https://betterbreakfast.eu/deploy.php` care rulează:
+   - `git reset --hard HEAD` + `git pull origin main`
+   - `composer install --no-dev`
    - `php artisan migrate --force`
-   - `php artisan config:cache`
-   - `php artisan route:cache`
-   - `php artisan view:cache`
+   - `php artisan optimize`
 
 ---
 
-## Deploy manual (fără GitHub Actions)
+## Deploy manual (din browser)
 
-```bash
-ssh username@betterbreakfast.ro
-cd /home/username/betterbreakfast
-git pull origin main
-php artisan migrate --force
-php artisan config:cache && php artisan route:cache && php artisan view:cache
+```
+https://betterbreakfast.eu/deploy.php?token=DEPLOY_TOKEN_DIN_ENV
 ```
 
-Apoi local:
-```bash
-npm run build
-# FTP public/build/ pe server manual
+Răspuns JSON cu statusul fiecărui pas. Dacă `code != 0` la vreun pas, deploy-ul se oprește.
+
+---
+
+## Diagnostice
+
+```
+https://betterbreakfast.eu/deploy.php?token=TOKEN&log=1    ← ultimele 150 linii din laravel.log
+https://betterbreakfast.eu/deploy.php?token=TOKEN&info=1   ← phpinfo()
 ```
