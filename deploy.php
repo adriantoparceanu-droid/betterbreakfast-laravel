@@ -2,19 +2,37 @@
 /**
  * Better Breakfast — cPanel deploy script
  *
- * Triggered by GitHub Actions after a successful build.
- * Place this file outside public/ and protect it with a secret token.
+ * Accepts token via:
+ *   - Browser:        GET https://betterbreakfast.eu/deploy.php?token=SECRET
+ *   - GitHub Actions: POST with header X-Deploy-Token: SECRET
  *
- * Usage: POST https://betterbreakfast.ro/deploy.php
- *        Header: X-Deploy-Token: <DEPLOY_SECRET>
+ * Set DEPLOY_SECRET in .env on the server.
  */
 
-$secret = getenv('DEPLOY_SECRET') ?: '';
-$token  = $_SERVER['HTTP_X_DEPLOY_TOKEN'] ?? '';
+// Read token from URL param (browser) or header (GitHub Actions)
+$secret = '';
+if (function_exists('getenv')) {
+    $secret = getenv('DEPLOY_SECRET') ?: '';
+}
+// Fallback: read directly from .env if getenv not populated
+if (! $secret) {
+    $envFile = __DIR__ . '/.env';
+    if (file_exists($envFile)) {
+        foreach (file($envFile) as $line) {
+            if (str_starts_with(trim($line), 'DEPLOY_SECRET=')) {
+                $secret = trim(explode('=', $line, 2)[1]);
+                break;
+            }
+        }
+    }
+}
+
+$token = $_GET['token'] ?? $_SERVER['HTTP_X_DEPLOY_TOKEN'] ?? '';
 
 if (! $secret || ! hash_equals($secret, $token)) {
     http_response_code(403);
-    exit('Forbidden');
+    header('Content-Type: text/plain');
+    exit("403 Forbidden\n");
 }
 
 $projectRoot = __DIR__;
@@ -30,11 +48,11 @@ $commands = [
     "{$php} {$projectRoot}/artisan up 2>&1",
 ];
 
-$output = [];
+header('Content-Type: text/plain; charset=utf-8');
 foreach ($commands as $cmd) {
-    $result = shell_exec($cmd);
-    $output[] = "$ {$cmd}\n{$result}";
+    echo "$ {$cmd}\n";
+    echo shell_exec($cmd);
+    echo "\n---\n";
+    flush();
 }
-
-header('Content-Type: text/plain');
-echo implode("\n---\n", $output);
+echo "Deploy complete.\n";
