@@ -1,4 +1,5 @@
 PassengerEnabled off
+AddHandler application/x-httpd-ea-php84 .php
 
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
