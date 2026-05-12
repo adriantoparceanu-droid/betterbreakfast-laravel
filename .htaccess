@@ -1,0 +1,13 @@
+# cPanel: document root points to project root, not public/
+# This redirects all traffic into public/, where Laravel's own .htaccess takes over.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Serve deploy webhook directly (before public/ rewrite)
+    RewriteRule ^deploy\.php$ - [L]
+
+    # Serve everything else from public/
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
