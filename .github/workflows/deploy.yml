@@ -31,7 +31,7 @@ jobs:
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./public/build/
-          server-dir: /public_html/public/build/
+          server-dir: /betterbreakfast.eu/public/build/
           dangerous-clean-slate: false
 
       # Trigger server-side deploy (git pull + migrate + cache)
