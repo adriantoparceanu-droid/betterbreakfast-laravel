@@ -19,7 +19,7 @@ class StatsController extends Controller
         $recipeCompletions = [];
 
         foreach ($completionEvents as $e) {
-            $props = json_decode($e->properties, true) ?? [];
+            $props = is_array($e->properties) ? $e->properties : (json_decode($e->properties, true) ?? []);
             $day   = $props['dayNumber'] ?? 0;
             $completionsByDay[$day] = ($completionsByDay[$day] ?? 0) + 1;
             if ($recipeId = $props['fromRecipeId'] ?? null) {
@@ -31,7 +31,7 @@ class StatsController extends Controller
         $recipeSwapsFrom = [];
 
         foreach ($swapEvents as $e) {
-            $props = json_decode($e->properties, true) ?? [];
+            $props = is_array($e->properties) ? $e->properties : (json_decode($e->properties, true) ?? []);
             if ($to   = $props['toRecipeId']   ?? null) $recipeSwapsTo[$to]     = ($recipeSwapsTo[$to]     ?? 0) + 1;
             if ($from = $props['fromRecipeId'] ?? null) $recipeSwapsFrom[$from] = ($recipeSwapsFrom[$from] ?? 0) + 1;
         }
