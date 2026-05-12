@@ -15,7 +15,7 @@ class PurchaseController extends Controller
         $user = $request->user();
 
         if ($user->isAdmin() || $user->modules()->where('slug', 'breakfast-10-day')->exists()) {
-            return redirect()->route('today');
+            return redirect()->route('staples');
         }
 
         $module = Module::where('slug', 'breakfast-10-day')->firstOrFail();

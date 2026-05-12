@@ -47,8 +47,10 @@ php artisan serve       # (opțional, Herd gestionează)
 Register → Onboarding → /staples → middleware EnsureModuleAccess
     → redirect /purchase (dacă fără acces)
     → admin acordă acces manual după confirmare plată
-    → acces complet la Today / Plan / Staples
+    → user reîncarcă /purchase → redirect automat /staples
 ```
+
+**Redirect după acces:** `PurchaseController` redirecționează la `/staples` (nu `/today`) când user-ul are deja acces — indiferent dacă vine din grant admin sau din reîncărcare după plată.
 
 **Prețurile** sunt configurabile din `/admin/modules` și `/admin/categories` — nu sunt hardcodate.
 
@@ -90,7 +92,7 @@ Paginile app folosesc `PageComponent.layout = AppLayout` (persistent layout Iner
 | API | `/api` | `auth` (sesiune web) |
 
 **Web routes cu acces gated:**
-- `GET /purchase` — pagina de cumpărare (redirect la /today dacă are deja acces)
+- `GET /purchase` — pagina de cumpărare (redirect la **/staples** dacă are deja acces)
 - `GET /explore` — browser categorii premium (fără gate modul 1)
 - `GET /today`, `/plan`, `/staples`, `/swap/{day}`, `/complete/{day}` — necesită `module.access`
 

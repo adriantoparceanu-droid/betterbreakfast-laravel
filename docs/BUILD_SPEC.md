@@ -724,6 +724,7 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-13) Fix: `bootstrapRecipes()` curăță Dexie înainte de bulkPut (elimină rețete vechi/greșite)
 - [x] (2026-05-13) Fix: Today — auto-select robust, rezolvă zombie selection (selectedId setat pe rețetă inexistentă)
 - [x] (2026-05-13) Fix: Plan — eliminat `isLocked`/`foundationDone` care bloca toate zilele; `DEFAULT_USER_PROGRESS.foundationDone = true`
+- [x] (2026-05-13) Fix: `/purchase` redirecționează la `/staples` (nu `/today`) după grant acces sau plată
 
 ### In Progress / Planned
 
