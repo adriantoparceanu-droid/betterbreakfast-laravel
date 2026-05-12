@@ -74,7 +74,7 @@ function findGit(): string
     return $which ?: 'git';
 }
 
-function findComposer(string $php): string
+function findComposer(string $php, string $root): string
 {
     $candidates = [
         '/usr/local/bin/composer',
@@ -86,8 +86,21 @@ function findComposer(string $php): string
     }
     $which = trim(run('which composer')['out']);
     if ($which && is_executable($which)) return $which;
-    // Fallback: run composer.phar directly with the found PHP binary
-    return "$php /usr/local/bin/composer.phar";
+
+    // Check for local composer.phar (home dir or project root)
+    $homeDir = dirname($root);
+    foreach (["$homeDir/composer.phar", "$root/composer.phar"] as $phar) {
+        if (is_readable($phar)) return "$php $phar";
+    }
+
+    // Download composer.phar to home dir
+    $phar = "$homeDir/composer.phar";
+    $data = @file_get_contents('https://getcomposer.org/composer-stable.phar');
+    if ($data !== false && file_put_contents($phar, $data) !== false) {
+        return "$php $phar";
+    }
+
+    return 'composer';
 }
 
 // ── Diagnostic routes ─────────────────────────────────────────────────────────
@@ -109,7 +122,7 @@ if (isset($_GET['info'])) { phpinfo(); exit; }
 
 $php      = findPhp();
 $git      = findGit();
-$composer = findComposer($php);
+$composer = findComposer($php, $root);
 
 $commands = [
     "$git -C $root reset --hard HEAD",

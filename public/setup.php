@@ -53,7 +53,7 @@ function findPhp(): string
     return PHP_BINARY;
 }
 
-function findComposer(string $php): string
+function findComposer(string $php, string $root): string
 {
     $candidates = [
         '/usr/local/bin/composer',
@@ -72,12 +72,24 @@ function findComposer(string $php): string
         proc_close($proc);
     }
     if ($out && is_executable($out)) return $out;
-    return "$php /usr/local/bin/composer.phar";
+
+    $homeDir = dirname($root);
+    foreach (["$homeDir/composer.phar", "$root/composer.phar"] as $phar) {
+        if (is_readable($phar)) return "$php $phar";
+    }
+
+    $phar = "$homeDir/composer.phar";
+    $data = @file_get_contents('https://getcomposer.org/composer-stable.phar');
+    if ($data !== false && file_put_contents($phar, $data) !== false) {
+        return "$php $phar";
+    }
+
+    return 'composer';
 }
 
 $root     = dirname(__DIR__);
 $php      = findPhp();
-$composer = findComposer($php);
+$composer = findComposer($php, $root);
 
 $steps = [
     "cd $root && $composer install --no-dev --optimize-autoloader 2>&1",
