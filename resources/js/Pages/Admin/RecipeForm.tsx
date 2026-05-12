@@ -141,7 +141,7 @@ function SortableStepRow({ id, children }: SortableRowProps) {
                 {...attributes}
                 {...listeners}
                 tabIndex={-1}
-                className="mt-2.5 h-5 w-5 flex items-center justify-center text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none shrink-0"
+                className="h-9 w-5 flex items-center justify-center text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none shrink-0"
             >
                 <GripVertical size={14} />
             </button>
