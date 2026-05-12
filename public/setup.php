@@ -92,7 +92,7 @@ $php      = findPhp();
 $composer = findComposer($php, $root);
 
 $steps = [
-    "cd $root && $composer install --no-dev --optimize-autoloader 2>&1",
+    "cd $root && HOME=" . dirname($root) . " $composer install --no-dev --optimize-autoloader 2>&1",
     "$php $root/artisan key:generate --force",
     "$php $root/artisan migrate --force",
     "$php $root/artisan db:seed --force",

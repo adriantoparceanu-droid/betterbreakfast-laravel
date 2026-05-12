@@ -127,7 +127,7 @@ $composer = findComposer($php, $root);
 $commands = [
     "$git -C $root reset --hard HEAD",
     "$git -C $root pull origin main",
-    "cd $root && $composer install --no-dev --optimize-autoloader 2>&1",
+    "cd $root && HOME=" . dirname($root) . " $composer install --no-dev --optimize-autoloader 2>&1",
     "$php $root/artisan migrate --force",
     "$php $root/artisan optimize",
 ];
