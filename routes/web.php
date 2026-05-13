@@ -96,6 +96,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/pages',                       [AdminPages::class, 'index'])->name('pages');
     Route::put('/pages',                       [AdminPages::class, 'update'])->name('pages.update');
+
+    // Temporary: one-time nutrition seeder — remove after running on live
+    Route::get('/run-nutrition-seeder', function () {
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'MasterIngredientNutritionSeeder']);
+        return '<pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre>';
+    })->name('run_nutrition_seeder');
 });
 
 require __DIR__ . '/auth.php';
