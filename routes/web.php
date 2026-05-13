@@ -105,7 +105,8 @@ Route::get('/export-recipes', function (\Illuminate\Http\Request $request) {
     }
 
     $module = \Illuminate\Support\Facades\DB::table('modules')
-        ->where('slug', 'module-breakfast-10day')
+        ->where('id', 'module-breakfast-10day')
+        ->orWhere('slug', 'breakfast-10-day')
         ->first();
 
     if (!$module) {
