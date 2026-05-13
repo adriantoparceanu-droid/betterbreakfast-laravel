@@ -98,4 +98,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/pages',                       [AdminPages::class, 'update'])->name('pages.update');
 });
 
+// Temporary: add missing ingredients to live — remove after running once
+Route::get('/run-missing-ingredients-seeder', function () {
+    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'MasterIngredientMissingSeeder', '--force' => true]);
+    return '<pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre>';
+})->middleware(['auth', 'admin']);
+
 require __DIR__ . '/auth.php';
