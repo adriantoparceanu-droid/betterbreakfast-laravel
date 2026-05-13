@@ -54,7 +54,7 @@ export function SettingsModal({ isOpen, onClose }: Props) {
                         <AnimatePresence mode="wait">
                             {step === 'menu' && (
                                 <motion.div key="menu" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.18 }} className="px-4 pb-10">
+                                    exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.18 }} className="px-4 pb-24">
                                     <div className="flex items-center justify-between py-3 mb-1">
                                         <h2 className="text-lg font-bold text-gray-900">Settings</h2>
                                         <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 transition-colors text-lg">×</button>
@@ -77,7 +77,7 @@ export function SettingsModal({ isOpen, onClose }: Props) {
                             )}
                             {step === 'confirm' && (
                                 <motion.div key="confirm" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.18 }} className="px-4 pb-10">
+                                    exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.18 }} className="px-4 pb-24">
                                     <div className="flex items-center gap-2 py-3 mb-4">
                                         <button onClick={() => setStep('menu')} className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 transition-colors text-base">←</button>
                                         <h2 className="text-lg font-bold text-gray-900">Restart plan</h2>

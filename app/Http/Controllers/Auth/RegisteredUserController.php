@@ -29,6 +29,7 @@ class RegisteredUserController extends Controller
             'username'       => 'required|string|min:2|max:30|unique:users|alpha_dash',
             'password'       => ['required', 'confirmed', Rules\Password::defaults()],
             'hcaptcha_token' => $captchaRules,
+            'privacy_policy' => 'accepted',
         ]);
 
         $user = User::create([

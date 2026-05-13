@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MasterIngredient;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -65,6 +67,40 @@ class IngredientController extends Controller
     {
         MasterIngredient::findOrFail($id)->delete();
         return back();
+    }
+
+    public function nutritionLookup(Request $request): JsonResponse
+    {
+        $name = $request->validate(['name' => 'required|string|max:100'])['name'];
+
+        $response = Http::get('https://api.nal.usda.gov/fdc/v1/foods/search', [
+            'query'    => $name,
+            'dataType' => 'Foundation,SR Legacy',
+            'pageSize' => 1,
+            'api_key'  => config('services.usda_fdc.key'),
+        ]);
+
+        if (!$response->ok()) {
+            return response()->json(['error' => 'API request failed'], 502);
+        }
+
+        $foods = $response->json('foods', []);
+
+        if (empty($foods)) {
+            return response()->json(['error' => 'Not found'], 404);
+        }
+
+        $nutrients = collect($foods[0]['foodNutrients'] ?? []);
+        $get = fn (int $id) => round($nutrients->firstWhere('nutrientId', $id)['value'] ?? 0, 1) ?: null;
+
+        return response()->json([
+            'foundName' => $foods[0]['description'] ?? null,
+            'calories'  => $get(1008),
+            'protein'   => $get(1003),
+            'fat'       => $get(1004),
+            'carbs'     => $get(1005),
+            'fiber'     => $get(1079),
+        ]);
     }
 
     public function seedFromRecipes(): RedirectResponse

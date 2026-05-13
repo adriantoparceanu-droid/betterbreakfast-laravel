@@ -3,8 +3,8 @@ import { router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 const INGREDIENT_CATEGORIES = [
-    'Proteins', 'Grains', 'Dairy', 'Fruits',
-    'Vegetables', 'Seeds & Nuts', 'Condiments',
+    'Proteins', 'Grains & Legumes', 'Dairy', 'Fruits',
+    'Vegetables', 'Fats, Nuts & Seeds', 'Condiments',
 ] as const;
 
 interface IngredientRow {
@@ -30,22 +30,70 @@ const NUTRITION_COLS: { key: NutritionKey; label: string; server: string }[] = [
 
 interface Props { ingredients: IngredientRow[]; }
 
-const EMPTY_ADD = { name: '', category: 'Grains' as string, calories_per_100g: '', protein_per_100g: '', fat_per_100g: '', carbs_per_100g: '', fiber_per_100g: '' };
+const EMPTY_ADD = { name: '', category: 'Grains & Legumes' as string, calories_per_100g: '', protein_per_100g: '', fat_per_100g: '', carbs_per_100g: '', fiber_per_100g: '' };
 
 const INPUT_CLS = 'w-full h-8 border border-gray-200 rounded-lg px-2 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-400';
 const NUM_CLS   = `${INPUT_CLS} text-center`;
 
+interface NutritionResult {
+    foundName: string | null;
+    calories: number | null;
+    protein:  number | null;
+    fat:      number | null;
+    carbs:    number | null;
+    fiber:    number | null;
+}
+
 export default function AdminIngredients({ ingredients }: Props) {
-    const [search,    setSearch]   = useState('');
-    const [adding,    setAdding]   = useState(false);
-    const [newForm,   setNewForm]  = useState(EMPTY_ADD);
-    const [editingId, setEditing]  = useState<number | null>(null);
-    const [editForm,  setEditForm] = useState<Partial<Record<string, string>>>({});
+    const [search,        setSearch]        = useState('');
+    const [adding,        setAdding]        = useState(false);
+    const [newForm,       setNewForm]       = useState(EMPTY_ADD);
+    const [editingId,     setEditing]       = useState<number | null>(null);
+    const [editForm,      setEditForm]      = useState<Partial<Record<string, string>>>({});
+    const [lookupLoading, setLookupLoading] = useState<'add' | number | null>(null);
+    const [lookupError,   setLookupError]   = useState<{ ctx: 'add' | number; msg: string } | null>(null);
 
     const filtered = ingredients.filter((i) =>
         i.name.toLowerCase().includes(search.toLowerCase()) ||
         i.category.toLowerCase().includes(search.toLowerCase()),
     );
+
+    // ─── Nutrition lookup ─────────────────────────────────────────────────────
+
+    const handleLookup = async (name: string, ctx: 'add' | number) => {
+        if (!name.trim()) return;
+        setLookupLoading(ctx);
+        setLookupError(null);
+
+        try {
+            const url = route('admin.ingredients.nutrition_lookup') + '?name=' + encodeURIComponent(name.trim());
+            const res = await fetch(url, { credentials: 'same-origin' });
+            const data: NutritionResult & { error?: string } = await res.json();
+
+            if (!res.ok || data.error) {
+                setLookupError({ ctx, msg: data.error ?? 'Not found' });
+                return;
+            }
+
+            const patch = {
+                calories_per_100g: data.calories?.toString() ?? '',
+                protein_per_100g:  data.protein?.toString()  ?? '',
+                fat_per_100g:      data.fat?.toString()       ?? '',
+                carbs_per_100g:    data.carbs?.toString()     ?? '',
+                fiber_per_100g:    data.fiber?.toString()     ?? '',
+            };
+
+            if (ctx === 'add') {
+                setNewForm(prev => ({ ...prev, ...patch }));
+            } else {
+                setEditForm(prev => ({ ...prev, ...patch }));
+            }
+        } catch {
+            setLookupError({ ctx, msg: 'Network error' });
+        } finally {
+            setLookupLoading(null);
+        }
+    };
 
     // ─── Add ──────────────────────────────────────────────────────────────────
 
@@ -59,6 +107,7 @@ export default function AdminIngredients({ ingredients }: Props) {
 
     const startEdit = (i: IngredientRow) => {
         setEditing(i.id);
+        setLookupError(null);
         setEditForm({
             name:               i.name,
             category:           i.category,
@@ -84,6 +133,19 @@ export default function AdminIngredients({ ingredients }: Props) {
         }
     };
 
+    // ─── Lookup button ────────────────────────────────────────────────────────
+
+    const LookupBtn = ({ name, ctx }: { name: string; ctx: 'add' | number }) => (
+        <button
+            type="button"
+            onClick={() => handleLookup(name, ctx)}
+            disabled={!name.trim() || lookupLoading === ctx}
+            className="shrink-0 h-8 px-2.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors whitespace-nowrap"
+        >
+            {lookupLoading === ctx ? '…' : 'Lookup'}
+        </button>
+    );
+
     // ─── Render ───────────────────────────────────────────────────────────────
 
     return (
@@ -93,20 +155,12 @@ export default function AdminIngredients({ ingredients }: Props) {
                     <h1 className="text-2xl font-bold text-gray-900 mb-1">Ingredients</h1>
                     <p className="text-sm text-gray-400">{ingredients.length} ingredients in master list</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => router.post(route('admin.ingredients.seed'))}
-                        className="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
-                    >
-                        Seed from recipes
-                    </button>
-                    <button
-                        onClick={() => setAdding(true)}
-                        className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-xl hover:bg-brand-600 transition-colors"
-                    >
-                        + Add ingredient
-                    </button>
-                </div>
+                <button
+                    onClick={() => setAdding(true)}
+                    className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-xl hover:bg-brand-600 transition-colors"
+                >
+                    + Add ingredient
+                </button>
             </div>
 
             {/* Add form */}
@@ -116,12 +170,18 @@ export default function AdminIngredients({ ingredients }: Props) {
                     <div className="grid grid-cols-[1fr_1fr_repeat(5,6rem)] gap-3 items-end mb-3">
                         <div>
                             <label className="text-xs font-medium text-gray-500 block mb-1">Name</label>
-                            <input
-                                value={newForm.name}
-                                onChange={e => setNewForm({ ...newForm, name: e.target.value })}
-                                className={INPUT_CLS}
-                                placeholder="e.g. Rolled oats"
-                            />
+                            <div className="flex gap-1">
+                                <input
+                                    value={newForm.name}
+                                    onChange={e => { setNewForm({ ...newForm, name: e.target.value }); setLookupError(null); }}
+                                    className={INPUT_CLS}
+                                    placeholder="e.g. Rolled oats"
+                                />
+                                <LookupBtn name={newForm.name} ctx="add" />
+                            </div>
+                            {lookupError?.ctx === 'add' && (
+                                <p className="text-xs text-red-500 mt-1">{lookupError.msg}</p>
+                            )}
                         </div>
                         <div>
                             <label className="text-xs font-medium text-gray-500 block mb-1">Category</label>
@@ -150,7 +210,7 @@ export default function AdminIngredients({ ingredients }: Props) {
                     </div>
                     <div className="flex gap-2 justify-end">
                         <button
-                            onClick={() => { setAdding(false); setNewForm(EMPTY_ADD); }}
+                            onClick={() => { setAdding(false); setNewForm(EMPTY_ADD); setLookupError(null); }}
                             className="px-4 py-2 border border-gray-200 text-xs font-medium rounded-xl text-gray-600 hover:bg-gray-50 transition-colors"
                         >Cancel</button>
                         <button
@@ -194,11 +254,17 @@ export default function AdminIngredients({ ingredients }: Props) {
                                 /* Edit row */
                                 <tr key={i.id} className="bg-brand-50/40">
                                     <td className="px-5 py-2">
-                                        <input
-                                            value={editForm.name ?? ''}
-                                            onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                                            className={INPUT_CLS}
-                                        />
+                                        <div className="flex gap-1">
+                                            <input
+                                                value={editForm.name ?? ''}
+                                                onChange={e => { setEditForm({ ...editForm, name: e.target.value }); setLookupError(null); }}
+                                                className={INPUT_CLS}
+                                            />
+                                            <LookupBtn name={editForm.name ?? ''} ctx={i.id} />
+                                        </div>
+                                        {lookupError?.ctx === i.id && (
+                                            <p className="text-xs text-red-500 mt-1">{lookupError.msg}</p>
+                                        )}
                                     </td>
                                     <td className="px-5 py-2">
                                         <select

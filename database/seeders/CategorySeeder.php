@@ -60,7 +60,7 @@ class CategorySeeder extends Seeder
                 'tags'         => ['no-cook', 'high-protein', 'quick'],
                 'ingredients'  => [
                     ['name' => 'Cottage cheese',    'quantity' => 200, 'unit' => 'g',    'category' => 'Dairy'],
-                    ['name' => 'Almonds',            'quantity' => 20,  'unit' => 'g',    'category' => 'Seeds & Nuts'],
+                    ['name' => 'Almonds',            'quantity' => 20,  'unit' => 'g',    'category' => 'Fats, Nuts & Seeds'],
                     ['name' => 'Banana',             'quantity' => 1,   'unit' => 'whole','category' => 'Fruits'],
                     ['name' => 'Honey',              'quantity' => 1,   'unit' => 'tsp',  'category' => 'Condiments'],
                 ],
@@ -82,7 +82,7 @@ class CategorySeeder extends Seeder
                 'category_id'  => 'cat-highprotein',
                 'tags'         => ['high-protein', 'no-cook'],
                 'ingredients'  => [
-                    ['name' => 'Whole grain bagel', 'quantity' => 1,   'unit' => 'whole', 'category' => 'Grains'],
+                    ['name' => 'Whole grain bagel', 'quantity' => 1,   'unit' => 'whole', 'category' => 'Grains & Legumes'],
                     ['name' => 'Cream cheese',      'quantity' => 2,   'unit' => 'tbsp',  'category' => 'Dairy'],
                     ['name' => 'Smoked salmon',     'quantity' => 80,  'unit' => 'g',     'category' => 'Proteins'],
                     ['name' => 'Capers',            'quantity' => 1,   'unit' => 'tsp',   'category' => 'Condiments'],
@@ -108,7 +108,7 @@ class CategorySeeder extends Seeder
                 'category_id'  => 'cat-highprotein',
                 'tags'         => ['hot', 'high-protein'],
                 'ingredients'  => [
-                    ['name' => 'Oats',             'quantity' => 50,  'unit' => 'g',    'category' => 'Grains'],
+                    ['name' => 'Oats',             'quantity' => 50,  'unit' => 'g',    'category' => 'Grains & Legumes'],
                     ['name' => 'Eggs',             'quantity' => 2,   'unit' => 'whole','category' => 'Proteins'],
                     ['name' => 'Banana',           'quantity' => 1,   'unit' => 'whole','category' => 'Fruits'],
                     ['name' => 'Greek yogurt',     'quantity' => 50,  'unit' => 'g',    'category' => 'Dairy'],
@@ -135,10 +135,10 @@ class CategorySeeder extends Seeder
                 'category_id'  => 'cat-quickmeals',
                 'tags'         => ['no-cook', 'quick'],
                 'ingredients'  => [
-                    ['name' => 'Rice cakes',       'quantity' => 3,   'unit' => 'whole','category' => 'Grains'],
-                    ['name' => 'Peanut butter',    'quantity' => 2,   'unit' => 'tbsp', 'category' => 'Seeds & Nuts'],
+                    ['name' => 'Rice cakes',       'quantity' => 3,   'unit' => 'whole','category' => 'Grains & Legumes'],
+                    ['name' => 'Peanut butter',    'quantity' => 2,   'unit' => 'tbsp', 'category' => 'Fats, Nuts & Seeds'],
                     ['name' => 'Strawberries',     'quantity' => 5,   'unit' => 'whole','category' => 'Fruits'],
-                    ['name' => 'Chia seeds',       'quantity' => 1,   'unit' => 'tsp',  'category' => 'Seeds & Nuts'],
+                    ['name' => 'Chia seeds',       'quantity' => 1,   'unit' => 'tsp',  'category' => 'Fats, Nuts & Seeds'],
                 ],
                 'steps'        => [
                     'Spread peanut butter on each rice cake.',
@@ -162,7 +162,7 @@ class CategorySeeder extends Seeder
                     ['name' => 'Greek yogurt',          'quantity' => 150, 'unit' => 'g',    'category' => 'Dairy'],
                     ['name' => 'Honey',                 'quantity' => 1,   'unit' => 'tsp',  'category' => 'Condiments'],
                     ['name' => 'Cardamom',              'quantity' => 0.25,'unit' => 'tsp',  'category' => 'Condiments'],
-                    ['name' => 'Granola',               'quantity' => 2,   'unit' => 'tbsp', 'category' => 'Grains'],
+                    ['name' => 'Granola',               'quantity' => 2,   'unit' => 'tbsp', 'category' => 'Grains & Legumes'],
                 ],
                 'steps'        => [
                     'Blend mango, yogurt, honey, and cardamom until smooth.',
@@ -183,7 +183,7 @@ class CategorySeeder extends Seeder
                 'tags'         => ['hot', 'quick'],
                 'ingredients'  => [
                     ['name' => 'Banana',          'quantity' => 1,   'unit' => 'whole','category' => 'Fruits'],
-                    ['name' => 'Rolled oats',     'quantity' => 4,   'unit' => 'tbsp', 'category' => 'Grains'],
+                    ['name' => 'Rolled oats',     'quantity' => 4,   'unit' => 'tbsp', 'category' => 'Grains & Legumes'],
                     ['name' => 'Egg',             'quantity' => 1,   'unit' => 'whole','category' => 'Proteins'],
                     ['name' => 'Cinnamon',        'quantity' => 0.5, 'unit' => 'tsp',  'category' => 'Condiments'],
                     ['name' => 'Dark chocolate',  'quantity' => 5,   'unit' => 'g',    'category' => 'Condiments'],
@@ -235,7 +235,7 @@ class CategorySeeder extends Seeder
                 'category_id'  => 'cat-plantbased',
                 'tags'         => ['no-cook', 'plant-based', 'high-fiber'],
                 'ingredients'  => [
-                    ['name' => 'Sourdough bread',   'quantity' => 2,   'unit' => 'slices','category' => 'Grains'],
+                    ['name' => 'Sourdough bread',   'quantity' => 2,   'unit' => 'slices','category' => 'Grains & Legumes'],
                     ['name' => 'Ripe avocado',      'quantity' => 1,   'unit' => 'whole', 'category' => 'Fruits'],
                     ['name' => 'Black beans',       'quantity' => 80,  'unit' => 'g',     'category' => 'Proteins'],
                     ['name' => 'Lime juice',        'quantity' => 1,   'unit' => 'tsp',   'category' => 'Condiments'],
@@ -261,11 +261,11 @@ class CategorySeeder extends Seeder
                 'category_id'  => 'cat-plantbased',
                 'tags'         => ['hot', 'plant-based', 'comfort'],
                 'ingredients'  => [
-                    ['name' => 'Rolled oats',        'quantity' => 60,  'unit' => 'g',    'category' => 'Grains'],
+                    ['name' => 'Rolled oats',        'quantity' => 60,  'unit' => 'g',    'category' => 'Grains & Legumes'],
                     ['name' => 'Coconut milk',       'quantity' => 200, 'unit' => 'ml',   'category' => 'Dairy'],
                     ['name' => 'Banana',             'quantity' => 1,   'unit' => 'whole','category' => 'Fruits'],
                     ['name' => 'Maple syrup',        'quantity' => 1,   'unit' => 'tbsp', 'category' => 'Condiments'],
-                    ['name' => 'Toasted coconut',    'quantity' => 1,   'unit' => 'tbsp', 'category' => 'Seeds & Nuts'],
+                    ['name' => 'Toasted coconut',    'quantity' => 1,   'unit' => 'tbsp', 'category' => 'Fats, Nuts & Seeds'],
                 ],
                 'steps'        => [
                     'Cook oats with coconut milk over medium heat, stirring until creamy.',
@@ -285,11 +285,11 @@ class CategorySeeder extends Seeder
                 'category_id'  => 'cat-plantbased',
                 'tags'         => ['no-cook', 'plant-based', 'prep-ahead', 'high-fiber'],
                 'ingredients'  => [
-                    ['name' => 'Chia seeds',        'quantity' => 3,   'unit' => 'tbsp', 'category' => 'Seeds & Nuts'],
+                    ['name' => 'Chia seeds',        'quantity' => 3,   'unit' => 'tbsp', 'category' => 'Fats, Nuts & Seeds'],
                     ['name' => 'Oat milk',          'quantity' => 200, 'unit' => 'ml',   'category' => 'Dairy'],
                     ['name' => 'Maple syrup',       'quantity' => 1,   'unit' => 'tsp',  'category' => 'Condiments'],
                     ['name' => 'Mixed berries',     'quantity' => 80,  'unit' => 'g',    'category' => 'Fruits'],
-                    ['name' => 'Granola',           'quantity' => 2,   'unit' => 'tbsp', 'category' => 'Grains'],
+                    ['name' => 'Granola',           'quantity' => 2,   'unit' => 'tbsp', 'category' => 'Grains & Legumes'],
                 ],
                 'steps'        => [
                     'Mix chia seeds, oat milk, and maple syrup in a jar.',

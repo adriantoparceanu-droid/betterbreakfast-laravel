@@ -111,6 +111,8 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
     const captchaRef = useRef<HCaptcha>(null);
     const [captchaToken, setCaptchaToken] = useState<string | null>(null);
     const [captchaError, setCaptchaError] = useState<string | null>(null);
+    const [privacyAccepted, setPrivacyAccepted] = useState(false);
+    const [privacyError, setPrivacyError] = useState<string | null>(null);
 
     const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<RegisterFields>({
         resolver: zodResolver(registerSchema),
@@ -121,9 +123,14 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
             setCaptchaError('Please complete the CAPTCHA.');
             return;
         }
+        if (!privacyAccepted) {
+            setPrivacyError('You must accept the Privacy Policy to continue.');
+            return;
+        }
         setCaptchaError(null);
+        setPrivacyError(null);
 
-        router.post(route('register'), { ...data, hcaptcha_token: captchaToken }, {
+        router.post(route('register'), { ...data, hcaptcha_token: captchaToken, privacy_policy: '1' }, {
             onError: (errs) => {
                 if (errs.email)    setError('email',    { message: errs.email });
                 if (errs.username) setError('username', { message: errs.username });
@@ -168,6 +175,29 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
                 error={errors.password_confirmation?.message}
                 {...register('password_confirmation')}
             />
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                    type="checkbox"
+                    checked={privacyAccepted}
+                    onChange={e => { setPrivacyAccepted(e.target.checked); if (e.target.checked) setPrivacyError(null); }}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                />
+                <span className="text-sm text-gray-600">
+                    I agree to the{' '}
+                    <a
+                        href="/privacy-policy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-brand-600 underline underline-offset-2 hover:text-brand-700"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        Privacy Policy
+                    </a>
+                </span>
+            </label>
+            {privacyError && (
+                <p className="text-sm text-red-500 -mt-2">{privacyError}</p>
+            )}
             <div className="flex flex-col items-center gap-1">
                 <HCaptcha
                     ref={captchaRef}
@@ -203,49 +233,7 @@ export default function AuthPage({ mode: initialMode = 'login', status }: Props)
                 {/* Logo */}
                 <div className="text-center mb-8">
                     <div className="flex justify-center mb-3">
-                        {/* Fried egg — organic blob, no background */}
-                        <svg width="76" height="76" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <defs>
-                                <radialGradient id="bb-yolk" cx="38%" cy="32%" r="68%">
-                                    <stop offset="0%"   stopColor="#FFE57F" />
-                                    <stop offset="45%"  stopColor="#FFAB00" />
-                                    <stop offset="100%" stopColor="#E65C00" />
-                                </radialGradient>
-                                <radialGradient id="bb-white" cx="52%" cy="38%" r="72%">
-                                    <stop offset="0%"   stopColor="#FFFFFF" />
-                                    <stop offset="80%"  stopColor="#F7F0E0" />
-                                    <stop offset="100%" stopColor="#EDE4CE" />
-                                </radialGradient>
-                            </defs>
-
-                            {/* egg white — organic irregular blob */}
-                            <path
-                                d="M62 8
-                                   C 76 6, 96 14, 100 28
-                                   C 104 38, 104 50, 99 60
-                                   C 95 68, 108 74, 101 85
-                                   C 94 96, 81 100, 68 100
-                                   C 57 100, 47 97, 38 91
-                                   C 27 84, 17 74, 15 62
-                                   C 13 50, 18 38, 16 28
-                                   C 14 18, 22 10, 34 9
-                                   C 44 8, 48 10, 62 8 Z"
-                                fill="url(#bb-white)"
-                                stroke="#DDD3BA"
-                                strokeWidth="1.2"
-                            />
-
-                            {/* yolk */}
-                            <circle cx="62" cy="56" r="25" fill="url(#bb-yolk)" />
-
-                            {/* yolk highlight — soft glow */}
-                            <ellipse cx="53" cy="46" rx="11" ry="7.5"
-                                fill="rgba(255,255,255,0.32)"
-                                transform="rotate(-25,53,46)"
-                            />
-                            {/* yolk specular dot */}
-                            <circle cx="51" cy="44" r="4.5" fill="rgba(255,255,255,0.62)" />
-                        </svg>
+                        <img src="/icons/egg.png" alt="Better Breakfast" width={80} height={80} className="object-contain" />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-900">Better Breakfast</h1>
                     <p className="text-gray-500 mt-1 text-sm">10 days. 10 breakfasts. One system.</p>

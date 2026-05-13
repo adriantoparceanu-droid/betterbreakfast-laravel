@@ -9,6 +9,7 @@ const navItems = [
     { label: 'Modules',     routeName: 'admin.modules',     icon: '📦' },
     { label: 'Categories',  routeName: 'admin.categories',  icon: '🏷️' },
     { label: 'Stats',       routeName: 'admin.stats',       icon: '📊' },
+    { label: 'Pages',       routeName: 'admin.pages',       icon: '📄' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

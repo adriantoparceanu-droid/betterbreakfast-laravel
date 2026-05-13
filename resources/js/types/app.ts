@@ -1,6 +1,6 @@
 export type IngredientCategory =
-    | 'Proteins' | 'Grains' | 'Dairy' | 'Fruits'
-    | 'Vegetables' | 'Seeds & Nuts' | 'Condiments';
+    | 'Proteins' | 'Grains & Legumes' | 'Dairy' | 'Fruits'
+    | 'Vegetables' | 'Fats, Nuts & Seeds' | 'Condiments';
 
 export interface Ingredient {
     name: string;

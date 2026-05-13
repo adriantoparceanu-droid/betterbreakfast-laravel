@@ -731,6 +731,13 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-13) Feature: Plan — auto-asignare rețete pentru zilele necompletate la mount
 - [x] (2026-05-13) Feature: Admin Recipes — filtre module / categorie / status cu buton Clear filters
 - [x] (2026-05-13) UI: Login — înlocuit emoji 🥣 cu ilustrație SVG ou prăjit; tagline actualizat
+- [x] (2026-05-13) Feature: Admin Ingredients — buton "Lookup" via USDA FoodData Central API completează automat kcal/proteină/grăsime/carbohidrați/fibre per 100g (Add + Edit)
+- [x] (2026-05-13) Feature: Admin Ingredients — eliminat butonul "Seed from recipes" din header
+- [x] (2026-05-13) Seeder: MasterIngredientNutritionSeeder — 61 ingrediente cu valori nutritionale verificate (USDA + corecții manuale)
+- [x] (2026-05-13) Feature: Privacy Policy — pagină publică /privacy-policy + editor TipTap în Admin Pages
+- [x] (2026-05-13) DB: Creat tabela site_settings (key/value) pentru conținut editabil
+- [x] (2026-05-13) DB: Redenumit categorii ingrediente — Grains → Grains & Legumes, Seeds & Nuts → Fats, Nuts & Seeds
+- [x] (2026-05-13) Config: USDA FDC API key adăugat în config/services.php
 
 ### In Progress / Planned
 

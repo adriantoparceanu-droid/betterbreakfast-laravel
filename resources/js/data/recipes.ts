@@ -8,9 +8,9 @@ export const recipes: Recipe[] = [
     baseServings: 2,
     tags: ['no-cook', 'prep-ahead', 'high-fiber'],
     ingredients: [
-      { name: 'Rolled oats',     quantity: 1,   unit: 'cup',  category: 'Grains' },
+      { name: 'Rolled oats',     quantity: 1,   unit: 'cup',  category: 'Grains & Legumes' },
       { name: 'Milk',            quantity: 1,   unit: 'cup',  category: 'Dairy' },
-      { name: 'Chia seeds',      quantity: 2,   unit: 'tbsp', category: 'Seeds & Nuts' },
+      { name: 'Chia seeds',      quantity: 2,   unit: 'tbsp', category: 'Fats, Nuts & Seeds' },
       { name: 'Honey',           quantity: 1,   unit: 'tbsp', category: 'Condiments' },
       { name: 'Mixed berries',   quantity: 0.5, unit: 'cup',  category: 'Fruits' },
       { name: 'Vanilla extract', quantity: 0.5, unit: 'tsp',  category: 'Condiments' },
@@ -31,7 +31,7 @@ export const recipes: Recipe[] = [
     tags: ['no-cook', 'high-protein', 'quick'],
     ingredients: [
       { name: 'Greek yogurt',  quantity: 2,    unit: 'cups', category: 'Dairy' },
-      { name: 'Granola',       quantity: 0.5,  unit: 'cup',  category: 'Grains' },
+      { name: 'Granola',       quantity: 0.5,  unit: 'cup',  category: 'Grains & Legumes' },
       { name: 'Strawberries',  quantity: 0.5,  unit: 'cup',  category: 'Fruits' },
       { name: 'Blueberries',   quantity: 0.25, unit: 'cup',  category: 'Fruits' },
       { name: 'Honey',         quantity: 2,    unit: 'tsp',  category: 'Condiments' },
@@ -51,7 +51,7 @@ export const recipes: Recipe[] = [
     baseServings: 2,
     tags: ['hot', 'high-protein', 'healthy-fats'],
     ingredients: [
-      { name: 'Whole grain bread',    quantity: 2,    unit: 'slices', category: 'Grains' },
+      { name: 'Whole grain bread',    quantity: 2,    unit: 'slices', category: 'Grains & Legumes' },
       { name: 'Ripe avocado',         quantity: 1,    unit: 'whole',  category: 'Fruits' },
       { name: 'Eggs',                 quantity: 2,    unit: 'whole',  category: 'Proteins' },
       { name: 'Lemon juice',          quantity: 1,    unit: 'tsp',    category: 'Condiments' },
@@ -100,9 +100,9 @@ export const recipes: Recipe[] = [
       { name: 'Frozen açaí packets', quantity: 2,    unit: 'packets', category: 'Fruits' },
       { name: 'Frozen banana',       quantity: 1,    unit: 'whole',   category: 'Fruits' },
       { name: 'Almond milk',         quantity: 0.25, unit: 'cup',     category: 'Dairy' },
-      { name: 'Granola',             quantity: 0.25, unit: 'cup',     category: 'Grains' },
+      { name: 'Granola',             quantity: 0.25, unit: 'cup',     category: 'Grains & Legumes' },
       { name: 'Banana (sliced)',     quantity: 0.5,  unit: 'whole',   category: 'Fruits' },
-      { name: 'Coconut flakes',      quantity: 2,    unit: 'tbsp',    category: 'Seeds & Nuts' },
+      { name: 'Coconut flakes',      quantity: 2,    unit: 'tbsp',    category: 'Fats, Nuts & Seeds' },
       { name: 'Honey',               quantity: 1,    unit: 'tbsp',    category: 'Condiments' },
     ],
     steps: [
@@ -120,7 +120,7 @@ export const recipes: Recipe[] = [
     baseServings: 2,
     tags: ['no-cook', 'prep-ahead', 'high-fiber', 'omega-3'],
     ingredients: [
-      { name: 'Chia seeds',   quantity: 6,   unit: 'tbsp', category: 'Seeds & Nuts' },
+      { name: 'Chia seeds',   quantity: 6,   unit: 'tbsp', category: 'Fats, Nuts & Seeds' },
       { name: 'Coconut milk', quantity: 1.5, unit: 'cups', category: 'Dairy' },
       { name: 'Maple syrup',  quantity: 2,   unit: 'tsp',  category: 'Condiments' },
       { name: 'Vanilla extract', quantity: 0.5, unit: 'tsp', category: 'Condiments' },
@@ -143,7 +143,7 @@ export const recipes: Recipe[] = [
     baseServings: 2,
     tags: ['hot', 'weekend', 'high-fiber'],
     ingredients: [
-      { name: 'Whole wheat flour', quantity: 1,    unit: 'cup',  category: 'Grains' },
+      { name: 'Whole wheat flour', quantity: 1,    unit: 'cup',  category: 'Grains & Legumes' },
       { name: 'Baking powder',     quantity: 1,    unit: 'tsp',  category: 'Condiments' },
       { name: 'Egg',               quantity: 1,    unit: 'whole',category: 'Proteins' },
       { name: 'Milk',              quantity: 0.75, unit: 'cup',  category: 'Dairy' },
@@ -193,10 +193,10 @@ export const recipes: Recipe[] = [
     baseServings: 2,
     tags: ['no-cook', 'quick', 'healthy-fats'],
     ingredients: [
-      { name: 'Sourdough bread', quantity: 2, unit: 'slices', category: 'Grains' },
-      { name: 'Almond butter',   quantity: 2, unit: 'tbsp',   category: 'Seeds & Nuts' },
+      { name: 'Sourdough bread', quantity: 2, unit: 'slices', category: 'Grains & Legumes' },
+      { name: 'Almond butter',   quantity: 2, unit: 'tbsp',   category: 'Fats, Nuts & Seeds' },
       { name: 'Banana',          quantity: 1, unit: 'whole',  category: 'Fruits' },
-      { name: 'Chia seeds',      quantity: 1, unit: 'tsp',    category: 'Seeds & Nuts' },
+      { name: 'Chia seeds',      quantity: 1, unit: 'tsp',    category: 'Fats, Nuts & Seeds' },
       { name: 'Cinnamon',        quantity: 0.25, unit: 'tsp', category: 'Condiments' },
       { name: 'Honey',           quantity: 1, unit: 'tsp',    category: 'Condiments' },
     ],
@@ -219,7 +219,7 @@ export const recipes: Recipe[] = [
       { name: 'Frozen banana', quantity: 1,   unit: 'whole',category: 'Fruits' },
       { name: 'Greek yogurt',  quantity: 0.5, unit: 'cup',  category: 'Dairy' },
       { name: 'Almond milk',   quantity: 1,   unit: 'cup',  category: 'Dairy' },
-      { name: 'Almond butter', quantity: 1,   unit: 'tbsp', category: 'Seeds & Nuts' },
+      { name: 'Almond butter', quantity: 1,   unit: 'tbsp', category: 'Fats, Nuts & Seeds' },
       { name: 'Honey',         quantity: 1,   unit: 'tsp',  category: 'Condiments' },
     ],
     steps: [

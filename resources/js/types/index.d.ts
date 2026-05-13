@@ -14,8 +14,8 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
 // ─── Recipe ───────────────────────────────────────────────────────────────────
 
 export type IngredientCategory =
-    | 'Proteins' | 'Grains' | 'Dairy' | 'Fruits'
-    | 'Vegetables' | 'Seeds & Nuts' | 'Condiments';
+    | 'Proteins' | 'Grains & Legumes' | 'Dairy' | 'Fruits'
+    | 'Vegetables' | 'Fats, Nuts & Seeds' | 'Condiments';
 
 export interface Ingredient {
     name: string;

@@ -168,11 +168,6 @@ export default function Explore() {
                                         </svg>
                                     )}
                                     {cat.name}
-                                    {!cat.has_access && (
-                                        <span className={`text-[10px] font-semibold ${selectedId === cat.id ? 'text-white/80' : 'text-brand-500'}`}>
-                                            €{cat.price.toFixed(2)}
-                                        </span>
-                                    )}
                                 </button>
                             ))}
                         </div>

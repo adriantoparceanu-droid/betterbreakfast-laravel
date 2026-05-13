@@ -6,7 +6,7 @@ import { scaleIngredient, formatQty, convertUnit, cn, type UnitSystem } from '@/
 import AppLayout from '@/Layouts/AppLayout';
 import type { IngredientCategory, Recipe } from '@/types/app';
 
-const CATEGORY_ORDER: IngredientCategory[] = ['Proteins', 'Grains', 'Dairy', 'Fruits', 'Vegetables', 'Seeds & Nuts', 'Condiments'];
+const CATEGORY_ORDER: IngredientCategory[] = ['Proteins', 'Grains & Legumes', 'Dairy', 'Fruits', 'Vegetables', 'Fats, Nuts & Seeds', 'Condiments'];
 
 interface GatheredIngredient { name: string; unit: string; totalQuantity: number; category: IngredientCategory; }
 

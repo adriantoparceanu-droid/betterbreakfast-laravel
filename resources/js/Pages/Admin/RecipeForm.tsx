@@ -25,8 +25,8 @@ import {
 import type { Nutrition, Ingredient, IngredientCategory } from '@/types/app';
 
 const CATEGORIES: IngredientCategory[] = [
-    'Proteins', 'Grains', 'Dairy', 'Fruits',
-    'Vegetables', 'Seeds & Nuts', 'Condiments',
+    'Proteins', 'Grains & Legumes', 'Dairy', 'Fruits',
+    'Vegetables', 'Fats, Nuts & Seeds', 'Condiments',
 ];
 
 const SELECT_CLS = 'h-9 rounded-xl border border-gray-200 bg-white px-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500';

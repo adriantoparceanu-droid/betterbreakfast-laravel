@@ -15,10 +15,14 @@ use App\Http\Controllers\Admin\IngredientController as AdminIngredient;
 use App\Http\Controllers\Admin\StatsController as AdminStats;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\PrivacyPolicyController;
+use App\Http\Controllers\Admin\PagesController as AdminPages;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // ─── Public ───────────────────────────────────────────────────────────────────
+
+Route::get('/privacy-policy', [PrivacyPolicyController::class, 'show'])->name('privacy-policy');
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -72,11 +76,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/recipes/{id}',             [AdminRecipe::class, 'destroy'])->name('recipes.destroy');
     Route::patch('/recipes/{id}/toggle',       [AdminRecipe::class, 'toggleActive'])->name('recipes.toggle');
 
-    Route::get('/ingredients',                 [AdminIngredient::class, 'index'])->name('ingredients');
-    Route::post('/ingredients',                [AdminIngredient::class, 'store'])->name('ingredients.store');
-    Route::patch('/ingredients/{id}',          [AdminIngredient::class, 'update'])->name('ingredients.update');
-    Route::delete('/ingredients/{id}',         [AdminIngredient::class, 'destroy'])->name('ingredients.destroy');
-    Route::post('/ingredients/seed',           [AdminIngredient::class, 'seedFromRecipes'])->name('ingredients.seed');
+    Route::get('/ingredients',                        [AdminIngredient::class, 'index'])->name('ingredients');
+    Route::get('/ingredients/nutrition-lookup',       [AdminIngredient::class, 'nutritionLookup'])->name('ingredients.nutrition_lookup');
+    Route::post('/ingredients',                       [AdminIngredient::class, 'store'])->name('ingredients.store');
+    Route::patch('/ingredients/{id}',                 [AdminIngredient::class, 'update'])->name('ingredients.update');
+    Route::delete('/ingredients/{id}',                [AdminIngredient::class, 'destroy'])->name('ingredients.destroy');
+    Route::post('/ingredients/seed',                  [AdminIngredient::class, 'seedFromRecipes'])->name('ingredients.seed');
 
     Route::get('/modules',                     [AdminModule::class, 'index'])->name('modules');
     Route::patch('/modules/{id}',              [AdminModule::class, 'update'])->name('modules.update');
@@ -88,6 +93,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/categories/{id}',          [AdminCategory::class, 'destroy'])->name('categories.destroy');
 
     Route::get('/stats',                       [AdminStats::class, 'index'])->name('stats');
+
+    Route::get('/pages',                       [AdminPages::class, 'index'])->name('pages');
+    Route::put('/pages',                       [AdminPages::class, 'update'])->name('pages.update');
 });
 
 require __DIR__ . '/auth.php';

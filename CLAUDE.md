@@ -98,6 +98,47 @@ Paginile app folosesc `PageComponent.layout = AppLayout` (persistent layout Iner
 
 **API endpoints:** `/api/recipes`, `/api/user/progress` (GET/PUT), `/api/sync` (POST), `/api/analytics` (POST), `/api/explore` (GET — categorii premium cu locked flag)
 
+## Privacy Policy
+
+Pagina `/privacy-policy` este publică (fără auth) și conținutul ei se editează din `/admin/pages`.
+
+### Stocare
+- Tabel `site_settings` (key/value) — cheia `privacy_policy` conține HTML generat de TipTap.
+- Model `App\Models\SiteSetting` cu helper-e statice `SiteSetting::get($key, $default)` și `SiteSetting::set($key, $value)`.
+
+### Rute
+| Rută | Controller | Descriere |
+|------|-----------|-----------|
+| `GET /privacy-policy` | `PrivacyPolicyController@show` | Pagină publică, fără auth |
+| `GET /admin/pages` | `Admin\PagesController@index` | Editor admin |
+| `PUT /admin/pages` | `Admin\PagesController@update` | Salvare conținut |
+
+### Checkbox register
+- Formularul de înregistrare (`Auth/Login.tsx`) include checkbox „I agree to the Privacy Policy" cu link activ spre `/privacy-policy` (se deschide în tab nou).
+- Butonul Continue este blocat până la bifarea checkbox-ului (validare frontend + backend `accepted`).
+- Câmpul trimis spre backend: `privacy_policy: '1'`.
+- Validare Laravel: `'privacy_policy' => 'accepted'`.
+- Teste: trimite `'privacy_policy' => '1'` în orice test de register.
+
+## UI — Explore (categorii premium)
+
+Pagina `/explore` afișează categoriile premium ca tab-uri orizontale + un panou de detalii cu buton de unlock.
+
+### Convenție obligatorie pentru butoanele de categorie
+
+- **Tab-urile mici** (selector categorie, sus) — afișează **doar numele** categoriei, fără preț.
+- **Butonul mare verde** (Unlock) — afișează **numele + prețul**: `Unlock {Nume} — €{preț}`.
+
+```tsx
+// ✅ Corect
+{cat.name}
+
+// ❌ Greșit — nu afișa prețul în tab
+{cat.name} <span>€{cat.price.toFixed(2)}</span>
+```
+
+Prețul apare o singură dată, în contextul acțiunii de cumpărare (butonul mare), nu în navigarea între categorii. Orice categorie nouă adăugată trebuie să respecte acest pattern.
+
 ## Baza de date — tabele relevante
 
 | Tabel | Scop |
