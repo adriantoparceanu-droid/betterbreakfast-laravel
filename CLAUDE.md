@@ -146,6 +146,14 @@ Paginile app folosesc `PageComponent.layout = AppLayout` (persistent layout Iner
 
 **NU folosi:** Vercel, Supabase, Firebase, Docker — toate incompatibile cu cPanel shared hosting (CloudLinux LVE).
 
+### Reguli OBLIGATORII pentru deploy și migrații
+
+- ❌ **NICIODATĂ** nu copia/sincroniza baza de date locală (SQLite dev) pe serverul live (MySQL producție)
+- ❌ **NICIODATĂ** nu rula `artisan db:seed` pe producție fără aprobare explicită din partea utilizatorului — nici manual, nici prin webhook
+- ❌ **NICIODATĂ** nu include `INSERT` / date hardcodate în fișierele de migrație — migrațiile conțin doar schema (DDL), nu date
+- ✅ Date de producție (module, categorii, rețete) se gestionează exclusiv prin interfața `/admin` de pe live
+- ✅ Deploy-ul standard rulează doar: `git pull` + `composer install --no-dev` + `migrate --force` + `optimize`
+
 ## Analytics
 
 Doar două evenimente: `COMPLETE_DAY` și `SWAP_RECIPE`, cu `anonymousId` anonim. Queue offline în Dexie, flush când e online. Fail silently.
