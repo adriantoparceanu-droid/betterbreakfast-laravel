@@ -725,6 +725,12 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-13) Fix: Today — auto-select robust, rezolvă zombie selection (selectedId setat pe rețetă inexistentă)
 - [x] (2026-05-13) Fix: Plan — eliminat `isLocked`/`foundationDone` care bloca toate zilele; `DEFAULT_USER_PROGRESS.foundationDone = true`
 - [x] (2026-05-13) Fix: `/purchase` redirecționează la `/staples` (nu `/today`) după grant acces sau plată
+- [x] (2026-05-13) Feature: API `/api/recipes` returnează acum câmpurile `substitutions` și `whyThisWorks`
+- [x] (2026-05-13) Feature: Today — afișează secțiunile Substitutions și Why this works (din rich text) când sunt prezente
+- [x] (2026-05-13) Fix: Today/Plan — nutrition grid protejat cu null-check (nu mai crăpă când lipsesc date nutriționale)
+- [x] (2026-05-13) Feature: Plan — auto-asignare rețete pentru zilele necompletate la mount
+- [x] (2026-05-13) Feature: Admin Recipes — filtre module / categorie / status cu buton Clear filters
+- [x] (2026-05-13) UI: Login — înlocuit emoji 🥣 cu ilustrație SVG ou prăjit; tagline actualizat
 
 ### In Progress / Planned
 

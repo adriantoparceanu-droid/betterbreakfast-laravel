@@ -24,24 +24,83 @@ interface CategoryOption { id: string; name: string; module_id: string; }
 
 interface Props { recipes: RecipeRow[]; modules: ModuleOption[]; categories: CategoryOption[]; }
 
-export default function AdminRecipes({ recipes }: Props) {
+export default function AdminRecipes({ recipes, modules, categories }: Props) {
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+    const [filterModule,   setFilterModule]   = useState('');
+    const [filterCategory, setFilterCategory] = useState('');
+    const [filterStatus,   setFilterStatus]   = useState('');
 
     const toggle  = (id: string) => router.patch(route('admin.recipes.toggle', { id }));
     const destroy = (id: string) => router.delete(route('admin.recipes.destroy', { id }), {
         onSuccess: () => setConfirmDelete(null),
     });
 
+    const visibleCategories = filterModule
+        ? categories.filter(c => c.module_id === filterModule)
+        : categories;
+
+    const filtered = recipes.filter(r => {
+        if (filterModule   && r.module?.id   !== filterModule)   return false;
+        if (filterCategory && r.category?.id !== filterCategory) return false;
+        if (filterStatus === 'active'   && !r.isActive) return false;
+        if (filterStatus === 'inactive' &&  r.isActive) return false;
+        return true;
+    });
+
+    const hasFilter = filterModule || filterCategory || filterStatus;
+
     return (
         <div className="p-8">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-1">Recipes</h1>
-                    <p className="text-sm text-gray-400">{recipes.length} recipes</p>
+                    <p className="text-sm text-gray-400">
+                        {hasFilter ? `${filtered.length} of ${recipes.length}` : recipes.length} recipes
+                    </p>
                 </div>
                 <Button size="sm" onClick={() => router.visit(route('admin.recipes.create'))}>
                     + Add Recipe
                 </Button>
+            </div>
+
+            {/* ─── Filters ─────────────────────────────────────────────── */}
+            <div className="flex flex-wrap items-center gap-2 mb-5">
+                <select
+                    value={filterModule}
+                    onChange={e => { setFilterModule(e.target.value); setFilterCategory(''); }}
+                    className="text-sm border border-gray-200 rounded-xl px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                >
+                    <option value="">All modules</option>
+                    {modules.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+
+                <select
+                    value={filterCategory}
+                    onChange={e => setFilterCategory(e.target.value)}
+                    className="text-sm border border-gray-200 rounded-xl px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                >
+                    <option value="">All categories</option>
+                    {visibleCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+
+                <select
+                    value={filterStatus}
+                    onChange={e => setFilterStatus(e.target.value)}
+                    className="text-sm border border-gray-200 rounded-xl px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                >
+                    <option value="">All statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+
+                {hasFilter && (
+                    <button
+                        onClick={() => { setFilterModule(''); setFilterCategory(''); setFilterStatus(''); }}
+                        className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1.5 transition-colors"
+                    >
+                        Clear filters
+                    </button>
+                )}
             </div>
 
             <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -57,7 +116,14 @@ export default function AdminRecipes({ recipes }: Props) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {recipes.map((r) => (
+                        {filtered.length === 0 && (
+                            <tr>
+                                <td colSpan={6} className="px-5 py-10 text-center text-sm text-gray-400">
+                                    No recipes match the selected filters.
+                                </td>
+                            </tr>
+                        )}
+                        {filtered.map((r) => (
                             <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-5 py-3 text-gray-400 font-mono text-xs">{r.sortOrder}</td>
                                 <td className="px-5 py-3">

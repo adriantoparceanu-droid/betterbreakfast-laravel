@@ -41,6 +41,8 @@ export interface Recipe {
     steps: string[];
     nutrition: Nutrition;
     tags: string[];
+    substitutions?: string;
+    whyThisWorks?: string;
 }
 
 // ─── User Progress ────────────────────────────────────────────────────────────

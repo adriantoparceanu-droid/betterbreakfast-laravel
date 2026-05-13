@@ -81,20 +81,22 @@ export default function TodayPage() {
                     </div>
                     <div>
                         <h2 className="text-xl font-bold text-gray-900 mb-2">{recipe.name}</h2>
-                        <div className="grid grid-cols-5 gap-1 text-center">
-                            {[
-                                { label: 'Cal',    value: Math.round(recipe.nutrition.calories * scale) },
-                                { label: 'Protein',value: `${Math.round(recipe.nutrition.protein * scale)}g` },
-                                { label: 'Carbs',  value: `${Math.round(recipe.nutrition.carbs * scale)}g` },
-                                { label: 'Fat',    value: `${Math.round(recipe.nutrition.fat * scale)}g` },
-                                { label: 'Fiber',  value: `${Math.round(recipe.nutrition.fiber * scale)}g` },
-                            ].map(({ label, value }) => (
-                                <div key={label} className="bg-gray-50 rounded-2xl py-2 px-1">
-                                    <p className="text-sm font-bold text-gray-900">{value}</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">{label}</p>
-                                </div>
-                            ))}
-                        </div>
+                        {recipe.nutrition && (
+                            <div className="grid grid-cols-5 gap-1 text-center">
+                                {[
+                                    { label: 'Cal',    value: Math.round(recipe.nutrition.calories * scale) },
+                                    { label: 'Protein',value: `${Math.round(recipe.nutrition.protein * scale)}g` },
+                                    { label: 'Carbs',  value: `${Math.round(recipe.nutrition.carbs * scale)}g` },
+                                    { label: 'Fat',    value: `${Math.round(recipe.nutrition.fat * scale)}g` },
+                                    { label: 'Fiber',  value: `${Math.round(recipe.nutrition.fiber * scale)}g` },
+                                ].map(({ label, value }) => (
+                                    <div key={label} className="bg-gray-50 rounded-2xl py-2 px-1">
+                                        <p className="text-sm font-bold text-gray-900">{value}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3">
@@ -144,6 +146,26 @@ export default function TodayPage() {
                             ))}
                         </div>
                     </div>
+
+                    {recipe.substitutions && (
+                        <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4">
+                            <h3 className="text-sm font-bold text-gray-900 mb-2">Substitutions</h3>
+                            <div
+                                className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{ __html: recipe.substitutions }}
+                            />
+                        </div>
+                    )}
+
+                    {recipe.whyThisWorks && (
+                        <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4">
+                            <h3 className="text-sm font-bold text-gray-900 mb-2">Why this works</h3>
+                            <div
+                                className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{ __html: recipe.whyThisWorks }}
+                            />
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="px-4 flex items-center justify-center py-20">

@@ -26,6 +26,8 @@ export interface Recipe {
     steps: string[];
     nutrition: Nutrition;
     tags: string[];
+    substitutions?: string;
+    whyThisWorks?: string;
 }
 
 export type CheckInMood = 'energized' | 'full' | 'hungry';
