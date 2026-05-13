@@ -98,4 +98,29 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/pages',                       [AdminPages::class, 'update'])->name('pages.update');
 });
 
+// Temporary: export recipes from module-breakfast-10day — remove after local import
+Route::get('/export-recipes', function (\Illuminate\Http\Request $request) {
+    if ($request->query('token') !== 'bb-export-2026') {
+        abort(403);
+    }
+
+    $module = \Illuminate\Support\Facades\DB::table('modules')
+        ->where('slug', 'module-breakfast-10day')
+        ->first();
+
+    if (!$module) {
+        return response()->json(['error' => 'Module not found'], 404);
+    }
+
+    $recipes = \App\Models\Recipe::where('module_id', $module->id)
+        ->orderBy('sort_order')
+        ->get();
+
+    return response()->json([
+        'module' => ['id' => $module->id, 'slug' => $module->slug, 'name' => $module->name],
+        'recipes' => $recipes,
+        'exported_at' => now()->toISOString(),
+    ]);
+});
+
 require __DIR__ . '/auth.php';
