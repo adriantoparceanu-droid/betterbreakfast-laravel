@@ -19,7 +19,7 @@ import { Input } from '@/Components/ui/Input';
 import RichTextEditor from '@/Components/ui/RichTextEditor';
 import {
     METRIC_UNITS, IMPERIAL_UNITS, UNIVERSAL_UNITS,
-    convertForForm, toGrams,
+    convertForForm, toGrams, WHOLE_GRAMS,
     type UnitSystem,
 } from '@/data/units';
 import type { Nutrition, Ingredient, IngredientCategory } from '@/types/app';
@@ -242,8 +242,18 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
             const master = masterMap.get(ing.name.toLowerCase());
             if (!master) { warnings.push(`"${ing.name}" not in ingredient list`); continue; }
             if (master.caloriesPer100g === null) { warnings.push(`"${ing.name}" has no nutrition data`); continue; }
-            const grams = toGrams(Number(ing.quantity), ing.unit);
-            if (grams === null) { warnings.push(`"${ing.name}" uses unit "${ing.unit}" — can't convert to grams`); continue; }
+            let grams = toGrams(Number(ing.quantity), ing.unit);
+            if (grams === null) {
+                const key = ing.name.toLowerCase().trim();
+                const wholeG = WHOLE_GRAMS[key]
+                    ?? Object.entries(WHOLE_GRAMS).find(([k]) => key.includes(k))?.[1];
+                if (wholeG !== undefined) {
+                    grams = Number(ing.quantity) * wholeG;
+                } else {
+                    warnings.push(`"${ing.name}" uses unit "${ing.unit}" — can't convert to grams`);
+                    continue;
+                }
+            }
             const factor = grams / 100;
             totalCals  += (master.caloriesPer100g ?? 0) * factor;
             totalProt  += (master.proteinPer100g  ?? 0) * factor;

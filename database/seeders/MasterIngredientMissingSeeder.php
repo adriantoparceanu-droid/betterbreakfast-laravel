@@ -39,6 +39,7 @@ class MasterIngredientMissingSeeder extends Seeder
             ['Cinnamon, ground',                           'Condiments',         247,  4.0,  1.2,  80.6, 53.1],
             ['Protein powder (whey)',                      'Proteins',           400,  80.0, 7.0,  8.0,  0.0],
             ['Olives',                                     'Fats, Nuts & Seeds', 115,  0.8,  10.9, 6.3,  3.2],
+            ['Lemon juice',                                'Condiments',         22,   0.4,  0.2,  6.9,  0.3],
         ];
 
         $added   = 0;

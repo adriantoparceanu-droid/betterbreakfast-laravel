@@ -738,6 +738,8 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-13) DB: Creat tabela site_settings (key/value) pentru conținut editabil
 - [x] (2026-05-13) DB: Redenumit categorii ingrediente — Grains → Grains & Legumes, Seeds & Nuts → Fats, Nuts & Seeds
 - [x] (2026-05-13) Config: USDA FDC API key adăugat în config/services.php
+- [x] (2026-05-13) Fix: Calculate from ingredients — toGrams() acum convertește unitățile universale (handful, pinch, dash, whole etc.) cu lookup WHOLE_GRAMS per ingredient
+- [x] (2026-05-13) Fix: Calculate from ingredients — adăugat "Lemon juice" în master_ingredients (era lipsă, rețeta îl referencia ca "Lemon juice" nu "Lemon, juiced")
 
 ### In Progress / Planned
 
