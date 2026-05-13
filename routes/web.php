@@ -99,7 +99,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Temporary: one-time nutrition seeder — remove after running on live
     Route::get('/run-nutrition-seeder', function () {
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'MasterIngredientNutritionSeeder']);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'MasterIngredientNutritionSeeder', '--force' => true]);
         return '<pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre>';
     })->name('run_nutrition_seeder');
 });
