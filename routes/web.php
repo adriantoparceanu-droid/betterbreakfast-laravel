@@ -109,7 +109,8 @@ Route::get('/export-recipes', function (\Illuminate\Http\Request $request) {
         ->first();
 
     if (!$module) {
-        return response()->json(['error' => 'Module not found'], 404);
+        $all = \Illuminate\Support\Facades\DB::table('modules')->get(['id', 'slug', 'name']);
+        return response()->json(['error' => 'Module not found', 'available_modules' => $all], 404);
     }
 
     $recipes = \App\Models\Recipe::where('module_id', $module->id)
