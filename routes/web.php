@@ -96,19 +96,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/pages',                       [AdminPages::class, 'index'])->name('pages');
     Route::put('/pages',                       [AdminPages::class, 'update'])->name('pages.update');
-
-    // Temporary: one-time nutrition seeder — remove after running on live
-    Route::get('/run-nutrition-seeder', function () {
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'MasterIngredientNutritionSeeder', '--force' => true]);
-        return '<pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre>';
-    })->name('run_nutrition_seeder');
-
-    // Temporary: dump live ingredient names — remove after use
-    Route::get('/list-ingredients', function () {
-        $rows = \App\Models\MasterIngredient::orderBy('name')->get(['id', 'name', 'calories_per_100g']);
-        $out = $rows->map(fn($r) => sprintf('%3d | %-40s | kcal: %s', $r->id, $r->name, $r->calories_per_100g ?? 'null'))->implode("\n");
-        return '<pre>' . $out . '</pre>';
-    })->name('list_ingredients');
 });
 
 require __DIR__ . '/auth.php';
