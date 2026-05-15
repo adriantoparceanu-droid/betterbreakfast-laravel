@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\StripeController;
 use App\Http\Controllers\TodayController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\StaplesController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Admin\ModuleController as AdminModule;
 use App\Http\Controllers\Admin\IngredientController as AdminIngredient;
 use App\Http\Controllers\Admin\StatsController as AdminStats;
 use App\Http\Controllers\ExploreController;
+use App\Http\Controllers\FoundationDayController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\Admin\PagesController as AdminPages;
@@ -41,12 +43,14 @@ Route::middleware('auth')->group(function () {
 
     // Purchase gate — accessible before module access
     Route::get('/purchase', [PurchaseController::class, 'show'])->name('purchase');
+    Route::post('/purchase/checkout', [StripeController::class, 'createCheckoutSession'])->name('purchase.checkout');
 
     // Explore — accessible without module access (premium category browser)
     Route::get('/explore', [ExploreController::class, 'show'])->name('explore');
 
     // Module-gated routes
     Route::middleware('module.access')->group(function () {
+        Route::get('/foundation-day',     [FoundationDayController::class, 'show'])->name('foundation-day');
         Route::get('/today',              [TodayController::class,   'show'])->name('today');
         Route::get('/plan',               [PlanController::class,    'show'])->name('plan');
         Route::get('/staples',            [StaplesController::class, 'show'])->name('staples');
@@ -97,5 +101,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/pages',                       [AdminPages::class, 'index'])->name('pages');
     Route::put('/pages',                       [AdminPages::class, 'update'])->name('pages.update');
 });
+
+// Stripe webhook — no auth, no CSRF (excluded in bootstrap/app.php)
+Route::post('/webhook/stripe', [StripeController::class, 'webhook'])->name('webhook.stripe');
 
 require __DIR__ . '/auth.php';

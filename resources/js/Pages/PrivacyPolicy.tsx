@@ -22,7 +22,7 @@ export default function PrivacyPolicy({ content }: Props) {
 
                 {content ? (
                     <div
-                        className="prose prose-sm max-w-none text-gray-700"
+                        className="text-sm text-gray-700 leading-relaxed rte-display"
                         dangerouslySetInnerHTML={{ __html: content }}
                     />
                 ) : (

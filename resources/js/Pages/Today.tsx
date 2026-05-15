@@ -151,7 +151,7 @@ export default function TodayPage() {
                         <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4">
                             <h3 className="text-sm font-bold text-gray-900 mb-2">Substitutions</h3>
                             <div
-                                className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                                className="text-sm text-gray-700 leading-relaxed rte-display"
                                 dangerouslySetInnerHTML={{ __html: recipe.substitutions }}
                             />
                         </div>
@@ -161,7 +161,7 @@ export default function TodayPage() {
                         <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4">
                             <h3 className="text-sm font-bold text-gray-900 mb-2">Why this works</h3>
                             <div
-                                className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                                className="text-sm text-gray-700 leading-relaxed rte-display"
                                 dangerouslySetInnerHTML={{ __html: recipe.whyThisWorks }}
                             />
                         </div>

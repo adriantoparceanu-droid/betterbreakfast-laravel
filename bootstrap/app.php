@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // cPanel terminates SSL at the load balancer — trust all proxy headers
         $middleware->trustProxies(at: '*');
 
+        $middleware->validateCsrfTokens(except: [
+            'webhook/stripe',
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,

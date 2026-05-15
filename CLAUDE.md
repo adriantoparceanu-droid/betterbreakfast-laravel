@@ -1,5 +1,9 @@
 # Better Breakfast — CLAUDE.md
 
+## Limbă de comunicare
+
+**Răspunsurile Claude sunt întotdeauna în română.** Interfața aplicației este în engleză, dar toate conversațiile și explicațiile sunt în română.
+
 ## Project overview
 
 **Better Breakfast** este un PWA offline-first care livrează un plan de mic dejun de 10 zile. Spec complet: `docs/BUILD_SPEC.md`.
@@ -13,6 +17,7 @@
 - **Routing React:** Ziggy (`route()` helper)
 - **Animații:** Framer Motion v11
 - **Forms:** React Hook Form v7 + Zod v3
+- **Plăți:** Stripe Checkout (hosted) — `stripe/stripe-php` v20
 
 ## Dev
 
@@ -44,17 +49,46 @@ php artisan serve       # (opțional, Herd gestionează)
 
 **Flux nou user:**
 ```
-Register → Onboarding → /staples → middleware EnsureModuleAccess
-    → redirect /purchase (dacă fără acces)
-    → admin acordă acces manual după confirmare plată
-    → user reîncarcă /purchase → redirect automat /staples
+Register → /purchase → Stripe Checkout → plată card
+    → webhook checkout.session.completed → acces acordat automat în user_modules
+    → /purchase?stripe_success=1 → PurchaseController redirect → /onboarding
+    → /onboarding (setup servings) → /staples
 ```
 
-**Redirect după acces:** `PurchaseController` redirecționează la `/staples` (nu `/today`) când user-ul are deja acces — indiferent dacă vine din grant admin sau din reîncărcare după plată.
+**Redirect după acces:** `PurchaseController` verifică `foundation_done`:
+- `false` → redirect `/onboarding` (user nou, nu a setat serving-urile)
+- `true` → redirect `/staples` (user existent, a trecut deja prin onboarding)
+
+**Admin bypass:** Admins bypass automat middleware-ul — au acces la tot fără intrare în `user_modules`.
+
+**Fallback manual:** Adminul poate acorda/revoca accesul manual din `/admin/users` pentru cazuri excepționale (rambursări, erori tehnice).
 
 **Prețurile** sunt configurabile din `/admin/modules` și `/admin/categories` — nu sunt hardcodate.
 
-**Admins bypass** automat middleware-ul — au acces la tot fără intrare în `user_modules`.
+## Stripe — integrare plăți
+
+| Variabilă env | Descriere |
+|--------------|-----------|
+| `STRIPE_KEY` | Publishable key (pk_test_... / pk_live_...) |
+| `STRIPE_SECRET` | Secret key (sk_test_... / sk_live_...) |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret pentru verificare webhook (whsec_...) |
+
+**Controller:** `App\Http\Controllers\StripeController`
+- `POST /purchase/checkout` → `createCheckoutSession()` → redirect Stripe via `Inertia::location()`
+- `POST /webhook/stripe` → `webhook()` — fără auth, fără CSRF (exclus în `bootstrap/app.php`)
+
+**Webhook local (dev):**
+```bash
+stripe listen --forward-to betterbreakfast.test/webhook/stripe
+```
+`STRIPE_WEBHOOK_SECRET` local (whsec_...) e diferit de cel de producție — se actualizează la fiecare sesiune `stripe listen`.
+
+**Eveniment webhook relevant:** `checkout.session.completed`
+- Verifică semnătura cu `Stripe\Webhook::constructEvent()`
+- Citește `metadata.user_id` și `metadata.module_id`
+- Inserează în `user_modules` cu `insertOrIgnore`
+
+**Card de test Stripe:** `4242 4242 4242 4242`, orice dată viitoare, orice CVC.
 
 ## Structura frontend
 
@@ -119,6 +153,36 @@ Pagina `/privacy-policy` este publică (fără auth) și conținutul ei se edite
 - Câmpul trimis spre backend: `privacy_policy: '1'`.
 - Validare Laravel: `'privacy_policy' => 'accepted'`.
 - Teste: trimite `'privacy_policy' => '1'` în orice test de register.
+
+## Afișarea conținutului rich text (TipTap HTML)
+
+**`@tailwindcss/typography` NU este instalat** și NU trebuie instalat. Clasa `prose` din Tailwind nu funcționează fără plugin — nu o folosi.
+
+### Pattern obligatoriu pentru render HTML din TipTap
+
+Orice loc care afișează HTML salvat din `RichTextEditor` (substitutions, whyThisWorks, privacy policy etc.) **trebuie** să folosească clasa CSS `.rte-display`, definită în `resources/css/app.css`:
+
+```tsx
+// ✅ Corect — pentru afișare read-only a conținutului TipTap
+<div
+    className="text-sm text-gray-700 leading-relaxed rte-display"
+    dangerouslySetInnerHTML={{ __html: content }}
+/>
+
+// ❌ Greșit — prose nu are efect, nu e instalat pluginul typography
+<div
+    className="prose prose-sm max-w-none text-gray-700"
+    dangerouslySetInnerHTML={{ __html: content }}
+/>
+```
+
+### CSS classes
+| Clasă | Unde | Efect |
+|-------|------|-------|
+| `.rte-content` | `RichTextEditor` (editor TipTap) | Stilizare + placeholder |
+| `.rte-display` | Pagini user (Today, PrivacyPolicy etc.) | Stilizare read-only |
+
+Ambele sunt definite în `resources/css/app.css` și partajează aceleași reguli de bază (bold, italic, liste). `.rte-display` adaugă suport pentru headings (h1/h2/h3) pentru pagini cu conținut lung (e.g. Privacy Policy).
 
 ## UI — Explore (categorii premium)
 

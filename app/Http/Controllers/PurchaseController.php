@@ -15,10 +15,17 @@ class PurchaseController extends Controller
         $user = $request->user();
 
         if ($user->isAdmin() || $user->modules()->where('slug', 'breakfast-10-day')->exists()) {
-            return redirect()->route('staples');
+            $onboardingDone = $user->progress?->foundation_done ?? false;
+            return redirect()->route($onboardingDone ? 'staples' : 'onboarding');
         }
 
         $module = Module::where('slug', 'breakfast-10-day')->firstOrFail();
+
+        $stripeStatus = match (true) {
+            $request->has('stripe_success')  => 'success',
+            $request->has('stripe_canceled') => 'canceled',
+            default                          => null,
+        };
 
         return Inertia::render('Purchase', [
             'module' => [
@@ -26,6 +33,7 @@ class PurchaseController extends Controller
                 'description' => $module->description,
                 'price'       => $module->price,
             ],
+            'stripeStatus' => $stripeStatus,
         ]);
     }
 }

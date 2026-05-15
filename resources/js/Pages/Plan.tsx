@@ -7,7 +7,7 @@ import AppLayout from '@/Layouts/AppLayout';
 
 export default function PlanPage() {
     const { progress, updateProgress } = useUserStore();
-    const { currentDay, completedDays, selectedRecipes, checkIns } = progress;
+    const { currentDay, completedDays, selectedRecipes, checkIns, foundationDone, foundationChecked } = progress;
     const recipes = useRecipes();
     const recipeMap = new Map(recipes.map((r) => [r.id, r]));
 
@@ -46,6 +46,28 @@ export default function PlanPage() {
             </div>
 
             <div className="px-4 flex flex-col gap-2">
+                {/* Day 0 — Foundation Day */}
+                <div
+                    onClick={() => router.visit(route('foundation-day'))}
+                    className={cn('bg-white border rounded-2xl px-4 py-3 flex items-center gap-3 transition-all duration-150 cursor-pointer',
+                        foundationDone ? 'border-gray-100 hover:border-gray-200' : 'border-brand-300 ring-1 ring-brand-200 shadow-sm hover:border-brand-400'
+                    )}
+                >
+                    <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0',
+                        foundationDone ? 'bg-brand-500 text-white' : 'bg-brand-100 text-brand-700')}>
+                        {foundationDone ? '✓' : '0'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className={cn('font-semibold text-sm', foundationDone ? 'text-gray-500' : 'text-gray-900')}>Foundation Day</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                            {foundationDone ? 'Prep complete' : `${foundationChecked.length}/9 steps done`}
+                        </p>
+                    </div>
+                    {!foundationDone && (
+                        <span className="shrink-0 text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Prep</span>
+                    )}
+                </div>
+
                 {Array.from({ length: 10 }, (_, i) => i + 1).map((day) => {
                     const isDone   = completedDays.includes(day);
                     const isToday  = day === currentDay;

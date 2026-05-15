@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { router } from '@inertiajs/react';
 
 interface Module {
@@ -8,6 +9,7 @@ interface Module {
 
 interface Props {
     module: Module;
+    stripeStatus?: 'success' | 'canceled' | null;
 }
 
 const INCLUDED = [
@@ -18,10 +20,15 @@ const INCLUDED = [
     'Swap recipes you don\'t like',
 ];
 
-export default function Purchase({ module }: Props) {
-    const mailSubject = `Purchase: ${module.name}`;
-    const mailBody    = `Hi,\n\nI'd like to purchase access to the ${module.name} (€${module.price.toFixed(2)}).\n\nMy registered email is: `;
-    const mailtoHref  = `mailto:hello@betterbreakfast.eu?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(mailBody)}`;
+export default function Purchase({ module, stripeStatus }: Props) {
+    const [loading, setLoading] = useState(false);
+
+    const handleCheckout = () => {
+        setLoading(true);
+        router.post(route('purchase.checkout'), {}, {
+            onError: () => setLoading(false),
+        });
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-10">
@@ -29,11 +36,31 @@ export default function Purchase({ module }: Props) {
 
                 {/* Logo / brand */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-3xl bg-brand-500 text-white text-2xl mb-3">
-                        🥣
+                    <div className="flex justify-center mb-3">
+                        <img src="/icons/egg.png" alt="Better Breakfast" width={80} height={80} className="object-contain" />
                     </div>
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Better Breakfast</p>
                 </div>
+
+                {/* Status banners */}
+                {stripeStatus === 'success' && (
+                    <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 mb-4 text-center">
+                        <p className="text-sm font-semibold text-green-700 mb-1">Payment confirmed!</p>
+                        <p className="text-xs text-green-600">Your access is being activated. Reload in a few seconds.</p>
+                        <button
+                            onClick={() => router.visit(route('purchase'))}
+                            className="mt-3 text-xs font-semibold text-green-700 underline underline-offset-2"
+                        >
+                            Check my access →
+                        </button>
+                    </div>
+                )}
+
+                {stripeStatus === 'canceled' && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 mb-4 text-center">
+                        <p className="text-sm text-amber-700">Payment was canceled. You can try again below.</p>
+                    </div>
+                )}
 
                 {/* Card */}
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-4">
@@ -63,14 +90,22 @@ export default function Purchase({ module }: Props) {
                             <span className="text-3xl font-bold text-gray-900">€{module.price.toFixed(2)}</span>
                             <span className="text-sm text-gray-400">one-time</span>
                         </div>
-                        <a
-                            href={mailtoHref}
-                            className="block w-full text-center py-3.5 rounded-2xl bg-brand-500 text-white font-semibold text-sm hover:bg-brand-600 active:scale-[0.98] transition-all"
+                        <button
+                            onClick={handleCheckout}
+                            disabled={loading}
+                            className="w-full flex items-center justify-center py-3.5 rounded-2xl bg-brand-500 text-white font-semibold text-sm hover:bg-brand-600 active:scale-[0.98] transition-all disabled:opacity-60 disabled:pointer-events-none gap-2"
                         >
-                            Purchase access — €{module.price.toFixed(2)}
-                        </a>
+                            {loading ? (
+                                <>
+                                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Redirecting to Stripe…
+                                </>
+                            ) : (
+                                `Purchase access — €${module.price.toFixed(2)}`
+                            )}
+                        </button>
                         <p className="text-xs text-gray-400 text-center mt-3">
-                            Send us an email and we'll activate your account within 24h.
+                            Secure payment via Stripe. One-time charge, no subscription.
                         </p>
                     </div>
                 </div>

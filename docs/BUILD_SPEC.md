@@ -29,14 +29,14 @@ Better Breakfast is a mobile-first web app (PWA-style) delivering a 10-day guide
 | 10-Day Breakfast Plan (Module 1) | `breakfast-10-day` | €9.99 one-time | Full app (Today, Plan, Staples) |
 | Premium Recipes (Module 2) | `breakfast-premium` | per-category | Explore screen premium categories |
 
-**Payment flow:** Email-based manual payment. User sends an email to `hello@betterbreakfast.eu`, admin grants access manually via the admin panel.
+**Payment flow:** Stripe Checkout (hosted). User plătește online cu cardul → Stripe trimite webhook `checkout.session.completed` → Laravel acordă accesul automat în `user_modules`. Admin poate acorda/revoca accesul manual din `/admin/users` (pentru cazuri excepționale).
 
-**Access gate:** After registration → Onboarding → attempts to access any module-gated route → redirected to `/purchase` screen.
+**Access gate:** After registration → `/purchase` → Stripe Checkout → webhook → `/onboarding` → `/staples`.
 
 ### Registration & Onboarding Flow
 
 ```
-Register → Onboarding → /staples (module.access middleware) → /purchase if no access
+Register → /purchase → Stripe Checkout → webhook acordă acces → /onboarding → /staples
 ```
 
 Admins bypass all access checks automatically.
@@ -375,15 +375,18 @@ Shown to authenticated users without Module 1 access when they try to access any
   - Offline access — works without internet
   - Swap recipes you don't like
 - Price: `€9.99 one-time`
-- CTA button: `Purchase access — €9.99` → opens mailto link to `hello@betterbreakfast.eu` with pre-filled subject/body (user fills in their registered email)
-- Footer note: *"Send us an email and we'll activate your account within 24h."*
-- "Already purchased? Contact us to activate" link
+- CTA button: `Purchase access — €9.99` → `POST /purchase/checkout` → redirect Stripe Checkout
+- Footer note: *"Secure payment via Stripe. One-time charge, no subscription."*
+- Banner `stripe_success=1`: "Payment confirmed! Your access is being activated." + buton "Check my access"
+- Banner `stripe_canceled=1`: "Payment was canceled. You can try again."
+- "Already purchased? Contact us to activate" link (fallback suport)
 - Sign out button
 
 **Redirect logic (PurchaseController):**
-- Admin → redirect to `today`
-- User with module access → redirect to `today`
-- User without access → render Purchase screen
+- Admin → redirect la `onboarding` (dacă `foundation_done = false`) sau `staples`
+- User cu acces modul + `foundation_done = true` → redirect la `staples`
+- User cu acces modul + `foundation_done = false` → redirect la `onboarding`
+- User fără acces → render Purchase screen
 
 ---
 
@@ -430,7 +433,7 @@ Accessible to all authenticated users (even without Module 1 access). Shows Modu
 - ❌ No inventory tracking
 - ❌ No gamification
 - ❌ No prep time displayed anywhere
-- ❌ No Stripe/online payments — email-based manual payment only
+- ❌ No subscriptions — doar one-time payment per modul/categorie
 
 ---
 
@@ -675,12 +678,12 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 | Unit system stored in recipe? | No — only the unit string is stored (e.g. `"tsp"`). System toggle is a UI-only helper for the admin |
 | Ingredient name blocks save? | No — adding to master list is optional; admin can type a free name and still save the recipe |
 | Module 1 price | €9.99 one-time — NOT free, never will be |
-| Payment method | Email-based manual payment → admin grants access in admin panel |
+| Payment method | Stripe Checkout (hosted) → webhook acordă acces automat; admin poate gestiona manual din `/admin/users` |
 | Module 2 structure | Per-category access at different prices |
 | Explore accessibility | `/explore` accessible without Module 1 — lets users browse before paying |
 | Category navigation | Horizontal scrolling pills |
 | Number of categories at launch | 3–5 |
-| Online payments | Not implemented — email only |
+| Online payments | Implementat via Stripe Checkout — `stripe/stripe-php` v20, webhook `checkout.session.completed` |
 | Admin bypass | Admins bypass `module.access` and `purchase` gate automatically |
 
 ---
@@ -702,7 +705,7 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] Admin: Per-user category grant/revoke
 - [x] Admin: Role toggle (admin/user)
 - [x] Module 1 paid access gate (`EnsureModuleAccess` middleware)
-- [x] Purchase screen (email CTA, standalone no-nav gate page)
+- [x] Purchase screen (Stripe Checkout CTA, standalone no-nav gate page)
 - [x] Explore screen (Module 2 categories, locked/unlocked state, unlock modal)
 - [x] DB: `recipe_categories`, `user_categories` tables + migrations
 - [x] Seeder: Module 2 `breakfast-premium` + 3 categories + 10 premium recipes
@@ -740,6 +743,17 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-13) Config: USDA FDC API key adăugat în config/services.php
 - [x] (2026-05-13) Fix: Calculate from ingredients — toGrams() acum convertește unitățile universale (handful, pinch, dash, whole etc.) cu lookup WHOLE_GRAMS per ingredient
 - [x] (2026-05-13) Fix: Calculate from ingredients — adăugat "Lemon juice" în master_ingredients (era lipsă, rețeta îl referencia ca "Lemon juice" nu "Lemon, juiced")
+- [x] (2026-05-15) UI: Onboarding — redesign complet cu copy marketing, bullets beneficii, picker persoane, buton "Set up my kitchen"
+- [x] (2026-05-15) UI: Purchase + Onboarding — înlocuit emoji 🥣 / cerc verde cu egg.png (consistent cu Login)
+- [x] (2026-05-15) Flow: Register → Purchase (nu Onboarding) → după acces acordat → Onboarding → Staples
+- [x] (2026-05-15) Feature: Stripe Checkout integration — `stripe/stripe-php` v20, `StripeController` cu `createCheckoutSession()` + `webhook()`
+- [x] (2026-05-15) Feature: Webhook `POST /webhook/stripe` — verificare semnătură, event `checkout.session.completed`, acordare acces automat în `user_modules`
+- [x] (2026-05-15) Config: `STRIPE_KEY`, `STRIPE_SECRET`, `STRIPE_WEBHOOK_SECRET` în `.env` + `config/services.php`
+- [x] (2026-05-15) Config: Stripe CLI instalat și autentificat; `stripe listen` configurat pentru testare locală
+- [x] (2026-05-16) UI: Staples — header redesign: titlu + contor pe aceeași linie, card alb cu progress bar, text descriptiv, butoane Go to Foundation Day + Skip for now
+- [x] (2026-05-16) Feature: Foundation Day — pagină completă (`/foundation-day`) cu 9 pași pe 3 secțiuni (Cook / Wash & Prep / Finishing Touches), progress bar, checklist persistent în Zustand
+- [x] (2026-05-16) Feature: Plan — card Day 0 (Foundation Day) afișat deasupra zilelor 1–10, clickabil permanent, arată progresul pașilor bifați
+- [x] (2026-05-16) Feature: Staples → Foundation Day button activ cu route real
 
 ### In Progress / Planned
 

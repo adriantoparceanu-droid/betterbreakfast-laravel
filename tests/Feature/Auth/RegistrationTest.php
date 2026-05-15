@@ -28,7 +28,7 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('onboarding'));
+        $response->assertRedirect(route('purchase'));
     }
 
     public function test_registration_requires_unique_email(): void

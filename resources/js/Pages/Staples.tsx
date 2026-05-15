@@ -62,14 +62,37 @@ export default function StaplesPage() {
     return (
         <div className="flex flex-col pb-nav">
             <div className="px-4 pt-4 pb-3">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900">Staples</h1>
-                    <button onClick={() => router.visit(route('plan'))} className="text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 px-3 py-1.5 rounded-xl transition-all duration-150">View plan</button>
-                </div>
-                <p className="text-sm text-gray-400 mt-0.5">Full 10-day plan · {checkedCount}/{ingredients.length} items checked</p>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mt-3">
-                    <div className="h-full bg-brand-500 rounded-full transition-all duration-300"
-                        style={{ width: `${ingredients.length > 0 ? (checkedCount / ingredients.length) * 100 : 0}%` }} />
+                <div className="bg-white border border-gray-100 rounded-2xl px-4 pt-4 pb-4">
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-2xl font-bold text-gray-900">Staples</h1>
+                        <p className="text-sm text-gray-400 text-right">Full 10-day plan · {checkedCount}/{ingredients.length} items checked</p>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mt-3">
+                        <div className="h-full bg-brand-500 rounded-full transition-all duration-300"
+                            style={{ width: `${ingredients.length > 0 ? (checkedCount / ingredients.length) * 100 : 0}%` }} />
+                    </div>
+                    <div className="mt-3 space-y-1">
+                        <p className="text-sm text-gray-500 leading-relaxed">
+                            This is your ingredient list for the next 10 breakfasts, adjusted to the number of people you cook for. Check what you already have and buy the rest.
+                        </p>
+                        <p className="text-sm text-gray-400 leading-relaxed">
+                            When you're ready, go to <span className="font-semibold text-brand-600">Foundation Day</span> — a short prep session for the week ahead.
+                        </p>
+                    </div>
+                    <div className="mt-4 flex flex-col items-center gap-2">
+                        <button
+                            onClick={() => router.visit(route('foundation-day'))}
+                            className="w-full py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold transition-colors hover:bg-brand-600 active:bg-brand-700"
+                        >
+                            Go to Foundation Day
+                        </button>
+                        <button
+                            onClick={() => router.visit(route('plan'))}
+                            className="text-xs text-gray-400 hover:text-gray-600 transition-colors duration-150"
+                        >
+                            Skip for now
+                        </button>
+                    </div>
                 </div>
             </div>
 
