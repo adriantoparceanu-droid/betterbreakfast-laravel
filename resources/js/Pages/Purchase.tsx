@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 
 interface Module {
@@ -22,6 +22,15 @@ const INCLUDED = [
 
 export default function Purchase({ module, stripeStatus }: Props) {
     const [loading, setLoading] = useState(false);
+    const activating = stripeStatus === 'success';
+
+    useEffect(() => {
+        if (!activating) return;
+        const id = setInterval(() => {
+            router.visit(route('purchase'), { preserveState: false });
+        }, 3000);
+        return () => clearInterval(id);
+    }, [activating]);
 
     const handleCheckout = () => {
         setLoading(true);
@@ -43,16 +52,13 @@ export default function Purchase({ module, stripeStatus }: Props) {
                 </div>
 
                 {/* Status banners */}
-                {stripeStatus === 'success' && (
+                {activating && (
                     <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 mb-4 text-center">
+                        <div className="flex justify-center mb-2">
+                            <span className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
                         <p className="text-sm font-semibold text-green-700 mb-1">Payment confirmed!</p>
-                        <p className="text-xs text-green-600">Your access is being activated. Reload in a few seconds.</p>
-                        <button
-                            onClick={() => router.visit(route('purchase'))}
-                            className="mt-3 text-xs font-semibold text-green-700 underline underline-offset-2"
-                        >
-                            Check my access →
-                        </button>
+                        <p className="text-xs text-green-600">Activating your account, please wait…</p>
                     </div>
                 )}
 
@@ -92,10 +98,15 @@ export default function Purchase({ module, stripeStatus }: Props) {
                         </div>
                         <button
                             onClick={handleCheckout}
-                            disabled={loading}
+                            disabled={loading || activating}
                             className="w-full flex items-center justify-center py-3.5 rounded-2xl bg-brand-500 text-white font-semibold text-sm hover:bg-brand-600 active:scale-[0.98] transition-all disabled:opacity-60 disabled:pointer-events-none gap-2"
                         >
-                            {loading ? (
+                            {activating ? (
+                                <>
+                                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Activating your account…
+                                </>
+                            ) : loading ? (
                                 <>
                                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                     Redirecting to Stripe…

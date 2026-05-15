@@ -758,6 +758,7 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Feature: PWA icons — generate iconițe corecte din egg.png pentru toate platformele (192/512 Android, maskable 512 adaptive, apple-touch-icon 180 iOS, favicon.ico 16/32/48)
 - [x] (2026-05-16) Fix: iOS "Use Strong Password" — readonly trick pe câmpurile de parolă din register; readOnly setat via DOM în useEffect, eliminat sincron în onTouchStart înainte că Safari să afișeze dialogul
 - [x] (2026-05-16) Fix: iOS confirm password field — adăugat focus() cu delay 50ms în unlock() pentru a forța tastatura după dismissarea dialogului nativ iOS pe câmpul 2 (Confirm password)
+- [x] (2026-05-16) Fix: Purchase page — butonul Purchase dezactivat automat după plată confirmată; auto-refresh la fiecare 3s până când webhook-ul acordă accesul și controller-ul redirecționează
 
 ### In Progress / Planned
 
