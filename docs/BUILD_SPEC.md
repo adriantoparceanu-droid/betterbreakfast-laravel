@@ -755,6 +755,7 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Feature: Plan — card Day 0 (Foundation Day) afișat deasupra zilelor 1–10, clickabil permanent, arată progresul pașilor bifați
 - [x] (2026-05-16) Feature: Staples → Foundation Day button activ cu route real
 - [x] (2026-05-16) Fix: Register form — autoComplete="off" pe câmpurile de parolă, elimină dialogul iOS "Use Strong Password" care bloca tastatura
+- [x] (2026-05-16) Feature: PWA icons — generate iconițe corecte din egg.png pentru toate platformele (192/512 Android, maskable 512 adaptive, apple-touch-icon 180 iOS, favicon.ico 16/32/48)
 
 ### In Progress / Planned
 
