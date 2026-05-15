@@ -126,7 +126,10 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
     }, []);
 
     const unlock = (ref: React.MutableRefObject<HTMLInputElement | null>) => {
-        if (ref.current) ref.current.readOnly = false;
+        if (ref.current) {
+            ref.current.readOnly = false;
+            setTimeout(() => ref.current?.focus(), 50);
+        }
     };
 
     const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<RegisterFields>({
