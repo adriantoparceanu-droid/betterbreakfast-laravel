@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -114,9 +114,27 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
     const [privacyAccepted, setPrivacyAccepted] = useState(false);
     const [privacyError, setPrivacyError] = useState<string | null>(null);
 
+    // iOS "Use Strong Password" fix: start readonly, remove on first touch.
+    // Safari skips the suggestion dialog for readonly fields. We remove readonly
+    // synchronously in onTouchStart (before iOS has a chance to show the dialog).
+    const pwRef = useRef<HTMLInputElement | null>(null);
+    const confirmRef = useRef<HTMLInputElement | null>(null);
+
+    useEffect(() => {
+        if (pwRef.current) pwRef.current.readOnly = true;
+        if (confirmRef.current) confirmRef.current.readOnly = true;
+    }, []);
+
+    const unlock = (ref: React.MutableRefObject<HTMLInputElement | null>) => {
+        if (ref.current) ref.current.readOnly = false;
+    };
+
     const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<RegisterFields>({
         resolver: zodResolver(registerSchema),
     });
+
+    const { ref: rhfPwRef, ...pwRest } = register('password');
+    const { ref: rhfConfirmRef, ...confirmRest } = register('password_confirmation');
 
     const onSubmit = (data: RegisterFields) => {
         if (!captchaToken) {
@@ -159,22 +177,28 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
                 error={errors.username?.message}
                 {...register('username')}
             />
-            <Input
-                label="Password"
-                type="password"
-                autoComplete="off"
-                placeholder="At least 8 characters"
-                error={errors.password?.message}
-                {...register('password')}
-            />
-            <Input
-                label="Confirm password"
-                type="password"
-                autoComplete="off"
-                placeholder="••••••••"
-                error={errors.password_confirmation?.message}
-                {...register('password_confirmation')}
-            />
+            <div onTouchStart={() => unlock(pwRef)}>
+                <Input
+                    ref={(el) => { pwRef.current = el; rhfPwRef(el); }}
+                    label="Password"
+                    type="password"
+                    autoComplete="off"
+                    placeholder="At least 8 characters"
+                    error={errors.password?.message}
+                    {...pwRest}
+                />
+            </div>
+            <div onTouchStart={() => unlock(confirmRef)}>
+                <Input
+                    ref={(el) => { confirmRef.current = el; rhfConfirmRef(el); }}
+                    label="Confirm password"
+                    type="password"
+                    autoComplete="off"
+                    placeholder="••••••••"
+                    error={errors.password_confirmation?.message}
+                    {...confirmRest}
+                />
+            </div>
             <label className="flex items-start gap-2.5 cursor-pointer select-none">
                 <input
                     type="checkbox"
