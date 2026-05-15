@@ -162,7 +162,7 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
             <Input
                 label="Password"
                 type="password"
-                autoComplete="new-password"
+                autoComplete="off"
                 placeholder="At least 8 characters"
                 error={errors.password?.message}
                 {...register('password')}
@@ -170,7 +170,7 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
             <Input
                 label="Confirm password"
                 type="password"
-                autoComplete="new-password"
+                autoComplete="off"
                 placeholder="••••••••"
                 error={errors.password_confirmation?.message}
                 {...register('password_confirmation')}
