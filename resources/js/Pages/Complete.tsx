@@ -118,7 +118,7 @@ export default function CompletePage({ day }: Props) {
                         className="absolute inset-0 bg-white flex flex-col items-center justify-center p-8">
                         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.35 }} className="w-full max-w-sm">
                             <h2 className="text-2xl font-bold text-gray-900 text-center mb-1.5">How did this feel?</h2>
-                            <p className="text-gray-400 text-sm text-center mb-10">Day {dayNumber} check-in</p>
+                            <p className="text-gray-500 text-sm text-center mb-10">Day {dayNumber} check-in</p>
                             <div className="flex flex-col gap-3">
                                 {moods.map(({ value, label, emoji }, i) => (
                                     <motion.button key={value} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}

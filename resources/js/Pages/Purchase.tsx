@@ -49,7 +49,7 @@ export default function Purchase({ module, stripeStatus }: Props) {
                     <div className="flex justify-center mb-3">
                         <img src="/icons/egg.png" alt="Better Breakfast" width={80} height={80} className="object-contain" />
                     </div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Better Breakfast</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Better Breakfast</p>
                 </div>
 
                 {/* Status banners */}
@@ -80,7 +80,7 @@ export default function Purchase({ module, stripeStatus }: Props) {
 
                     {/* Included */}
                     <div className="px-6 py-5">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">What's included</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">What's included</p>
                         <ul className="flex flex-col gap-2.5">
                             {INCLUDED.map(item => (
                                 <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
@@ -95,7 +95,7 @@ export default function Purchase({ module, stripeStatus }: Props) {
                     <div className="px-6 pb-6">
                         <div className="flex items-baseline gap-1 mb-4">
                             <span className="text-3xl font-bold text-gray-900">€{module.price.toFixed(2)}</span>
-                            <span className="text-sm text-gray-400">one-time</span>
+                            <span className="text-sm text-gray-500">one-time</span>
                         </div>
                         <button
                             onClick={handleCheckout}
@@ -116,14 +116,14 @@ export default function Purchase({ module, stripeStatus }: Props) {
                                 `Purchase access — €${module.price.toFixed(2)}`
                             )}
                         </button>
-                        <p className="text-xs text-gray-400 text-center mt-3">
+                        <p className="text-xs text-gray-500 text-center mt-3">
                             Secure payment via Stripe. One-time charge, no subscription.
                         </p>
                     </div>
                 </div>
 
                 {/* Already purchased */}
-                <p className="text-xs text-center text-gray-400">
+                <p className="text-xs text-center text-gray-500">
                     Already purchased?{' '}
                     <a href="mailto:hello@betterbreakfast.eu?subject=Activate my account" className="text-brand-500 hover:underline">
                         Contact us to activate
@@ -134,7 +134,7 @@ export default function Purchase({ module, stripeStatus }: Props) {
                 <div className="text-center mt-6">
                     <button
                         onClick={() => router.post(route('logout'))}
-                        className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-xs text-gray-500 hover:text-gray-600 transition-colors"
                     >
                         Sign out
                     </button>

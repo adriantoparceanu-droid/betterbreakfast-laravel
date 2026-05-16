@@ -55,15 +55,15 @@ export default function SwapPage({ day }: Props) {
             <div className="px-4 flex flex-col gap-2">
                 {currentRecipe && <RecipeCard recipe={currentRecipe} isCurrent />}
                 {alternatives.length > 0 && (
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-2 mb-1 px-1">Available options</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-2 mb-1 px-1">Available options</p>
                 )}
                 {alternatives.map((recipe) => (
                     <RecipeCard key={recipe.id} recipe={recipe} onPick={() => handleSelect(recipe.id)} />
                 ))}
                 {alternatives.length === 0 && (
                     <div className="py-8 text-center">
-                        <p className="text-sm text-gray-400">No other recipes available.</p>
-                        <p className="text-xs text-gray-300 mt-1">All options have been used this cycle.</p>
+                        <p className="text-sm text-gray-500">No other recipes available.</p>
+                        <p className="text-xs text-gray-500 mt-1">All options have been used this cycle.</p>
                     </div>
                 )}
             </div>
@@ -90,7 +90,7 @@ function RecipeCard({ recipe, isCurrent, onPick }: CardProps) {
                         <p className="font-semibold text-gray-900 text-sm truncate">{recipe.name}</p>
                         {isCurrent && <span className="shrink-0 text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Current</span>}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 flex-wrap">
                         <span className="font-medium text-gray-600">{nutrition.calories} kcal</span>
                         <span>·</span><span>{nutrition.protein}g P</span>
                         <span>·</span><span>{nutrition.carbs}g C</span>

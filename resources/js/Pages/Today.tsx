@@ -101,7 +101,7 @@ export default function TodayPage() {
         <div className="flex flex-col pb-36">
             <div className="px-4 pt-3 pb-4">
                 <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Day {currentDay} of 10</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Day {currentDay} of 10</p>
                     {isCompleted && <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Done ✓</span>}
                 </div>
                 <div className="flex gap-1 mb-3">
@@ -134,7 +134,7 @@ export default function TodayPage() {
                                 ].map(({ label, value }) => (
                                     <div key={label} className="bg-gray-50 rounded-2xl py-2 px-1">
                                         <p className="text-sm font-bold text-gray-900">{value}</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">{label}</p>
                                     </div>
                                 ))}
                             </div>
@@ -155,7 +155,7 @@ export default function TodayPage() {
                             {(['metric', 'imperial'] as UnitSystem[]).map((sys) => (
                                 <button key={sys} onClick={() => setUnitSystem(sys)}
                                     className={cn('px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-150',
-                                        unitSystem === sys ? 'bg-brand-500 text-white shadow-sm' : 'text-gray-400 hover:text-gray-600')}>
+                                        unitSystem === sys ? 'bg-brand-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-600')}>
                                     {sys === 'metric' ? 'Metric' : 'Imperial'}
                                 </button>
                             ))}
@@ -231,7 +231,7 @@ export default function TodayPage() {
                 </div>
             ) : (
                 <div className="px-4 flex items-center justify-center py-20">
-                    <p className="text-sm text-gray-400">Loading recipe…</p>
+                    <p className="text-sm text-gray-500">Loading recipe…</p>
                 </div>
             )}
 

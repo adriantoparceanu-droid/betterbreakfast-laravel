@@ -102,10 +102,10 @@ export default function FoundationDayPage() {
                 <div className="bg-white border border-gray-100 rounded-2xl px-4 pt-4 pb-4">
                     <div className="flex items-start justify-between">
                         <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Day 0</p>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Day 0</p>
                             <h1 className="text-2xl font-bold text-gray-900">Foundation Day</h1>
                         </div>
-                        <span className="text-sm text-gray-400 mt-1 tabular-nums">{checkedCount}/{total} done</span>
+                        <span className="text-sm text-gray-500 mt-1 tabular-nums">{checkedCount}/{total} done</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mt-3">
                         <div
@@ -127,7 +127,7 @@ export default function FoundationDayPage() {
             <div className="px-4 flex flex-col gap-4">
                 {SECTIONS.map(({ title, steps }) => (
                     <div key={title}>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">{title}</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-1">{title}</p>
                         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-50">
                             {steps.map((step) => {
                                 const isChecked = foundationChecked.includes(step.id);
@@ -153,10 +153,10 @@ export default function FoundationDayPage() {
                                                     {step.title}
                                                 </span>
                                                 {step.optional && (
-                                                    <span className="text-xs text-gray-400">(optional)</span>
+                                                    <span className="text-xs text-gray-500">(optional)</span>
                                                 )}
                                             </div>
-                                            <p className={cn('text-xs leading-relaxed mt-0.5', isChecked ? 'text-gray-300' : 'text-gray-400')}>
+                                            <p className={cn('text-xs leading-relaxed mt-0.5', isChecked ? 'text-gray-400' : 'text-gray-500')}>
                                                 {step.description}
                                             </p>
                                         </div>
@@ -190,7 +190,7 @@ export default function FoundationDayPage() {
                         </button>
                         <button
                             onClick={() => router.visit(route('today'))}
-                            className="text-xs text-gray-400 hover:text-gray-600 transition-colors duration-150"
+                            className="text-xs text-gray-500 hover:text-gray-600 transition-colors duration-150"
                         >
                             Skip for now
                         </button>

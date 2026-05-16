@@ -52,17 +52,17 @@ function SortableFutureDayCard({ day, recipe, onOpenModal }: SortableCardProps) 
                 onClick={() => recipe && onOpenModal(recipe)}
                 className="flex flex-1 items-center gap-3 px-3 py-3 min-w-0 cursor-pointer"
             >
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 bg-gray-100 text-gray-400">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 bg-gray-100 text-gray-500">
                     {day}
                 </div>
                 <div className="flex-1 min-w-0">
                     {recipe ? (
                         <>
                             <p className="font-semibold text-sm truncate text-gray-900">{recipe.name}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">{recipe.nutrition.calories} kcal</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{recipe.nutrition.calories} kcal</p>
                         </>
                     ) : (
-                        <p className="text-sm text-gray-400">Not set</p>
+                        <p className="text-sm text-gray-500">Not set</p>
                     )}
                 </div>
                 <span className="text-gray-300 text-base shrink-0">{recipe ? '›' : '+'}</span>
@@ -99,7 +99,7 @@ function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
                 <div className="px-5 pt-5 pb-4 border-b border-gray-100 flex items-start justify-between gap-3 shrink-0">
                     <div>
                         <h2 className="font-bold text-gray-900 text-lg leading-tight">{recipe.name}</h2>
-                        <p className="text-sm text-gray-400 mt-0.5">
+                        <p className="text-sm text-gray-500 mt-0.5">
                             {Math.round(recipe.nutrition.calories * scale)} kcal
                             {' · '}{defaultServings} serving{defaultServings !== 1 ? 's' : ''}
                         </p>
@@ -257,7 +257,7 @@ export default function PlanPage() {
             <div className="flex flex-col pb-nav">
                 <div className="px-4 pt-4 pb-3">
                     <h1 className="text-2xl font-bold text-gray-900">10-Day Plan</h1>
-                    <p className="text-sm text-gray-400 mt-0.5">{completedDays.length} of 10 days complete</p>
+                    <p className="text-sm text-gray-500 mt-0.5">{completedDays.length} of 10 days complete</p>
                     <div className="flex gap-1 mt-3">
                         {Array.from({ length: 10 }, (_, i) => i + 1).map((day) => (
                             <div key={day} className={cn('flex-1 h-1.5 rounded-full transition-colors duration-300',
@@ -283,7 +283,7 @@ export default function PlanPage() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className={cn('font-semibold text-sm', foundationDone ? 'text-gray-500' : 'text-gray-900')}>Foundation Day</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">
+                                    <p className="text-xs text-gray-500 mt-0.5">
                                         {foundationDone ? 'Prep complete' : `${foundationChecked.length}/9 steps done`}
                                     </p>
                                 </div>
@@ -325,17 +325,17 @@ export default function PlanPage() {
                                         )}
                                     >
                                         <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0',
-                                            isDone ? 'bg-brand-500 text-white' : isToday ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-400')}>
+                                            isDone ? 'bg-brand-500 text-white' : isToday ? 'bg-brand-100 text-brand-700' : 'bg-gray-100 text-gray-500')}>
                                             {isDone ? '✓' : day}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             {recipe ? (
                                                 <>
                                                     <p className={cn('font-semibold text-sm truncate', isDone || isPast ? 'text-gray-500' : 'text-gray-900')}>{recipe.name}</p>
-                                                    <p className="text-xs text-gray-400 mt-0.5">{isDone && mood ? moodLabel[mood] : `${recipe.nutrition.calories} kcal`}</p>
+                                                    <p className="text-xs text-gray-500 mt-0.5">{isDone && mood ? moodLabel[mood] : `${recipe.nutrition.calories} kcal`}</p>
                                                 </>
                                             ) : (
-                                                <p className={cn('text-sm', isToday ? 'text-gray-400' : 'text-gray-300')}>
+                                                <p className={cn('text-sm', isToday ? 'text-gray-500' : 'text-gray-400')}>
                                                     {isToday ? 'Go to today' : '—'}
                                                 </p>
                                             )}

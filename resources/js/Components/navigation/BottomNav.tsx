@@ -83,8 +83,8 @@ export function BottomNav() {
                                     transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                                 />
                             )}
-                            <Icon className={cn('w-6 h-6 transition-colors duration-150', isActive ? 'text-brand-600' : 'text-gray-400')} />
-                            <span className={cn('text-[10px] font-semibold tracking-wide transition-colors duration-150', isActive ? 'text-brand-600' : 'text-gray-400')}>
+                            <Icon className={cn('w-6 h-6 transition-colors duration-150', isActive ? 'text-brand-600' : 'text-gray-500')} />
+                            <span className={cn('text-[10px] font-semibold tracking-wide transition-colors duration-150', isActive ? 'text-brand-600' : 'text-gray-500')}>
                                 {label}
                             </span>
                         </button>

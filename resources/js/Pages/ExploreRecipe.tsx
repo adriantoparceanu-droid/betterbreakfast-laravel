@@ -82,7 +82,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                 <p className="text-xs text-brand-500 font-medium uppercase tracking-wide">{category.name}</p>
                 <h1 className="text-xl font-bold text-gray-900 mt-0.5">{recipe.name}</h1>
                 {localMadeCount > 0 && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                         Made {localMadeCount} {localMadeCount === 1 ? 'time' : 'times'}
                     </p>
                 )}
@@ -107,7 +107,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                         ].map(({ label, value }) => (
                             <div key={label} className="bg-gray-50 rounded-2xl py-2 px-1">
                                 <p className="text-sm font-bold text-gray-900">{value}</p>
-                                <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{label}</p>
                             </div>
                         ))}
                     </div>
@@ -136,7 +136,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                                 onClick={() => setUnitSystem(sys)}
                                 className={cn(
                                     'px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-150',
-                                    unitSystem === sys ? 'bg-brand-500 text-white shadow-sm' : 'text-gray-400 hover:text-gray-600',
+                                    unitSystem === sys ? 'bg-brand-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-600',
                                 )}
                             >
                                 {sys === 'metric' ? 'Metric' : 'Imperial'}

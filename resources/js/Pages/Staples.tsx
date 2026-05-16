@@ -51,7 +51,7 @@ export default function StaplesPage() {
                 <div className="px-4">
                     <div className="bg-white border border-gray-100 rounded-2xl py-10 flex flex-col items-center gap-2">
                         <span className="text-4xl">🛒</span>
-                        <p className="text-sm text-gray-400 text-center px-6">Loading recipes…</p>
+                        <p className="text-sm text-gray-500 text-center px-6">Loading recipes…</p>
                     </div>
                 </div>
             </div>
@@ -64,7 +64,7 @@ export default function StaplesPage() {
                 <div className="bg-white border border-gray-100 rounded-2xl px-4 pt-4 pb-4">
                     <div className="flex items-center justify-between">
                         <h1 className="text-2xl font-bold text-gray-900">Staples</h1>
-                        <p className="text-sm text-gray-400 text-right">Full 10-day plan · {checkedCount}/{ingredients.length} items checked</p>
+                        <p className="text-sm text-gray-500 text-right">Full 10-day plan · {checkedCount}/{ingredients.length} items checked</p>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mt-3">
                         <div className="h-full bg-brand-500 rounded-full transition-all duration-300"
@@ -87,7 +87,7 @@ export default function StaplesPage() {
                         </button>
                         <button
                             onClick={() => router.visit(route('plan'))}
-                            className="text-xs text-gray-400 hover:text-gray-600 transition-colors duration-150"
+                            className="text-xs text-gray-500 hover:text-gray-600 transition-colors duration-150"
                         >
                             Skip for now
                         </button>
@@ -112,7 +112,7 @@ export default function StaplesPage() {
                         {(['metric', 'imperial'] as UnitSystem[]).map((sys) => (
                             <button key={sys} onClick={() => setUnitSystem(sys)}
                                 className={cn('px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-150',
-                                    unitSystem === sys ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600')}>
+                                    unitSystem === sys ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-600')}>
                                 {sys === 'metric' ? 'Metric' : 'Imperial'}
                             </button>
                         ))}
@@ -123,7 +123,7 @@ export default function StaplesPage() {
             <div className="px-4 flex flex-col gap-4">
                 {grouped.map(({ category, items }) => (
                     <div key={category}>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">{category}</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-1">{category}</p>
                         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-50">
                             {items.map((ing) => {
                                 const key = checkKey(ing);
@@ -141,7 +141,7 @@ export default function StaplesPage() {
                                             )}
                                         </span>
                                         <span className={cn('flex-1 text-sm font-medium', isChecked ? 'text-gray-400 line-through' : 'text-gray-900')}>{ing.name}</span>
-                                        <span className={cn('text-sm tabular-nums', isChecked ? 'text-gray-300' : 'text-gray-500')}>{formatQty(qty)} {unit}</span>
+                                        <span className={cn('text-sm tabular-nums', isChecked ? 'text-gray-400' : 'text-gray-500')}>{formatQty(qty)} {unit}</span>
                                     </button>
                                 );
                             })}

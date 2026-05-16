@@ -80,7 +80,7 @@ function UnlockModal({ category, onClose }: { category: Category; onClose: () =>
                         `Unlock ${category.name} — €${category.price.toFixed(2)}`
                     )}
                 </button>
-                <p className="text-xs text-gray-400 text-center mb-4">
+                <p className="text-xs text-gray-500 text-center mb-4">
                     Secure payment via Stripe. One-time charge, no subscription.
                 </p>
                 <button onClick={onClose} className="block w-full text-center py-3 rounded-2xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
@@ -131,7 +131,7 @@ function RecipeCard({ recipe, locked }: { recipe: Recipe; locked: boolean }) {
             )}
             <div className="flex items-center justify-between gap-2">
                 {recipe.nutrition && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                         {recipe.nutrition.calories} kcal · {recipe.nutrition.protein}g protein
                     </p>
                 )}
@@ -183,7 +183,7 @@ export default function Explore() {
             {/* Header */}
             <div className="px-4 pt-5 pb-3">
                 <h1 className="text-xl font-bold text-gray-900">Explore</h1>
-                <p className="text-sm text-gray-400 mt-0.5">Premium recipe collections</p>
+                <p className="text-sm text-gray-500 mt-0.5">Premium recipe collections</p>
             </div>
 
             {/* Stripe status banners */}
@@ -202,13 +202,13 @@ export default function Explore() {
 
             {loading && (
                 <div className="flex-1 flex items-center justify-center">
-                    <p className="text-sm text-gray-400">Loading…</p>
+                    <p className="text-sm text-gray-500">Loading…</p>
                 </div>
             )}
 
             {!loading && categories.length === 0 && (
                 <div className="flex-1 flex items-center justify-center px-6">
-                    <p className="text-sm text-gray-400 text-center">No categories available yet. Check back soon.</p>
+                    <p className="text-sm text-gray-500 text-center">No categories available yet. Check back soon.</p>
                 </div>
             )}
 

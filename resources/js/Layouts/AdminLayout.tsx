@@ -79,7 +79,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Sidebar */}
             <aside className="w-56 shrink-0 bg-white border-r border-gray-200 flex flex-col">
                 <div className="px-5 py-4 border-b border-gray-100">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Admin</p>
                     <p className="text-sm font-bold text-gray-900 mt-0.5">Better Breakfast</p>
                 </div>
 
@@ -168,7 +168,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="px-4 py-3 border-t border-gray-100">
                     <button
                         onClick={() => router.post(route('logout'))}
-                        className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                        className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
                     >
                         Sign out
                     </button>

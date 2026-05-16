@@ -81,7 +81,7 @@ function LoginForm({ siteKey }: { siteKey: string }) {
                 <div className="text-right">
                     <a
                         href={route('password.request')}
-                        className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-xs text-gray-500 hover:text-gray-600 transition-colors"
                     >
                         Forgot password?
                     </a>
@@ -282,7 +282,7 @@ export default function AuthPage({ mode: initialMode = 'login', status }: Props)
                                     type="button"
                                     onClick={() => setMode(m)}
                                     className={`relative z-10 flex-1 py-2 text-sm font-semibold rounded-xl transition-colors duration-150 ${
-                                        mode === m ? 'text-gray-900' : 'text-gray-400'
+                                        mode === m ? 'text-gray-900' : 'text-gray-500'
                                     }`}
                                 >
                                     {m === 'login' ? 'Sign in' : 'Create account'}
@@ -312,7 +312,7 @@ export default function AuthPage({ mode: initialMode = 'login', status }: Props)
                 </Card>
 
                 {/* Privacy note */}
-                <p className="text-center text-xs text-gray-400 mt-5 px-4">
+                <p className="text-center text-xs text-gray-500 mt-5 px-4">
                     Used only for access and account recovery
                 </p>
             </div>
