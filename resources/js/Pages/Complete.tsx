@@ -21,6 +21,7 @@ export default function CompletePage({ day }: Props) {
     const { progress, userId, isHydrated, completeDay, checkIn, resetProgress } = useUserStore();
     const [step, setStep] = useState<Step>('celebrate');
     const [loading, setLoading] = useState(false);
+    const [resetting, setResetting] = useState(false);
 
     useEffect(() => {
         if (!isHydrated) return;
@@ -63,9 +64,20 @@ export default function CompletePage({ day }: Props) {
         }
     };
 
-    const handleRestart = () => {
-        resetProgress();
-        router.visit(route('staples'), { replace: true });
+    const handleRestart = async () => {
+        setResetting(true);
+        try {
+            const res = await fetch('/api/user/reset-plan', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            if (res.status === 401) { router.visit(route('login')); return; }
+            if (res.ok) { resetProgress(); router.visit(route('staples'), { replace: true }); }
+        } catch {
+            resetProgress(); router.visit(route('staples'), { replace: true });
+        } finally {
+            setResetting(false);
+        }
     };
 
     return (
@@ -123,8 +135,9 @@ export default function CompletePage({ day }: Props) {
                             <motion.button
                                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.35 }}
                                 onClick={handleRestart}
-                                className="w-full bg-brand-500 hover:bg-brand-600 active:scale-[0.97] text-white font-semibold text-base py-4 rounded-2xl transition-all duration-150">
-                                Start again
+                                disabled={resetting}
+                                className="w-full bg-brand-500 hover:bg-brand-600 active:scale-[0.97] text-white font-semibold text-base py-4 rounded-2xl transition-all duration-150 disabled:opacity-50">
+                                {resetting ? 'Starting…' : 'Start again'}
                             </motion.button>
                         </motion.div>
                     </motion.div>

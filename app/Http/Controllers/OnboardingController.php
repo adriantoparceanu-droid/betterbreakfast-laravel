@@ -29,7 +29,7 @@ class OnboardingController extends Controller
 
         UserProgress::updateOrCreate(
             ['user_id' => $request->user()->id],
-            ['default_servings' => $request->defaultServings, 'foundation_done' => true],
+            ['default_servings' => $request->defaultServings],
         );
 
         return redirect()->route('staples');

@@ -26,6 +26,7 @@ export default function TodayPage() {
 
     const [servings, setServings] = useState(defaultServings);
     const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
+    const [resetting, setResetting] = useState(false);
     const isCompleted = completedDays.includes(currentDay);
     const allDone = completedDays.length >= 10;
 
@@ -59,9 +60,24 @@ export default function TodayPage() {
                     You've completed your 10-day cycle.
                 </p>
                 <button
-                    onClick={() => { resetProgress(); router.visit(route('staples'), { replace: true }); }}
-                    className="w-full max-w-xs bg-brand-500 hover:bg-brand-600 active:scale-[0.97] text-white font-semibold text-base py-4 rounded-2xl transition-all duration-150">
-                    Start again
+                    disabled={resetting}
+                    onClick={async () => {
+                        setResetting(true);
+                        try {
+                            const res = await fetch('/api/user/reset-plan', {
+                                method: 'POST',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            });
+                            if (res.status === 401) { router.visit(route('login')); return; }
+                            if (res.ok) { resetProgress(); router.visit(route('staples'), { replace: true }); }
+                        } catch {
+                            resetProgress(); router.visit(route('staples'), { replace: true });
+                        } finally {
+                            setResetting(false);
+                        }
+                    }}
+                    className="w-full max-w-xs bg-brand-500 hover:bg-brand-600 active:scale-[0.97] text-white font-semibold text-base py-4 rounded-2xl transition-all duration-150 disabled:opacity-50">
+                    {resetting ? 'Starting…' : 'Start again'}
                 </button>
             </div>
         );

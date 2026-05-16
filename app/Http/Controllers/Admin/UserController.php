@@ -28,6 +28,7 @@ class UserController extends Controller
                 'hasAccess'           => $u->modules->contains(fn ($m) => $m->slug === 'breakfast-10-day'),
                 'unlockedCategoryIds' => $u->categories->pluck('id')->values(),
                 'createdAt'           => $u->created_at->toIso8601String(),
+                'deviceLocked'        => ! empty($u->current_session_id),
             ]);
 
         $premiumCategories = RecipeCategory::where('is_active', true)
@@ -88,6 +89,12 @@ class UserController extends Controller
         $user = User::findOrFail($userId);
         $user->update(['role' => $user->role === 'admin' ? 'user' : 'admin']);
 
+        return back();
+    }
+
+    public function resetDevice(int $userId): RedirectResponse
+    {
+        User::findOrFail($userId)->update(['current_session_id' => '__admin_reset__']);
         return back();
     }
 

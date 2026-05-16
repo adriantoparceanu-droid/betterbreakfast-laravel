@@ -37,7 +37,7 @@ Route::get('/', function () {
 
 // ─── App (authenticated) ──────────────────────────────────────────────────────
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'single.device'])->group(function () {
     Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding');
     Route::post('/onboarding', [OnboardingController::class, 'store']);
 
@@ -67,6 +67,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users',                                               [AdminUser::class, 'index'])->name('users');
     Route::post('/users/{userId}/grant',                               [AdminUser::class, 'grantAccess'])->name('users.grant');
     Route::delete('/users/{userId}/revoke',                            [AdminUser::class, 'revokeAccess'])->name('users.revoke');
+    Route::post('/users/{userId}/reset-device',                        [AdminUser::class, 'resetDevice'])->name('users.reset-device');
     Route::post('/users/{userId}/categories/{categoryId}/grant',       [AdminUser::class, 'grantCategoryAccess'])->name('users.categories.grant');
     Route::delete('/users/{userId}/categories/{categoryId}/revoke',    [AdminUser::class, 'revokeCategoryAccess'])->name('users.categories.revoke');
     Route::patch('/users/{userId}/role',                               [AdminUser::class, 'toggleRole'])->name('users.role');

@@ -11,7 +11,7 @@ class ProgressController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
-        $progress = $request->user()->progress;
+        $progress = UserProgress::where('user_id', $request->user()->id)->first();
 
         if (! $progress) {
             return response()->json(['data' => null, 'forceReset' => false]);

@@ -49,7 +49,12 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+        $request->session()->regenerate();
+        $token = Str::uuid()->toString();
+        $user->update(['current_session_id' => $token]);
 
-        return redirect()->route('purchase');
+        $cookie = cookie('bb_device_id', $token, 60 * 24 * 365 * 10, '/', null, config('session.secure', false), true, false, 'lax');
+
+        return redirect()->route('purchase')->withCookie($cookie);
     }
 }

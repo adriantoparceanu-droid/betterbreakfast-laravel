@@ -15,7 +15,7 @@ class PurchaseController extends Controller
         $user = $request->user();
 
         if ($user->isAdmin() || $user->modules()->where('slug', 'breakfast-10-day')->exists()) {
-            $onboardingDone = $user->progress?->foundation_done ?? false;
+            $onboardingDone = $user->progress !== null;
             return redirect()->route($onboardingDone ? 'staples' : 'onboarding');
         }
 

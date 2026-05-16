@@ -11,6 +11,7 @@ interface UserRow {
     hasAccess: boolean;
     unlockedCategoryIds: string[];
     createdAt: string;
+    deviceLocked: boolean;
 }
 
 interface CategoryOption {
@@ -32,6 +33,8 @@ export default function AdminUsers({ users, premiumCategories }: Props) {
     const destroy     = (id: number) => router.delete(route('admin.users.destroy', { userId: id }), {
         onSuccess: () => setConfirmDelete(null),
     });
+
+    const resetDevice = (id: number) => router.post(route('admin.users.reset-device', { userId: id }));
 
     const grantCategory  = (userId: number, catId: string) =>
         router.post(route('admin.users.categories.grant', { userId, categoryId: catId }));
@@ -123,6 +126,14 @@ export default function AdminUsers({ users, premiumCategories }: Props) {
                                                     <button onClick={() => grant(u.id)}
                                                         className="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors">
                                                         Grant access
+                                                    </button>
+                                                )}
+
+                                                {/* Reset device */}
+                                                {!isSelf && u.role !== 'admin' && u.deviceLocked && (
+                                                    <button onClick={() => resetDevice(u.id)}
+                                                        className="text-xs px-3 py-1.5 rounded-lg border border-amber-200 text-amber-600 hover:bg-amber-50 transition-colors">
+                                                        Reset device
                                                     </button>
                                                 )}
 

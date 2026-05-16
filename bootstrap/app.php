@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhook/stripe',
         ]);
 
+        $middleware->encryptCookies(except: ['bb_device_id']);
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
@@ -34,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin'          => \App\Http\Middleware\AdminMiddleware::class,
             'module.access'  => \App\Http\Middleware\EnsureModuleAccess::class,
+            'single.device'  => \App\Http\Middleware\EnsureSingleDevice::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
