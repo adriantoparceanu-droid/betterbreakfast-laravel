@@ -13,6 +13,7 @@ import { GripVertical } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';
 import { useRecipes } from '@/hooks/useRecipes';
 import { cn, formatQty, convertUnit } from '@/lib/utils';
+import { useT } from '@/hooks/useT';
 import AppLayout from '@/Layouts/AppLayout';
 import type { Recipe } from '@/types/app';
 
@@ -25,6 +26,7 @@ interface SortableCardProps {
 }
 
 function SortableFutureDayCard({ day, recipe, onOpenModal }: SortableCardProps) {
+    const { t } = useT();
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({ id: String(day) });
 
@@ -59,10 +61,10 @@ function SortableFutureDayCard({ day, recipe, onOpenModal }: SortableCardProps) 
                     {recipe ? (
                         <>
                             <p className="font-semibold text-sm truncate text-gray-900">{recipe.name}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{recipe.nutrition.calories} kcal</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{t('plan.kcal', { n: recipe.nutrition.calories })}</p>
                         </>
                     ) : (
-                        <p className="text-sm text-gray-500">Not set</p>
+                        <p className="text-sm text-gray-500">{t('plan.notSet')}</p>
                     )}
                 </div>
                 <span className="text-gray-300 text-base shrink-0">{recipe ? '›' : '+'}</span>
@@ -88,6 +90,7 @@ const SUMMARY_CLS = [
 const CHEVRON_CLS = 'text-gray-400 text-xs transition-transform duration-200 group-open:rotate-180';
 
 function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
+    const { t } = useT();
     const scale = defaultServings / (recipe.baseServings || 1);
 
     return (
@@ -100,8 +103,8 @@ function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
                     <div>
                         <h2 className="font-bold text-gray-900 text-lg leading-tight">{recipe.name}</h2>
                         <p className="text-sm text-gray-500 mt-0.5">
-                            {Math.round(recipe.nutrition.calories * scale)} kcal
-                            {' · '}{defaultServings} serving{defaultServings !== 1 ? 's' : ''}
+                            {t('plan.kcal', { n: Math.round(recipe.nutrition.calories * scale) })}
+                            {' · '}{t(defaultServings !== 1 ? 'plan.servingMany' : 'plan.servingOne', { n: defaultServings })}
                         </p>
                     </div>
                     <button
@@ -116,7 +119,7 @@ function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
                     {/* Ingredients — open by default */}
                     <details open className={SECTION_CLS}>
                         <summary className={SUMMARY_CLS}>
-                            Ingredients
+                            {t('common.ingredients')}
                             <span className={CHEVRON_CLS}>▾</span>
                         </summary>
                         <div className="px-4 pb-4 pt-1 flex flex-col gap-2.5">
@@ -137,7 +140,7 @@ function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
                     {/* Steps — closed by default */}
                     <details className={SECTION_CLS}>
                         <summary className={SUMMARY_CLS}>
-                            Steps
+                            {t('common.steps')}
                             <span className={CHEVRON_CLS}>▾</span>
                         </summary>
                         <div className="px-4 pb-4 pt-1 flex flex-col gap-3">
@@ -154,7 +157,7 @@ function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
                     {recipe.substitutions && (
                         <details className={SECTION_CLS}>
                             <summary className={SUMMARY_CLS}>
-                                Substitutions
+                                {t('common.substitutions')}
                                 <span className={CHEVRON_CLS}>▾</span>
                             </summary>
                             <div className="px-4 pb-4 pt-1">
@@ -170,7 +173,7 @@ function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
                     {recipe.whyThisWorks && (
                         <details className={SECTION_CLS}>
                             <summary className={SUMMARY_CLS}>
-                                Why this works
+                                {t('common.whyThisWorks')}
                                 <span className={CHEVRON_CLS}>▾</span>
                             </summary>
                             <div className="px-4 pb-4 pt-1">
@@ -190,6 +193,7 @@ function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PlanPage() {
+    const { t } = useT();
     const { progress, updateProgress, isHydrated } = useUserStore();
     const { currentDay, completedDays, selectedRecipes, checkIns, foundationDone, foundationChecked, defaultServings } = progress;
     const recipes = useRecipes();
@@ -250,14 +254,14 @@ export default function PlanPage() {
         updateProgress({ selectedRecipes: newSelected });
     }
 
-    const moodLabel: Record<string, string> = { energized: '⚡ Energized', full: '😊 Full', hungry: '😐 Still hungry' };
+    const moodLabel: Record<string, string> = { energized: t('plan.moodEnergized'), full: t('plan.moodFull'), hungry: t('plan.moodHungry') };
 
     return (
         <>
             <div className="flex flex-col pb-nav">
                 <div className="px-4 pt-4 pb-3">
-                    <h1 className="text-2xl font-bold text-gray-900">10-Day Plan</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">{completedDays.length} of 10 days complete</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('plan.title')}</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">{t('plan.daysComplete', { count: completedDays.length })}</p>
                     <div className="flex gap-1 mt-3">
                         {Array.from({ length: 10 }, (_, i) => i + 1).map((day) => (
                             <div key={day} className={cn('flex-1 h-1.5 rounded-full transition-colors duration-300',
@@ -282,13 +286,13 @@ export default function PlanPage() {
                                     {foundationDone ? '✓' : '0'}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className={cn('font-semibold text-sm', foundationDone ? 'text-gray-500' : 'text-gray-900')}>Foundation Day</p>
+                                    <p className={cn('font-semibold text-sm', foundationDone ? 'text-gray-500' : 'text-gray-900')}>{t('plan.foundationDay')}</p>
                                     <p className="text-xs text-gray-500 mt-0.5">
-                                        {foundationDone ? 'Prep complete' : `${foundationChecked.length}/9 steps done`}
+                                        {foundationDone ? t('plan.prepComplete') : t('plan.stepsDone', { count: foundationChecked.length })}
                                     </p>
                                 </div>
                                 {!foundationDone && (
-                                    <span className="shrink-0 text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Prep</span>
+                                    <span className="shrink-0 text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">{t('plan.prep')}</span>
                                 )}
                             </div>
 
@@ -332,15 +336,15 @@ export default function PlanPage() {
                                             {recipe ? (
                                                 <>
                                                     <p className={cn('font-semibold text-sm truncate', isDone || isPast ? 'text-gray-500' : 'text-gray-900')}>{recipe.name}</p>
-                                                    <p className="text-xs text-gray-500 mt-0.5">{isDone && mood ? moodLabel[mood] : `${recipe.nutrition.calories} kcal`}</p>
+                                                    <p className="text-xs text-gray-500 mt-0.5">{isDone && mood ? moodLabel[mood] : t('plan.kcal', { n: recipe.nutrition.calories })}</p>
                                                 </>
                                             ) : (
                                                 <p className={cn('text-sm', isToday ? 'text-gray-500' : 'text-gray-400')}>
-                                                    {isToday ? 'Go to today' : '—'}
+                                                    {isToday ? t('plan.goToToday') : '—'}
                                                 </p>
                                             )}
                                         </div>
-                                        {isToday && <span className="shrink-0 text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Today</span>}
+                                        {isToday && <span className="shrink-0 text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">{t('plan.today')}</span>}
                                     </div>
                                 );
                             })}

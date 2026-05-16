@@ -5,18 +5,20 @@ import { useRecipes, useRecipeById, useFirstAvailable } from '@/hooks/useRecipes
 import { enqueueSync } from '@/lib/sync/queue';
 import { Button } from '@/Components/ui/Button';
 import { cn, formatQty, convertUnit, type UnitSystem } from '@/lib/utils';
+import { useT } from '@/hooks/useT';
 import AppLayout from '@/Layouts/AppLayout';
 import type { PageProps } from '@/types/index.d';
 
-function greeting(): string {
+function greetingKey(): string {
     const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (h < 12) return 'today.greetingMorning';
+    if (h < 17) return 'today.greetingAfternoon';
+    return 'today.greetingEvening';
 }
 
 export default function TodayPage() {
     const { auth } = usePage<PageProps>().props;
+    const { t } = useT();
     const { progress, userId, isHydrated, selectRecipe, resetProgress, updateProgress } = useUserStore();
     const { currentDay, selectedRecipes, completedDays, usedRecipeIds, defaultServings } = progress;
 
@@ -59,9 +61,9 @@ export default function TodayPage() {
                 <div className="w-24 h-24 rounded-full bg-brand-50 flex items-center justify-center mb-8">
                     <span className="text-5xl">🏆</span>
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-3">Nice work!</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-3">{t('common.niceWork')}</h1>
                 <p className="text-gray-500 text-base leading-relaxed mb-12">
-                    You've completed your 10-day cycle.
+                    {t('common.cycleComplete')}
                 </p>
                 <button
                     disabled={resetting}
@@ -91,7 +93,7 @@ export default function TodayPage() {
                         }
                     }}
                     className="w-full max-w-xs bg-brand-500 hover:bg-brand-600 active:scale-[0.97] text-white font-semibold text-base py-4 rounded-2xl transition-all duration-150 disabled:opacity-50">
-                    {resetting ? 'Starting…' : 'Start again'}
+                    {resetting ? t('common.starting') : t('common.startAgain')}
                 </button>
             </div>
         );
@@ -101,8 +103,8 @@ export default function TodayPage() {
         <div className="flex flex-col pb-36">
             <div className="px-4 pt-3 pb-4">
                 <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Day {currentDay} of 10</p>
-                    {isCompleted && <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Done ✓</span>}
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('today.dayOf', { day: currentDay })}</p>
+                    {isCompleted && <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">{t('today.done')}</span>}
                 </div>
                 <div className="flex gap-1 mb-3">
                     {Array.from({ length: 10 }, (_, i) => i + 1).map((day) => (
@@ -110,7 +112,7 @@ export default function TodayPage() {
                             completedDays.includes(day) ? 'bg-brand-500' : day === currentDay ? 'bg-brand-200' : 'bg-gray-100')} />
                     ))}
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900">{greeting()}, {username}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{t('today.greetingLine', { greeting: t(greetingKey()), username })}</h1>
             </div>
 
             {recipe ? (
@@ -126,11 +128,11 @@ export default function TodayPage() {
                         {recipe.nutrition && (
                             <div className="grid grid-cols-5 gap-1 text-center">
                                 {[
-                                    { label: 'Cal',    value: Math.round(recipe.nutrition.calories * scale) },
-                                    { label: 'Protein',value: `${Math.round(recipe.nutrition.protein * scale)}g` },
-                                    { label: 'Carbs',  value: `${Math.round(recipe.nutrition.carbs * scale)}g` },
-                                    { label: 'Fat',    value: `${Math.round(recipe.nutrition.fat * scale)}g` },
-                                    { label: 'Fiber',  value: `${Math.round(recipe.nutrition.fiber * scale)}g` },
+                                    { label: t('today.calLabel'),     value: Math.round(recipe.nutrition.calories * scale) },
+                                    { label: t('today.proteinLabel'), value: `${Math.round(recipe.nutrition.protein * scale)}g` },
+                                    { label: t('today.carbsLabel'),   value: `${Math.round(recipe.nutrition.carbs * scale)}g` },
+                                    { label: t('today.fatLabel'),     value: `${Math.round(recipe.nutrition.fat * scale)}g` },
+                                    { label: t('today.fiberLabel'),   value: `${Math.round(recipe.nutrition.fiber * scale)}g` },
                                 ].map(({ label, value }) => (
                                     <div key={label} className="bg-gray-50 rounded-2xl py-2 px-1">
                                         <p className="text-sm font-bold text-gray-900">{value}</p>
@@ -142,7 +144,7 @@ export default function TodayPage() {
                     </div>
 
                     <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3">
-                        <p className="text-sm font-semibold text-gray-700 shrink-0">Servings</p>
+                        <p className="text-sm font-semibold text-gray-700 shrink-0">{t('common.servings')}</p>
                         <div className="flex items-center gap-3">
                             <button onClick={() => setServings((s) => Math.max(1, s - 1))} disabled={servings <= 1}
                                 className="w-8 h-8 rounded-xl bg-white shadow-sm text-gray-700 font-bold text-lg flex items-center justify-center disabled:opacity-30 active:scale-95 transition-transform">−</button>
@@ -156,14 +158,14 @@ export default function TodayPage() {
                                 <button key={sys} onClick={() => setUnitSystem(sys)}
                                     className={cn('px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-150',
                                         unitSystem === sys ? 'bg-brand-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-600')}>
-                                    {sys === 'metric' ? 'Metric' : 'Imperial'}
+                                    {sys === 'metric' ? t('common.metric') : t('common.imperial')}
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     <div>
-                        <h3 className="text-sm font-bold text-gray-900 mb-3">Ingredients</h3>
+                        <h3 className="text-sm font-bold text-gray-900 mb-3">{t('common.ingredients')}</h3>
                         <div className="flex flex-col gap-0 divide-y divide-gray-100 bg-white rounded-2xl border border-gray-100 overflow-hidden">
                             {recipe.ingredients.map((ing, i) => {
                                 const { qty, unit } = convertUnit(ing.quantity * scale, ing.unit, unitSystem);
@@ -178,7 +180,7 @@ export default function TodayPage() {
                     </div>
 
                     <div>
-                        <h3 className="text-sm font-bold text-gray-900 mb-3">Steps</h3>
+                        <h3 className="text-sm font-bold text-gray-900 mb-3">{t('common.steps')}</h3>
                         <div className="flex flex-col gap-3">
                             {recipe.steps.map((step, i) => (
                                 <div key={i} className="flex gap-3">
@@ -195,7 +197,7 @@ export default function TodayPage() {
                                 onClick={() => setOpenSubstitutions(s => !s)}
                                 className="w-full flex items-center justify-between px-5 py-4 text-left"
                             >
-                                <h3 className="text-sm font-bold text-gray-900">Substitutions</h3>
+                                <h3 className="text-sm font-bold text-gray-900">{t('common.substitutions')}</h3>
                                 <span className={cn('text-gray-400 text-xs transition-transform duration-200', openSubstitutions ? 'rotate-180' : '')}>▼</span>
                             </button>
                             {openSubstitutions && (
@@ -215,7 +217,7 @@ export default function TodayPage() {
                                 onClick={() => setOpenWhyWorks(s => !s)}
                                 className="w-full flex items-center justify-between px-5 py-4 text-left"
                             >
-                                <h3 className="text-sm font-bold text-gray-900">Why this works</h3>
+                                <h3 className="text-sm font-bold text-gray-900">{t('common.whyThisWorks')}</h3>
                                 <span className={cn('text-gray-400 text-xs transition-transform duration-200', openWhyWorks ? 'rotate-180' : '')}>▼</span>
                             </button>
                             {openWhyWorks && (
@@ -231,15 +233,15 @@ export default function TodayPage() {
                 </div>
             ) : (
                 <div className="px-4 flex items-center justify-center py-20">
-                    <p className="text-sm text-gray-500">Loading recipe…</p>
+                    <p className="text-sm text-gray-500">{t('common.loadingRecipe')}</p>
                 </div>
             )}
 
             {recipe && !isCompleted && (
                 <div className="fixed bottom-16 left-0 right-0 max-w-lg mx-auto px-4 pb-2 pt-2">
                     <div className="flex gap-3 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 px-4 py-3">
-                        <Button variant="secondary" size="lg" onClick={() => router.visit(route('swap', { day: currentDay }))}>Swap</Button>
-                        <Button size="lg" fullWidth onClick={() => router.visit(route('complete', { day: currentDay }))}>I made this</Button>
+                        <Button variant="secondary" size="lg" onClick={() => router.visit(route('swap', { day: currentDay }))}>{t('today.swap')}</Button>
+                        <Button size="lg" fullWidth onClick={() => router.visit(route('complete', { day: currentDay }))}>{t('today.iMadeThis')}</Button>
                     </div>
                 </div>
             )}
@@ -247,9 +249,11 @@ export default function TodayPage() {
             {recipe && isCompleted && (
                 <div className="px-4 mt-4">
                     <div className="bg-brand-50 rounded-2xl p-4 text-center">
-                        <p className="text-sm font-semibold text-brand-700">Day {currentDay} complete ✓</p>
+                        <p className="text-sm font-semibold text-brand-700">{t('today.dayComplete', { day: currentDay })}</p>
                         <p className="text-xs text-brand-500 mt-0.5">
-                            {progress.checkIns[currentDay] ? `You felt ${progress.checkIns[currentDay]}` : `Check in tomorrow for day ${currentDay + 1}`}
+                            {progress.checkIns[currentDay]
+                                ? t('today.feltMood', { mood: t(`complete.mood${progress.checkIns[currentDay][0].toUpperCase()}${progress.checkIns[currentDay].slice(1)}`) })
+                                : t('today.checkInTomorrow', { day: currentDay + 1 })}
                         </p>
                     </div>
                 </div>

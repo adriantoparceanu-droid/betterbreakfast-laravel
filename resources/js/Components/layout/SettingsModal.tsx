@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { router, usePage } from '@inertiajs/react';
 import { useUserStore } from '@/store/userStore';
+import { useSettingsStore, type Locale } from '@/store/settingsStore';
 import { useRecipes } from '@/hooks/useRecipes';
+import { useT } from '@/hooks/useT';
 import { enqueueSync } from '@/lib/sync/queue';
+import { cn } from '@/lib/utils';
 import type { PageProps } from '@/types/index.d';
 
 interface Props { isOpen: boolean; onClose: () => void; }
@@ -14,6 +17,8 @@ export function SettingsModal({ isOpen, onClose }: Props) {
     const [loading, setLoading] = useState(false);
     const { auth } = usePage<PageProps>().props;
     const { resetProgress, updateProgress, userId, progress } = useUserStore();
+    const { locale, setLocale } = useSettingsStore();
+    const { t } = useT();
     const allRecipes = useRecipes();
 
     function handleClose() {
@@ -69,21 +74,36 @@ export function SettingsModal({ isOpen, onClose }: Props) {
                                 <motion.div key="menu" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.18 }} className="px-4 pb-24">
                                     <div className="flex items-center justify-between py-3 mb-1">
-                                        <h2 className="text-lg font-bold text-gray-900">Settings</h2>
+                                        <h2 className="text-lg font-bold text-gray-900">{t('settings.title')}</h2>
                                         <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 transition-colors text-lg">×</button>
                                     </div>
                                     {auth?.user?.email && <p className="text-xs text-gray-400 mb-4 px-1">{auth.user.email}</p>}
                                     <div className="flex flex-col gap-2">
+                                        <div className="flex items-center justify-between gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-100">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xl">🌐</span>
+                                                <p className="text-sm font-semibold text-gray-900">{t('settings.language')}</p>
+                                            </div>
+                                            <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+                                                {(['en', 'ro'] as Locale[]).map((lng) => (
+                                                    <button key={lng} onClick={() => setLocale(lng)}
+                                                        className={cn('px-3 py-1 rounded-md text-xs font-semibold transition-all duration-150',
+                                                            locale === lng ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700')}>
+                                                        {lng === 'en' ? 'EN' : 'RO'}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                         <button onClick={() => setStep('confirm')} className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-100 hover:border-orange-200 hover:bg-orange-50 transition-all duration-150 text-left">
                                             <span className="text-xl">🔄</span>
                                             <div>
-                                                <p className="text-sm font-semibold text-gray-900">Restart plan</p>
-                                                <p className="text-xs text-gray-400 mt-0.5">Reset progress, keep settings</p>
+                                                <p className="text-sm font-semibold text-gray-900">{t('settings.restartPlan')}</p>
+                                                <p className="text-xs text-gray-400 mt-0.5">{t('settings.restartSub')}</p>
                                             </div>
                                         </button>
                                         <button onClick={handleSignOut} className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all duration-150 text-left">
                                             <span className="text-xl">🚪</span>
-                                            <p className="text-sm font-semibold text-gray-900">Sign out</p>
+                                            <p className="text-sm font-semibold text-gray-900">{t('settings.signOut')}</p>
                                         </button>
                                     </div>
                                 </motion.div>
@@ -93,16 +113,16 @@ export function SettingsModal({ isOpen, onClose }: Props) {
                                     exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.18 }} className="px-4 pb-24">
                                     <div className="flex items-center gap-2 py-3 mb-4">
                                         <button onClick={() => setStep('menu')} className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 transition-colors text-base">←</button>
-                                        <h2 className="text-lg font-bold text-gray-900">Restart plan</h2>
+                                        <h2 className="text-lg font-bold text-gray-900">{t('settings.restartPlan')}</h2>
                                     </div>
                                     <div className="bg-orange-50 border border-orange-100 rounded-2xl px-5 py-4 mb-5">
-                                        <p className="text-sm font-semibold text-orange-800 mb-1">Restart the 10-day plan?</p>
-                                        <p className="text-xs text-orange-600 leading-relaxed">Your progress, completed days, and pantry checklist will be reset. Your serving size and account will be kept.</p>
+                                        <p className="text-sm font-semibold text-orange-800 mb-1">{t('settings.restartConfirmQ')}</p>
+                                        <p className="text-xs text-orange-600 leading-relaxed">{t('settings.restartConfirmBody')}</p>
                                     </div>
                                     <div className="flex gap-3">
-                                        <button onClick={() => setStep('menu')} className="flex-1 py-3 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
+                                        <button onClick={() => setStep('menu')} className="flex-1 py-3 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">{t('common.cancel')}</button>
                                         <button onClick={handleRestart} disabled={loading} className="flex-1 py-3 rounded-2xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 active:scale-[0.97] transition-all disabled:opacity-50">
-                                            {loading ? 'Restarting…' : 'Restart'}
+                                            {loading ? t('settings.restarting') : t('settings.restart')}
                                         </button>
                                     </div>
                                 </motion.div>

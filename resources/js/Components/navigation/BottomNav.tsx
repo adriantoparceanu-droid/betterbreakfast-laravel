@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useT } from '@/hooks/useT';
 
 function TodayIcon({ className }: { className?: string }) {
     return (
@@ -42,14 +43,15 @@ function ExploreIcon({ className }: { className?: string }) {
 }
 
 const tabs = [
-    { routeName: 'today',   label: 'Today',   Icon: TodayIcon },
-    { routeName: 'plan',    label: 'Plan',     Icon: PlanIcon },
-    { routeName: 'staples', label: 'Staples',  Icon: StaplesIcon },
-    { routeName: 'explore', label: 'Explore',  Icon: ExploreIcon },
+    { routeName: 'today',   labelKey: 'nav.today',   Icon: TodayIcon },
+    { routeName: 'plan',    labelKey: 'nav.plan',    Icon: PlanIcon },
+    { routeName: 'staples', labelKey: 'nav.staples', Icon: StaplesIcon },
+    { routeName: 'explore', labelKey: 'nav.explore', Icon: ExploreIcon },
 ] as const;
 
 export function BottomNav() {
     const { url } = usePage();
+    const { t } = useT();
 
     return (
         <nav
@@ -57,7 +59,8 @@ export function BottomNav() {
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
             <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
-                {tabs.map(({ routeName, label, Icon }) => {
+                {tabs.map(({ routeName, labelKey, Icon }) => {
+                    const label = t(labelKey);
                     const href = route(routeName);
                     const isActive = url === href || url.startsWith(href + '/') || url.startsWith('/' + routeName);
 

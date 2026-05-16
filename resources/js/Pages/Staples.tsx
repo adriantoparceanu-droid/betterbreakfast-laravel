@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import { useUserStore } from '@/store/userStore';
 import { useRecipes } from '@/hooks/useRecipes';
 import { scaleIngredient, formatQty, convertUnit, cn, type UnitSystem } from '@/lib/utils';
+import { useT } from '@/hooks/useT';
 import AppLayout from '@/Layouts/AppLayout';
 import type { IngredientCategory, Recipe } from '@/types/app';
 
@@ -25,6 +26,7 @@ function gatherIngredients(recipes: Recipe[], servings: number): GatheredIngredi
 }
 
 export default function StaplesPage() {
+    const { t } = useT();
     const { progress, togglePantryItem, setDefaultServings } = useUserStore();
     const { pantryChecked, defaultServings: servings } = progress;
     const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
@@ -44,14 +46,14 @@ export default function StaplesPage() {
             <div className="flex flex-col pb-nav">
                 <div className="px-4 pt-4 pb-3">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold text-gray-900">Staples</h1>
-                        <button onClick={() => router.visit(route('plan'))} className="text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 px-3 py-1.5 rounded-xl transition-all duration-150">Start your plan</button>
+                        <h1 className="text-2xl font-bold text-gray-900">{t('staples.title')}</h1>
+                        <button onClick={() => router.visit(route('plan'))} className="text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 px-3 py-1.5 rounded-xl transition-all duration-150">{t('staples.startYourPlan')}</button>
                     </div>
                 </div>
                 <div className="px-4">
                     <div className="bg-white border border-gray-100 rounded-2xl py-10 flex flex-col items-center gap-2">
                         <span className="text-4xl">🛒</span>
-                        <p className="text-sm text-gray-500 text-center px-6">Loading recipes…</p>
+                        <p className="text-sm text-gray-500 text-center px-6">{t('common.loadingRecipes')}</p>
                     </div>
                 </div>
             </div>
@@ -63,8 +65,8 @@ export default function StaplesPage() {
             <div className="px-4 pt-4 pb-3">
                 <div className="bg-white border border-gray-100 rounded-2xl px-4 pt-4 pb-4">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold text-gray-900">Staples</h1>
-                        <p className="text-sm text-gray-500 text-right">Full 10-day plan · {checkedCount}/{ingredients.length} items checked</p>
+                        <h1 className="text-2xl font-bold text-gray-900">{t('staples.title')}</h1>
+                        <p className="text-sm text-gray-500 text-right">{t('staples.itemsChecked', { checked: checkedCount, total: ingredients.length })}</p>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mt-3">
                         <div className="h-full bg-brand-500 rounded-full transition-all duration-300"
@@ -72,10 +74,10 @@ export default function StaplesPage() {
                     </div>
                     <div className="mt-3 space-y-1">
                         <p className="text-sm text-gray-500 leading-relaxed">
-                            This is your ingredient list for the next 10 breakfasts, adjusted to the number of people you cook for. Check what you already have and buy the rest.
+                            {t('staples.intro1')}
                         </p>
                         <p className="text-sm text-gray-500 leading-relaxed">
-                            When you're ready, go to <span className="font-semibold text-brand-600">Foundation Day</span> — a short prep session for the week ahead.
+                            {t('staples.intro2pre')}<span className="font-semibold text-brand-600">{t('plan.foundationDay')}</span>{t('staples.intro2post')}
                         </p>
                     </div>
                     <div className="mt-4 flex flex-col items-center gap-2">
@@ -83,13 +85,13 @@ export default function StaplesPage() {
                             onClick={() => router.visit(route('foundation-day'))}
                             className="w-full py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold transition-colors hover:bg-brand-600 active:bg-brand-700"
                         >
-                            Go to Foundation Day
+                            {t('staples.goToFoundation')}
                         </button>
                         <button
                             onClick={() => router.visit(route('plan'))}
                             className="text-xs text-gray-500 hover:text-gray-600 transition-colors duration-150"
                         >
-                            Skip for now
+                            {t('common.skipForNow')}
                         </button>
                     </div>
                 </div>
@@ -97,7 +99,7 @@ export default function StaplesPage() {
 
             <div className="px-4 mb-3">
                 <div className="bg-white border border-gray-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700 shrink-0">Servings</span>
+                    <span className="text-sm font-medium text-gray-700 shrink-0">{t('common.servings')}</span>
                     <div className="flex items-center gap-2">
                         <button onClick={() => setDefaultServings(Math.max(1, servings - 1))} disabled={servings <= 1}
                             className={cn('w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-colors',
@@ -113,7 +115,7 @@ export default function StaplesPage() {
                             <button key={sys} onClick={() => setUnitSystem(sys)}
                                 className={cn('px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-150',
                                     unitSystem === sys ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-600')}>
-                                {sys === 'metric' ? 'Metric' : 'Imperial'}
+                                {sys === 'metric' ? t('common.metric') : t('common.imperial')}
                             </button>
                         ))}
                     </div>
@@ -123,7 +125,7 @@ export default function StaplesPage() {
             <div className="px-4 flex flex-col gap-4">
                 {grouped.map(({ category, items }) => (
                     <div key={category}>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-1">{category}</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-1">{t(`staples.categories.${category}`)}</p>
                         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-50">
                             {items.map((ing) => {
                                 const key = checkKey(ing);

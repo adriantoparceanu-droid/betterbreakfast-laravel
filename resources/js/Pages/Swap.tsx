@@ -5,6 +5,7 @@ import { enqueueSync } from '@/lib/sync/queue';
 import { track } from '@/lib/analytics';
 import { Button } from '@/Components/ui/Button';
 import { cn } from '@/lib/utils';
+import { useT } from '@/hooks/useT';
 import AppLayout from '@/Layouts/AppLayout';
 import type { Recipe } from '@/types/app';
 
@@ -12,6 +13,7 @@ interface Props { day: number; }
 
 export default function SwapPage({ day }: Props) {
     const dayNumber = Number(day);
+    const { t } = useT();
     const { progress, userId, updateProgress } = useUserStore();
     const { selectedRecipes, completedDays } = progress;
 
@@ -50,20 +52,20 @@ export default function SwapPage({ day }: Props) {
             <div className="px-4 pt-4 pb-3 flex items-center gap-3">
                 <button onClick={() => window.history.back()}
                     className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors text-lg">←</button>
-                <h1 className="text-xl font-bold text-gray-900">Choose another option</h1>
+                <h1 className="text-xl font-bold text-gray-900">{t('swap.title')}</h1>
             </div>
             <div className="px-4 flex flex-col gap-2">
                 {currentRecipe && <RecipeCard recipe={currentRecipe} isCurrent />}
                 {alternatives.length > 0 && (
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-2 mb-1 px-1">Available options</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-2 mb-1 px-1">{t('swap.availableOptions')}</p>
                 )}
                 {alternatives.map((recipe) => (
                     <RecipeCard key={recipe.id} recipe={recipe} onPick={() => handleSelect(recipe.id)} />
                 ))}
                 {alternatives.length === 0 && (
                     <div className="py-8 text-center">
-                        <p className="text-sm text-gray-500">No other recipes available.</p>
-                        <p className="text-xs text-gray-500 mt-1">All options have been used this cycle.</p>
+                        <p className="text-sm text-gray-500">{t('swap.noOther')}</p>
+                        <p className="text-xs text-gray-500 mt-1">{t('swap.allUsed')}</p>
                     </div>
                 )}
             </div>
@@ -74,6 +76,7 @@ export default function SwapPage({ day }: Props) {
 interface CardProps { recipe: Recipe; isCurrent?: boolean; onPick?: () => void; }
 
 function RecipeCard({ recipe, isCurrent, onPick }: CardProps) {
+    const { t } = useT();
     const { nutrition } = recipe;
     return (
         <div className={cn('bg-white border rounded-2xl overflow-hidden transition-all duration-150',
@@ -88,7 +91,7 @@ function RecipeCard({ recipe, isCurrent, onPick }: CardProps) {
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                         <p className="font-semibold text-gray-900 text-sm truncate">{recipe.name}</p>
-                        {isCurrent && <span className="shrink-0 text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Current</span>}
+                        {isCurrent && <span className="shrink-0 text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">{t('swap.current')}</span>}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-500 flex-wrap">
                         <span className="font-medium text-gray-600">{nutrition.calories} kcal</span>
@@ -98,7 +101,7 @@ function RecipeCard({ recipe, isCurrent, onPick }: CardProps) {
                         <span>·</span><span>{nutrition.fiber}g fiber</span>
                     </div>
                 </div>
-                {!isCurrent && <Button variant="secondary" size="sm" onClick={onPick}>Pick</Button>}
+                {!isCurrent && <Button variant="secondary" size="sm" onClick={onPick}>{t('swap.pick')}</Button>}
             </div>
         </div>
     );
