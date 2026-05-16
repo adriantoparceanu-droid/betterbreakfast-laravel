@@ -763,6 +763,8 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Refactor: StripeController — arhitectură multi-pachet generică (type=module|category + item_id în metadata); suportă Module 1 + categorii premium + orice pachet viitor
 - [x] (2026-05-16) Feature: Explore — butonul Unlock trimite spre Stripe Checkout (înlocuiește mailto); polling + banner activating după plată, same pattern ca Purchase
 - [x] (2026-05-16) Fix: Webhook — adăugat logging complet (Log::info/error) pentru diagnoză; backward compat cu sesiuni vechi (module_id fără type)
+- [x] (2026-05-16) Refactor: Eliminat logica de conversie unități (TO_GRAMS, WHOLE_GRAMS, toGrams) din units.ts și butonul "Calculate from ingredients" din RecipeForm — valorile nutriționale se completează manual sau via USDA Lookup
+- [x] (2026-05-16) Feature: Admin Ingredients — buton "Lookup All" bulk: apelează USDA FoodData Central pentru toate ingredientele secvențial, suprascrie valorile, arată progress bar; nutrienți lipsă din API primesc valoare 0
 
 ### In Progress / Planned
 

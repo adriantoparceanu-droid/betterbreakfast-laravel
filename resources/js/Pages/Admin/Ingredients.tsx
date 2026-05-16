@@ -52,11 +52,64 @@ export default function AdminIngredients({ ingredients }: Props) {
     const [editForm,      setEditForm]      = useState<Partial<Record<string, string>>>({});
     const [lookupLoading, setLookupLoading] = useState<'add' | number | null>(null);
     const [lookupError,   setLookupError]   = useState<{ ctx: 'add' | number; msg: string } | null>(null);
+    const [bulkProgress,  setBulkProgress]  = useState<{ done: number; total: number; skipped: number } | null>(null);
 
     const filtered = ingredients.filter((i) =>
         i.name.toLowerCase().includes(search.toLowerCase()) ||
         i.category.toLowerCase().includes(search.toLowerCase()),
     );
+
+    // ─── CSRF token helper ────────────────────────────────────────────────────
+
+    function getCsrf(): string {
+        return decodeURIComponent(
+            document.cookie.split('; ').find(r => r.startsWith('XSRF-TOKEN='))?.split('=')[1] ?? ''
+        );
+    }
+
+    // ─── Bulk lookup all ingredients ──────────────────────────────────────────
+
+    async function handleLookupAll() {
+        if (bulkProgress !== null) return;
+        setBulkProgress({ done: 0, total: ingredients.length, skipped: 0 });
+        let skipped = 0;
+
+        for (let idx = 0; idx < ingredients.length; idx++) {
+            const ing = ingredients[idx];
+            try {
+                const lookupUrl = route('admin.ingredients.nutrition_lookup') + '?name=' + encodeURIComponent(ing.name);
+                const res  = await fetch(lookupUrl, { credentials: 'same-origin' });
+                const data = await res.json() as NutritionResult & { error?: string };
+
+                if (!res.ok || data.error) {
+                    skipped++;
+                } else {
+                    const patchUrl = route('admin.ingredients.update', { id: ing.id });
+                    await fetch(patchUrl, {
+                        method: 'PATCH',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-XSRF-TOKEN': getCsrf(),
+                        },
+                        body: JSON.stringify({
+                            calories_per_100g: data.calories,
+                            protein_per_100g:  data.protein,
+                            fat_per_100g:      data.fat,
+                            carbs_per_100g:    data.carbs,
+                            fiber_per_100g:    data.fiber,
+                        }),
+                    });
+                }
+            } catch {
+                skipped++;
+            }
+            setBulkProgress({ done: idx + 1, total: ingredients.length, skipped });
+        }
+
+        router.reload();
+        setBulkProgress(null);
+    }
 
     // ─── Nutrition lookup ─────────────────────────────────────────────────────
 
@@ -155,13 +208,39 @@ export default function AdminIngredients({ ingredients }: Props) {
                     <h1 className="text-2xl font-bold text-gray-900 mb-1">Ingredients</h1>
                     <p className="text-sm text-gray-400">{ingredients.length} ingredients in master list</p>
                 </div>
-                <button
-                    onClick={() => setAdding(true)}
-                    className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-xl hover:bg-brand-600 transition-colors"
-                >
-                    + Add ingredient
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleLookupAll}
+                        disabled={bulkProgress !== null}
+                        className="px-4 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                    >
+                        {bulkProgress !== null
+                            ? `Lookup All… ${bulkProgress.done}/${bulkProgress.total}`
+                            : 'Lookup All'}
+                    </button>
+                    <button
+                        onClick={() => setAdding(true)}
+                        className="px-4 py-2 bg-brand-500 text-white text-sm font-medium rounded-xl hover:bg-brand-600 transition-colors"
+                    >
+                        + Add ingredient
+                    </button>
+                </div>
             </div>
+
+            {bulkProgress !== null && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">
+                    <div className="flex-1 bg-blue-100 rounded-full h-2">
+                        <div
+                            className="bg-blue-500 h-2 rounded-full transition-all duration-200"
+                            style={{ width: `${(bulkProgress.done / bulkProgress.total) * 100}%` }}
+                        />
+                    </div>
+                    <span className="text-xs text-blue-700 font-medium whitespace-nowrap">
+                        {bulkProgress.done}/{bulkProgress.total}
+                        {bulkProgress.skipped > 0 && ` · ${bulkProgress.skipped} skipped`}
+                    </span>
+                </div>
+            )}
 
             {/* Add form */}
             {adding && (

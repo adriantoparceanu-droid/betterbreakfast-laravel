@@ -19,7 +19,7 @@ import { Input } from '@/Components/ui/Input';
 import RichTextEditor from '@/Components/ui/RichTextEditor';
 import {
     METRIC_UNITS, IMPERIAL_UNITS, UNIVERSAL_UNITS,
-    convertForForm, toGrams, WHOLE_GRAMS,
+    convertForForm,
     type UnitSystem,
 } from '@/data/units';
 import type { Nutrition, Ingredient, IngredientCategory } from '@/types/app';
@@ -179,7 +179,6 @@ function SortableIngredientRow({ id, children }: SortableRowProps) {
 export default function RecipeForm({ recipe, modules, categories, masterIngredients }: Props) {
     const isEdit = recipe !== null;
     const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
-    const [calcWarnings, setCalcWarnings] = useState<string[]>([]);
 
     const {
         register, handleSubmit, control, watch, setValue,
@@ -226,49 +225,6 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
             setValue(`ingredients.${idx}.unit`, result.unit);
         });
         setUnitSystem(next);
-    }
-
-    // ─── Auto-calculate nutrition ─────────────────────────────────────────────
-
-    function calculateNutrition() {
-        const ingredients = watch('ingredients');
-        const servings    = Number(watch('base_servings')) || 1;
-        const masterMap   = new Map(masterIngredients.map(m => [m.name.toLowerCase(), m]));
-
-        let totalCals = 0, totalProt = 0, totalFat = 0, totalCarbs = 0, totalFiber = 0;
-        const warnings: string[] = [];
-
-        for (const ing of ingredients) {
-            const master = masterMap.get(ing.name.toLowerCase());
-            if (!master) { warnings.push(`"${ing.name}" not in ingredient list`); continue; }
-            if (master.caloriesPer100g === null) { warnings.push(`"${ing.name}" has no nutrition data`); continue; }
-            let grams = toGrams(Number(ing.quantity), ing.unit);
-            if (grams === null) {
-                const key = ing.name.toLowerCase().trim();
-                const wholeG = WHOLE_GRAMS[key]
-                    ?? Object.entries(WHOLE_GRAMS).find(([k]) => key.includes(k))?.[1];
-                if (wholeG !== undefined) {
-                    grams = Number(ing.quantity) * wholeG;
-                } else {
-                    warnings.push(`"${ing.name}" uses unit "${ing.unit}" — can't convert to grams`);
-                    continue;
-                }
-            }
-            const factor = grams / 100;
-            totalCals  += (master.caloriesPer100g ?? 0) * factor;
-            totalProt  += (master.proteinPer100g  ?? 0) * factor;
-            totalFat   += (master.fatPer100g      ?? 0) * factor;
-            totalCarbs += (master.carbsPer100g    ?? 0) * factor;
-            totalFiber += (master.fiberPer100g    ?? 0) * factor;
-        }
-
-        const round = (n: number) => Math.round((n / servings) * 10) / 10;
-        setValue('nutrition.calories', round(totalCals));
-        setValue('nutrition.protein',  round(totalProt));
-        setValue('nutrition.fat',      round(totalFat));
-        setValue('nutrition.carbs',    round(totalCarbs));
-        setValue('nutrition.fiber',    round(totalFiber));
-        setCalcWarnings(warnings);
     }
 
     // ─── Submit ───────────────────────────────────────────────────────────────
@@ -502,27 +458,7 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
 
                 {/* ─── Nutrition ─────────────────────────────────────────── */}
                 <section className="bg-white rounded-2xl border border-gray-200 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Nutrition (per serving)</p>
-                        <button
-                            type="button"
-                            onClick={calculateNutrition}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-50 text-brand-700 text-xs font-semibold hover:bg-brand-100 transition-colors"
-                        >
-                            <span>⚡</span> Calculate from ingredients
-                        </button>
-                    </div>
-
-                    {calcWarnings.length > 0 && (
-                        <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-100">
-                            <p className="text-xs font-semibold text-amber-700 mb-1">Some ingredients were skipped — adjust manually:</p>
-                            <ul className="flex flex-col gap-0.5">
-                                {calcWarnings.map((w, i) => (
-                                    <li key={i} className="text-xs text-amber-600">• {w}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Nutrition (per serving)</p>
 
                     <div className="grid grid-cols-5 gap-3">
                         {(['calories', 'protein', 'fat', 'carbs', 'fiber'] as const).map(key => (

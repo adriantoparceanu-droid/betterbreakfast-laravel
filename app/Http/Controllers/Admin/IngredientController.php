@@ -91,7 +91,7 @@ class IngredientController extends Controller
         }
 
         $nutrients = collect($foods[0]['foodNutrients'] ?? []);
-        $get = fn (int $id) => round($nutrients->firstWhere('nutrientId', $id)['value'] ?? 0, 1) ?: null;
+        $get = fn (int $id) => round($nutrients->firstWhere('nutrientId', $id)['value'] ?? 0, 1);
 
         return response()->json([
             'foundName' => $foods[0]['description'] ?? null,
