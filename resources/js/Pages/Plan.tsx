@@ -198,12 +198,28 @@ export default function PlanPage() {
 
     useEffect(() => {
         if (!isHydrated || !recipes.length) return;
-        const unassigned = Array.from({ length: 10 }, (_, i) => i + 1).filter(day => !selectedRecipes[day]);
-        if (!unassigned.length) return;
-        const assignedIds = new Set(Object.values(selectedRecipes));
+
+        const validIds = new Set(recipes.map(r => r.id));
+
+        // Remove stale assignments (fallback IDs like "recipe-01" that differ from DB UUIDs)
+        const cleanedSelected: Record<string, string> = {};
+        for (const [day, id] of Object.entries(selectedRecipes)) {
+            if (validIds.has(id)) cleanedSelected[day] = id;
+        }
+
+        const unassigned = Array.from({ length: 10 }, (_, i) => i + 1).filter(day => !cleanedSelected[day]);
+
+        // Nothing to do: all days assigned with valid IDs
+        if (
+            unassigned.length === 0 &&
+            Object.keys(cleanedSelected).length === Object.keys(selectedRecipes).length
+        ) return;
+
+        const assignedIds = new Set(Object.values(cleanedSelected));
         const available = [...recipes.filter(r => !assignedIds.has(r.id))].sort(() => Math.random() - 0.5);
         if (!available.length) return;
-        const newSelected = { ...selectedRecipes };
+
+        const newSelected = { ...cleanedSelected };
         let idx = 0;
         for (const day of unassigned) {
             if (idx >= available.length) break;
@@ -211,7 +227,7 @@ export default function PlanPage() {
             idx++;
         }
         updateProgress({ selectedRecipes: newSelected });
-    }, [isHydrated, recipes.length, Object.keys(selectedRecipes).length]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isHydrated, recipes.length, recipes[0]?.id, Object.keys(selectedRecipes).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // DnD
     const sensors = useSensors(

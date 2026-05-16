@@ -793,6 +793,7 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Feature: AdminLayout — navigare Recipes colapsabilă în sidebar (10-Day Plan, categorii dinamice, Modules); Modules mutat sub Recipes
 - [x] (2026-05-16) Test: ExploreRecipeTest — 11 teste pentru pagina de rețetă (acces, made_count, EXPLORE_MADE_THIS, 404)
 - [x] (2026-05-16) Test: RecipesPageTest + CategoryTest — 28 teste pentru pagina unificată admin (CRUD categorii, filtrare, recipe count)
+- [x] (2026-05-16) Fix: Plan — re-asignare automată rețete când sursa comută din fallback (recipe-01) în DB (UUID); `recipes[0]?.id` în dependency array + curățare ID-uri stale
 
 ### In Progress / Planned
 
