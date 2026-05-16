@@ -1,10 +1,12 @@
 import { router } from '@inertiajs/react';
+import { useT } from '@/hooks/useT';
 
 interface Props {
     content: string;
 }
 
 export default function PrivacyPolicy({ content }: Props) {
+    const { t } = useT();
     return (
         <div className="min-h-screen bg-surface-raised">
             <div className="max-w-2xl mx-auto px-4 py-10">
@@ -15,10 +17,10 @@ export default function PrivacyPolicy({ content }: Props) {
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                         <path d="M19 12H5M12 5l-7 7 7 7" />
                     </svg>
-                    Back
+                    {t('privacy.back')}
                 </button>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('privacy.title')}</h1>
 
                 {content ? (
                     <div
@@ -26,7 +28,7 @@ export default function PrivacyPolicy({ content }: Props) {
                         dangerouslySetInnerHTML={{ __html: content }}
                     />
                 ) : (
-                    <p className="text-gray-500 text-sm">Privacy policy not yet published.</p>
+                    <p className="text-gray-500 text-sm">{t('privacy.notPublished')}</p>
                 )}
             </div>
         </div>

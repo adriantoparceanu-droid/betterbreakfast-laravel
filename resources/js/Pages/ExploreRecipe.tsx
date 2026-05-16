@@ -50,7 +50,7 @@ interface Props {
 }
 
 export default function ExploreRecipe({ recipe, category, made_count }: Props) {
-    const { locale } = useT();
+    const { t, locale } = useT();
     const tr = locale === 'ro' ? recipe.translations?.ro : undefined;
     const recipeName = tr?.name || recipe.name;
     const steps = tr?.steps && tr.steps.length ? tr.steps : recipe.steps;
@@ -102,7 +102,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                 <h1 className="text-xl font-bold text-gray-900 mt-0.5">{recipeName}</h1>
                 {localMadeCount > 0 && (
                     <p className="text-xs text-gray-500 mt-1">
-                        Made {localMadeCount} {localMadeCount === 1 ? 'time' : 'times'}
+                        {t('explore.madeTimes', { n: localMadeCount, label: localMadeCount === 1 ? t('explore.timeOne') : t('explore.timeMany') })}
                     </p>
                 )}
             </div>
@@ -118,11 +118,11 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                 {recipe.nutrition && (
                     <div className="grid grid-cols-5 gap-1 text-center">
                         {[
-                            { label: 'Cal',     value: Math.round(recipe.nutrition.calories * scale) },
-                            { label: 'Protein', value: `${Math.round(recipe.nutrition.protein * scale)}g` },
-                            { label: 'Carbs',   value: `${Math.round(recipe.nutrition.carbs * scale)}g` },
-                            { label: 'Fat',     value: `${Math.round(recipe.nutrition.fat * scale)}g` },
-                            { label: 'Fiber',   value: `${Math.round(recipe.nutrition.fiber * scale)}g` },
+                            { label: t('today.calLabel'),     value: Math.round(recipe.nutrition.calories * scale) },
+                            { label: t('today.proteinLabel'), value: `${Math.round(recipe.nutrition.protein * scale)}g` },
+                            { label: t('today.carbsLabel'),   value: `${Math.round(recipe.nutrition.carbs * scale)}g` },
+                            { label: t('today.fatLabel'),     value: `${Math.round(recipe.nutrition.fat * scale)}g` },
+                            { label: t('today.fiberLabel'),   value: `${Math.round(recipe.nutrition.fiber * scale)}g` },
                         ].map(({ label, value }) => (
                             <div key={label} className="bg-gray-50 rounded-2xl py-2 px-1">
                                 <p className="text-sm font-bold text-gray-900">{value}</p>
@@ -133,7 +133,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                 )}
 
                 <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-4 py-3">
-                    <p className="text-sm font-semibold text-gray-700 shrink-0">Servings</p>
+                    <p className="text-sm font-semibold text-gray-700 shrink-0">{t('common.servings')}</p>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setServings(s => Math.max(1, s - 1))}
@@ -158,14 +158,14 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                                     unitSystem === sys ? 'bg-brand-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-600',
                                 )}
                             >
-                                {sys === 'metric' ? 'Metric' : 'Imperial'}
+                                {sys === 'metric' ? t('common.metric') : t('common.imperial')}
                             </button>
                         ))}
                     </div>
                 </div>
 
                 <div>
-                    <h3 className="text-sm font-bold text-gray-900 mb-3">Ingredients</h3>
+                    <h3 className="text-sm font-bold text-gray-900 mb-3">{t('common.ingredients')}</h3>
                     <div className="flex flex-col gap-0 divide-y divide-gray-100 bg-white rounded-2xl border border-gray-100 overflow-hidden">
                         {recipe.ingredients.map((ing, i) => {
                             const { qty, unit } = convertUnit(ing.quantity * scale, ing.unit, unitSystem);
@@ -181,7 +181,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                 </div>
 
                 <div>
-                    <h3 className="text-sm font-bold text-gray-900 mb-3">Steps</h3>
+                    <h3 className="text-sm font-bold text-gray-900 mb-3">{t('common.steps')}</h3>
                     <div className="flex flex-col gap-3">
                         {steps.map((step, i) => (
                             <div key={i} className="flex gap-3">
@@ -198,7 +198,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                             onClick={() => setOpenSubstitutions(s => !s)}
                             className="w-full flex items-center justify-between px-5 py-4 text-left"
                         >
-                            <h3 className="text-sm font-bold text-gray-900">Substitutions</h3>
+                            <h3 className="text-sm font-bold text-gray-900">{t('common.substitutions')}</h3>
                             <span className={cn('text-gray-400 text-xs transition-transform duration-200', openSubstitutions ? 'rotate-180' : '')}>▼</span>
                         </button>
                         {openSubstitutions && (
@@ -218,7 +218,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                             onClick={() => setOpenWhyWorks(s => !s)}
                             className="w-full flex items-center justify-between px-5 py-4 text-left"
                         >
-                            <h3 className="text-sm font-bold text-gray-900">Why this works</h3>
+                            <h3 className="text-sm font-bold text-gray-900">{t('common.whyThisWorks')}</h3>
                             <span className={cn('text-gray-400 text-xs transition-transform duration-200', openWhyWorks ? 'rotate-180' : '')}>▼</span>
                         </button>
                         {openWhyWorks && (
@@ -240,7 +240,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                         size="lg"
                         onClick={() => router.visit(route('explore'))}
                     >
-                        ← Back
+                        {t('explore.back')}
                     </Button>
                     <Button
                         size="lg"
@@ -248,7 +248,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                         disabled={madeDone}
                         onClick={handleMadeThis}
                     >
-                        {madeDone ? 'Done ✓' : 'I Made This'}
+                        {madeDone ? t('today.done') : t('explore.iMadeThis')}
                     </Button>
                 </div>
             </div>

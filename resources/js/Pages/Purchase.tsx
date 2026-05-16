@@ -16,16 +16,10 @@ interface Props {
     stripeStatus?: 'success' | 'canceled' | null;
 }
 
-const INCLUDED = [
-    '10 simple, nutritious breakfast recipes',
-    'Day-by-day guided 10-day plan',
-    'Shopping list (Staples)',
-    'Offline access — works without internet',
-    'Swap recipes you don\'t like',
-];
+const INCLUDED_KEYS = ['purchase.included1', 'purchase.included2', 'purchase.included3', 'purchase.included4', 'purchase.included5'];
 
 export default function Purchase({ module, stripeStatus }: Props) {
-    const { locale } = useT();
+    const { t, locale } = useT();
     const [loading, setLoading] = useState(false);
     const activating = stripeStatus === 'success';
     const moduleName = localized(locale, module.name, module.translations ?? null, 'name');
@@ -55,7 +49,7 @@ export default function Purchase({ module, stripeStatus }: Props) {
                     <div className="flex justify-center mb-3">
                         <img src="/icons/egg.png" alt="Better Breakfast" width={80} height={80} className="object-contain" />
                     </div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Better Breakfast</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">{t('purchase.brand')}</p>
                 </div>
 
                 {/* Status banners */}
@@ -64,14 +58,14 @@ export default function Purchase({ module, stripeStatus }: Props) {
                         <div className="flex justify-center mb-2">
                             <span className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
                         </div>
-                        <p className="text-sm font-semibold text-green-700 mb-1">Payment confirmed!</p>
-                        <p className="text-xs text-green-600">Activating your account, please wait…</p>
+                        <p className="text-sm font-semibold text-green-700 mb-1">{t('purchase.paymentConfirmed')}</p>
+                        <p className="text-xs text-green-600">{t('purchase.activatingAccount')}</p>
                     </div>
                 )}
 
                 {stripeStatus === 'canceled' && (
                     <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 mb-4 text-center">
-                        <p className="text-sm text-amber-700">Payment was canceled. You can try again below.</p>
+                        <p className="text-sm text-amber-700">{t('purchase.paymentCanceled')}</p>
                     </div>
                 )}
 
@@ -86,12 +80,12 @@ export default function Purchase({ module, stripeStatus }: Props) {
 
                     {/* Included */}
                     <div className="px-6 py-5">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">What's included</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{t('purchase.whatsIncluded')}</p>
                         <ul className="flex flex-col gap-2.5">
-                            {INCLUDED.map(item => (
-                                <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
+                            {INCLUDED_KEYS.map(k => (
+                                <li key={k} className="flex items-start gap-2.5 text-sm text-gray-700">
                                     <span className="mt-0.5 w-4 h-4 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0 text-xs">✓</span>
-                                    {item}
+                                    {t(k)}
                                 </li>
                             ))}
                         </ul>
@@ -101,7 +95,7 @@ export default function Purchase({ module, stripeStatus }: Props) {
                     <div className="px-6 pb-6">
                         <div className="flex items-baseline gap-1 mb-4">
                             <span className="text-3xl font-bold text-gray-900">€{module.price.toFixed(2)}</span>
-                            <span className="text-sm text-gray-500">one-time</span>
+                            <span className="text-sm text-gray-500">{t('purchase.oneTime')}</span>
                         </div>
                         <button
                             onClick={handleCheckout}
@@ -111,28 +105,28 @@ export default function Purchase({ module, stripeStatus }: Props) {
                             {activating ? (
                                 <>
                                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    Activating your account…
+                                    {t('purchase.activating')}
                                 </>
                             ) : loading ? (
                                 <>
                                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    Redirecting to Stripe…
+                                    {t('purchase.redirectingStripe')}
                                 </>
                             ) : (
-                                `Purchase access — €${module.price.toFixed(2)}`
+                                t('purchase.purchaseAccess', { price: module.price.toFixed(2) })
                             )}
                         </button>
                         <p className="text-xs text-gray-500 text-center mt-3">
-                            Secure payment via Stripe. One-time charge, no subscription.
+                            {t('purchase.secureNote')}
                         </p>
                     </div>
                 </div>
 
                 {/* Already purchased */}
                 <p className="text-xs text-center text-gray-500">
-                    Already purchased?{' '}
+                    {t('purchase.alreadyPurchased')}{' '}
                     <a href="mailto:hello@betterbreakfast.eu?subject=Activate my account" className="text-brand-500 hover:underline">
-                        Contact us to activate
+                        {t('purchase.contactActivate')}
                     </a>
                 </p>
 
@@ -142,7 +136,7 @@ export default function Purchase({ module, stripeStatus }: Props) {
                         onClick={() => router.post(route('logout'))}
                         className="text-xs text-gray-500 hover:text-gray-600 transition-colors"
                     >
-                        Sign out
+                        {t('purchase.signOut')}
                     </button>
                 </div>
             </div>

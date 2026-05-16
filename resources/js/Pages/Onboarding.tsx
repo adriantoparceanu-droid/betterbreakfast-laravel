@@ -4,21 +4,18 @@ import { router } from '@inertiajs/react';
 import { useUserStore } from '@/store/userStore';
 import { enqueueSync } from '@/lib/sync/queue';
 import { Button } from '@/Components/ui/Button';
+import { useT } from '@/hooks/useT';
 
 const MIN_SERVINGS = 1;
 const MAX_SERVINGS = 8;
 
-const bullets = [
-    'stay full longer',
-    'reduce cravings and energy crashes',
-    'support hormonal balance and metabolic health',
-    'remove morning decision fatigue',
-];
+const bulletKeys = ['onboarding.bullet1', 'onboarding.bullet2', 'onboarding.bullet3', 'onboarding.bullet4'];
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 400, damping: 30 } } };
 
 export default function OnboardingPage() {
+    const { t } = useT();
     const { completeOnboarding, userId, progress } = useUserStore();
     const [servings, setServings] = useState(progress.defaultServings ?? 1);
     const [loading, setLoading] = useState(false);
@@ -43,27 +40,27 @@ export default function OnboardingPage() {
                     {/* Intro copy */}
                     <motion.div variants={item} className="flex flex-col gap-5">
                         <p className="text-gray-700 text-base leading-relaxed">
-                            Most mornings are decided too quickly. Better Breakfast helps you:
+                            {t('onboarding.intro')}
                         </p>
                         <ul className="flex flex-col gap-2">
-                            {bullets.map((b) => (
-                                <li key={b} className="flex items-start gap-2.5 text-gray-700 text-base">
+                            {bulletKeys.map((k) => (
+                                <li key={k} className="flex items-start gap-2.5 text-gray-700 text-base">
                                     <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />
-                                    {b}
+                                    {t(k)}
                                 </li>
                             ))}
                         </ul>
                         <div className="flex flex-col gap-0.5 text-gray-400 text-sm">
-                            <span>No tracking.</span>
-                            <span>No complexity.</span>
-                            <span>No decision-making.</span>
+                            <span>{t('onboarding.noTracking')}</span>
+                            <span>{t('onboarding.noComplexity')}</span>
+                            <span>{t('onboarding.noDecisions')}</span>
                         </div>
                     </motion.div>
 
                     {/* Servings picker */}
                     <motion.div variants={item} className="flex flex-col gap-3">
                         <p className="text-base font-semibold text-gray-800">
-                            How many persons are you cooking for?
+                            {t('onboarding.howManyPersons')}
                         </p>
                         <div className="flex items-center justify-between gap-4 bg-white rounded-2xl shadow-sm px-6 py-5">
                             <button
@@ -91,14 +88,14 @@ export default function OnboardingPage() {
                             </button>
                         </div>
                         <p className="text-sm text-gray-400 text-center">
-                            Your shopping list will adapt to the number you select.
+                            {t('onboarding.listAdapts')}
                         </p>
                     </motion.div>
 
                     {/* CTA */}
                     <motion.div variants={item}>
                         <Button fullWidth size="lg" loading={loading} onClick={handleStart}>
-                            Set up my kitchen
+                            {t('onboarding.setUpKitchen')}
                         </Button>
                     </motion.div>
 

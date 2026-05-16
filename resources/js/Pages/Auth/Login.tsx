@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,43 +9,48 @@ import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { Button } from '@/Components/ui/Button';
 import { Input } from '@/Components/ui/Input';
 import { Card, CardBody } from '@/Components/ui/Card';
+import { useT } from '@/hooks/useT';
 
 type Mode = 'login' | 'register';
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
-const loginSchema = z.object({
-    login:    z.string().min(1, 'Email or username is required'),
-    password: z.string().min(1, 'Password is required'),
+type Tr = (key: string, params?: Record<string, string | number>) => string;
+
+const makeLoginSchema = (t: Tr) => z.object({
+    login:    z.string().min(1, t('auth.errLoginRequired')),
+    password: z.string().min(1, t('auth.errPasswordRequired')),
 });
 
-const registerSchema = z.object({
-    email:    z.string().email('Enter a valid email'),
-    username: z.string().min(2, 'At least 2 characters').max(30, 'Max 30 characters'),
-    password: z.string().min(8, 'At least 8 characters'),
+const makeRegisterSchema = (t: Tr) => z.object({
+    email:    z.string().email(t('auth.errEmailInvalid')),
+    username: z.string().min(2, t('auth.errUsernameMin')).max(30, t('auth.errUsernameMax')),
+    password: z.string().min(8, t('auth.errPasswordMin')),
     password_confirmation: z.string(),
 }).refine(d => d.password === d.password_confirmation, {
-    message: 'Passwords do not match',
+    message: t('auth.errPasswordsMatch'),
     path: ['password_confirmation'],
 });
 
-type LoginFields    = z.infer<typeof loginSchema>;
-type RegisterFields = z.infer<typeof registerSchema>;
+type LoginFields    = z.infer<ReturnType<typeof makeLoginSchema>>;
+type RegisterFields = z.infer<ReturnType<typeof makeRegisterSchema>>;
 
 // ─── Login form ───────────────────────────────────────────────────────────────
 
 function LoginForm({ siteKey }: { siteKey: string }) {
+    const { t } = useT();
     const captchaRef = useRef<HCaptcha>(null);
     const [captchaToken, setCaptchaToken] = useState<string | null>(null);
     const [captchaError, setCaptchaError] = useState<string | null>(null);
 
+    const schema = useMemo(() => makeLoginSchema(t), [t]);
     const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<LoginFields>({
-        resolver: zodResolver(loginSchema),
+        resolver: zodResolver(schema),
     });
 
     const onSubmit = (data: LoginFields) => {
         if (!captchaToken) {
-            setCaptchaError('Please complete the CAPTCHA.');
+            setCaptchaError(t('auth.captchaRequired'));
             return;
         }
         setCaptchaError(null);
@@ -62,19 +67,19 @@ function LoginForm({ siteKey }: { siteKey: string }) {
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <Input
-                label="Email or username"
+                label={t('auth.emailOrUsername')}
                 type="text"
                 autoComplete="username"
-                placeholder="you@example.com or alex"
+                placeholder={t('auth.emailOrUsernamePlaceholder')}
                 error={errors.login?.message}
                 {...register('login')}
             />
             <div className="flex flex-col gap-1">
                 <Input
-                    label="Password"
+                    label={t('auth.password')}
                     type="password"
                     autoComplete="current-password"
-                    placeholder="••••••••"
+                    placeholder={t('auth.passwordDots')}
                     error={errors.password?.message}
                     {...register('password')}
                 />
@@ -83,7 +88,7 @@ function LoginForm({ siteKey }: { siteKey: string }) {
                         href={route('password.request')}
                         className="text-xs text-gray-500 hover:text-gray-600 transition-colors"
                     >
-                        Forgot password?
+                        {t('auth.forgotPassword')}
                     </a>
                 </div>
             </div>
@@ -99,7 +104,7 @@ function LoginForm({ siteKey }: { siteKey: string }) {
                 )}
             </div>
             <Button type="submit" fullWidth loading={isSubmitting} size="lg" className="mt-1">
-                Continue
+                {t('auth.continue')}
             </Button>
         </form>
     );
@@ -108,6 +113,7 @@ function LoginForm({ siteKey }: { siteKey: string }) {
 // ─── Register form ────────────────────────────────────────────────────────────
 
 function RegisterForm({ siteKey }: { siteKey: string }) {
+    const { t } = useT();
     const captchaRef = useRef<HCaptcha>(null);
     const [captchaToken, setCaptchaToken] = useState<string | null>(null);
     const [captchaError, setCaptchaError] = useState<string | null>(null);
@@ -132,8 +138,9 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
         }
     };
 
+    const schema = useMemo(() => makeRegisterSchema(t), [t]);
     const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<RegisterFields>({
-        resolver: zodResolver(registerSchema),
+        resolver: zodResolver(schema),
     });
 
     const { ref: rhfPwRef, ...pwRest } = register('password');
@@ -141,11 +148,11 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
 
     const onSubmit = (data: RegisterFields) => {
         if (!captchaToken) {
-            setCaptchaError('Please complete the CAPTCHA.');
+            setCaptchaError(t('auth.captchaRequired'));
             return;
         }
         if (!privacyAccepted) {
-            setPrivacyError('You must accept the Privacy Policy to continue.');
+            setPrivacyError(t('auth.privacyRequired'));
             return;
         }
         setCaptchaError(null);
@@ -165,28 +172,28 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <Input
-                label="Email"
+                label={t('auth.email')}
                 type="email"
                 autoComplete="email"
-                placeholder="you@example.com"
+                placeholder={t('auth.emailPlaceholder')}
                 error={errors.email?.message}
                 {...register('email')}
             />
             <Input
-                label="Username"
+                label={t('auth.username')}
                 type="text"
                 autoComplete="username"
-                placeholder="e.g. alex"
+                placeholder={t('auth.usernamePlaceholder')}
                 error={errors.username?.message}
                 {...register('username')}
             />
             <div onTouchStart={() => unlock(pwRef)}>
                 <Input
                     ref={(el) => { pwRef.current = el; rhfPwRef(el); }}
-                    label="Password"
+                    label={t('auth.password')}
                     type="password"
                     autoComplete="off"
-                    placeholder="At least 8 characters"
+                    placeholder={t('auth.passwordMin')}
                     error={errors.password?.message}
                     {...pwRest}
                 />
@@ -194,10 +201,10 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
             <div onTouchStart={() => unlock(confirmRef)}>
                 <Input
                     ref={(el) => { confirmRef.current = el; rhfConfirmRef(el); }}
-                    label="Confirm password"
+                    label={t('auth.confirmPassword')}
                     type="password"
                     autoComplete="off"
-                    placeholder="••••••••"
+                    placeholder={t('auth.passwordDots')}
                     error={errors.password_confirmation?.message}
                     {...confirmRest}
                 />
@@ -210,7 +217,7 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
                     className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
                 />
                 <span className="text-sm text-gray-600">
-                    I agree to the{' '}
+                    {t('auth.iAgreeTo')}{' '}
                     <a
                         href="/privacy-policy"
                         target="_blank"
@@ -218,7 +225,7 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
                         className="text-brand-600 underline underline-offset-2 hover:text-brand-700"
                         onClick={e => e.stopPropagation()}
                     >
-                        Privacy Policy
+                        {t('auth.privacyPolicy')}
                     </a>
                 </span>
             </label>
@@ -237,7 +244,7 @@ function RegisterForm({ siteKey }: { siteKey: string }) {
                 )}
             </div>
             <Button type="submit" fullWidth loading={isSubmitting} size="lg" className="mt-1">
-                Continue
+                {t('auth.continue')}
             </Button>
         </form>
     );
@@ -251,6 +258,7 @@ interface Props {
 }
 
 export default function AuthPage({ mode: initialMode = 'login', status }: Props) {
+    const { t } = useT();
     const [mode, setMode] = useState<Mode>(initialMode);
     const { hcaptcha_site_key } = usePage<PageProps<{ hcaptcha_site_key: string }>>().props;
 
@@ -262,8 +270,8 @@ export default function AuthPage({ mode: initialMode = 'login', status }: Props)
                     <div className="flex justify-center mb-3">
                         <img src="/icons/egg.png" alt="Better Breakfast" width={80} height={80} className="object-contain" />
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900">Better Breakfast</h1>
-                    <p className="text-gray-500 mt-1 text-sm">10 days. 10 breakfasts. One system.</p>
+                    <h1 className="text-3xl font-bold text-gray-900">{t('auth.brand')}</h1>
+                    <p className="text-gray-500 mt-1 text-sm">{t('auth.tagline')}</p>
                 </div>
 
                 <Card elevated>
@@ -285,7 +293,7 @@ export default function AuthPage({ mode: initialMode = 'login', status }: Props)
                                         mode === m ? 'text-gray-900' : 'text-gray-500'
                                     }`}
                                 >
-                                    {m === 'login' ? 'Sign in' : 'Create account'}
+                                    {m === 'login' ? t('auth.signIn') : t('auth.createAccount')}
                                 </button>
                             ))}
                         </div>
@@ -313,7 +321,7 @@ export default function AuthPage({ mode: initialMode = 'login', status }: Props)
 
                 {/* Privacy note */}
                 <p className="text-center text-xs text-gray-500 mt-5 px-4">
-                    Used only for access and account recovery
+                    {t('auth.privacyNote')}
                 </p>
             </div>
         </div>
