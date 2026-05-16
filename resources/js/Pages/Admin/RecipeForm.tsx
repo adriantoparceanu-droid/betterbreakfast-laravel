@@ -17,6 +17,8 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Input } from '@/Components/ui/Input';
 import RichTextEditor from '@/Components/ui/RichTextEditor';
+import { cn } from '@/lib/utils';
+import { translateContent } from '@/lib/translate';
 import {
     METRIC_UNITS, IMPERIAL_UNITS, UNIVERSAL_UNITS,
     convertForForm,
@@ -50,6 +52,15 @@ interface RecipeData {
     sortOrder: number;
     module: { id: string; name: string; slug: string } | null;
     category: { id: string; name: string } | null;
+    translations?: { ro?: RecipeTranslationRo } | null;
+}
+
+interface RecipeTranslationRo {
+    name?: string;
+    steps?: string[];
+    ingredients?: { name: string }[];
+    substitutions?: string;
+    whyThisWorks?: string;
 }
 
 interface ModuleOption    { id: string; name: string; }
@@ -85,6 +96,11 @@ type FormValues = {
     steps: { value: string }[];
     substitutions: string;
     why_this_works: string;
+    tr_name: string;
+    tr_substitutions: string;
+    tr_why: string;
+    tr_steps: { value: string }[];
+    tr_ingredients: { name: string }[];
 };
 
 function toDefaults(recipe: RecipeData | null): FormValues {
@@ -103,6 +119,11 @@ function toDefaults(recipe: RecipeData | null): FormValues {
             steps:          recipe.steps.map(v => ({ value: v })),
             substitutions:  recipe.substitutions,
             why_this_works: recipe.whyThisWorks,
+            tr_name:         recipe.translations?.ro?.name ?? '',
+            tr_substitutions:recipe.translations?.ro?.substitutions ?? '',
+            tr_why:          recipe.translations?.ro?.whyThisWorks ?? '',
+            tr_steps:        (recipe.translations?.ro?.steps ?? []).map(v => ({ value: v })),
+            tr_ingredients:  (recipe.translations?.ro?.ingredients ?? []).map(i => ({ name: i.name })),
         };
     }
     return {
@@ -119,6 +140,11 @@ function toDefaults(recipe: RecipeData | null): FormValues {
         steps:          [{ value: '' }],
         substitutions:  '',
         why_this_works: '',
+        tr_name:         '',
+        tr_substitutions:'',
+        tr_why:          '',
+        tr_steps:        [],
+        tr_ingredients:  [],
     };
 }
 
@@ -186,6 +212,8 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
         calories: number; protein: number; fat: number; carbs: number; fiber: number;
     }[] | null>(null);
     const [aiError, setAiError] = useState<string | null>(null);
+    const [lang, setLang] = useState<'en' | 'ro'>('en');
+    const [trBusy, setTrBusy] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -325,9 +353,39 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
         setUnitSystem(next);
     }
 
+    // ─── Per-field RO translation via Gemini AI ───────────────────────────────
+
+    async function trField(
+        sourceText: string,
+        target: `tr_name` | `tr_substitutions` | `tr_why` | `tr_ingredients.${number}.name` | `tr_steps.${number}.value`,
+        busyKey: string,
+    ) {
+        if (!sourceText.trim()) return;
+        setTrBusy(busyKey);
+        const res = await translateContent<{ text?: string }>('field', { text: sourceText });
+        setTrBusy(null);
+        if (!res.ok) { alert(res.error); return; }
+        setValue(target, res.translation.text ?? '');
+    }
+
     // ─── Submit ───────────────────────────────────────────────────────────────
 
     const onSubmit: SubmitHandler<FormValues> = (data) => {
+        const roSteps = data.tr_steps.map(s => s.value).filter(Boolean);
+        const roIngs  = data.tr_ingredients.map(i => ({ name: i.name })).filter(i => i.name.trim());
+        const ro: {
+            name?: string;
+            steps?: string[];
+            ingredients?: { name: string }[];
+            substitutions?: string;
+            whyThisWorks?: string;
+        } = {};
+        if (data.tr_name.trim())          ro.name = data.tr_name.trim();
+        if (roSteps.length)               ro.steps = roSteps;
+        if (roIngs.length)                ro.ingredients = roIngs;
+        if (data.tr_substitutions.trim()) ro.substitutions = data.tr_substitutions;
+        if (data.tr_why.trim())           ro.whyThisWorks = data.tr_why;
+
         const payload = {
             ...data,
             tags:           data.tags.split(',').map(t => t.trim()).filter(Boolean),
@@ -338,6 +396,7 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
             sort_order:     Number(data.sort_order),
             substitutions:  data.substitutions || null,
             why_this_works: data.why_this_works || null,
+            translations:   Object.keys(ro).length ? { ro } : null,
             nutrition: {
                 calories: Number(data.nutrition.calories),
                 protein:  Number(data.nutrition.protein),
@@ -380,7 +439,27 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
                 </div>
             </div>
 
+            {/* Language tabs */}
+            <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
+                {(['en', 'ro'] as const).map((l) => (
+                    <button
+                        key={l}
+                        type="button"
+                        onClick={() => setLang(l)}
+                        className={cn(
+                            'px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors',
+                            lang === l ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+                        )}
+                    >
+                        {l === 'en' ? 'English' : 'Română'}
+                    </button>
+                ))}
+            </div>
+
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
+
+                {/* ═══ EN tab — main recipe (source of truth) ═══════════════ */}
+                <div className={cn('flex flex-col gap-8', lang === 'ro' && 'hidden')}>
 
                 {/* ─── Basic ─────────────────────────────────────────────── */}
                 <section className="bg-white rounded-2xl border border-gray-200 p-6">
@@ -745,6 +824,125 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
                         />
                     </div>
                 </details>
+
+                </div>{/* ═══ end EN tab ═══ */}
+
+                {/* ═══ RO tab — translations · "Tradu cu AI" per field ══════ */}
+                <div className={cn('flex flex-col gap-6', lang === 'en' && 'hidden')}>
+                    <section className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col gap-5">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Traducere · Română</p>
+
+                        {/* Name */}
+                        <div>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="text-sm font-medium text-gray-700">Nume</label>
+                                <button type="button" onClick={() => trField(watch('name'), 'tr_name', 'name')}
+                                    disabled={trBusy === 'name'}
+                                    className="text-xs px-3 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+                                    {trBusy === 'name' ? '…' : 'Tradu cu AI'}
+                                </button>
+                            </div>
+                            <p className="text-xs text-gray-400 mb-1 truncate">EN: {watch('name')}</p>
+                            <input
+                                {...register('tr_name')}
+                                placeholder="Nume rețetă în română…"
+                                className="w-full h-9 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            />
+                        </div>
+
+                        {/* Ingredients */}
+                        {ingFields.length > 0 && (
+                            <div>
+                                <p className="text-sm font-medium text-gray-700 mb-2">Ingrediente</p>
+                                <div className="flex flex-col gap-2">
+                                    {ingFields.map((field, idx) => (
+                                        <div key={field.id} className="flex items-center gap-2">
+                                            <span className="text-xs text-gray-400 w-36 shrink-0 truncate">{watch(`ingredients.${idx}.name`)}</span>
+                                            <input
+                                                {...register(`tr_ingredients.${idx}.name`)}
+                                                placeholder="în română…"
+                                                className="flex-1 h-9 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                            />
+                                            <button type="button"
+                                                onClick={() => trField(watch(`ingredients.${idx}.name`), `tr_ingredients.${idx}.name`, `ing-${idx}`)}
+                                                disabled={trBusy === `ing-${idx}`}
+                                                className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+                                                {trBusy === `ing-${idx}` ? '…' : 'Tradu cu AI'}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Steps */}
+                        {stepFields.length > 0 && (
+                            <div>
+                                <p className="text-sm font-medium text-gray-700 mb-2">Pași</p>
+                                <div className="flex flex-col gap-3">
+                                    {stepFields.map((field, idx) => (
+                                        <div key={field.id} className="flex gap-2 items-start">
+                                            <span className="text-xs text-gray-400 pt-2.5 w-5 shrink-0 text-right font-semibold">{idx + 1}.</span>
+                                            <div className="flex-1">
+                                                <p className="text-xs text-gray-400 mb-1">EN: {watch(`steps.${idx}.value`)}</p>
+                                                <textarea
+                                                    {...register(`tr_steps.${idx}.value`)}
+                                                    rows={2}
+                                                    placeholder="în română…"
+                                                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+                                                />
+                                            </div>
+                                            <button type="button"
+                                                onClick={() => trField(watch(`steps.${idx}.value`), `tr_steps.${idx}.value`, `step-${idx}`)}
+                                                disabled={trBusy === `step-${idx}`}
+                                                className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 mt-5">
+                                                {trBusy === `step-${idx}` ? '…' : 'Tradu cu AI'}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Substitutions */}
+                        <div>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="text-sm font-medium text-gray-700">Substituții</label>
+                                <button type="button" onClick={() => trField(watch('substitutions'), 'tr_substitutions', 'subs')}
+                                    disabled={trBusy === 'subs'}
+                                    className="text-xs px-3 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+                                    {trBusy === 'subs' ? '…' : 'Tradu cu AI'}
+                                </button>
+                            </div>
+                            <Controller
+                                control={control}
+                                name="tr_substitutions"
+                                render={({ field }) => (
+                                    <RichTextEditor value={field.value} onChange={field.onChange} placeholder="Substituții în română…" />
+                                )}
+                            />
+                        </div>
+
+                        {/* Why this works */}
+                        <div>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="text-sm font-medium text-gray-700">De ce funcționează</label>
+                                <button type="button" onClick={() => trField(watch('why_this_works'), 'tr_why', 'why')}
+                                    disabled={trBusy === 'why'}
+                                    className="text-xs px-3 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+                                    {trBusy === 'why' ? '…' : 'Tradu cu AI'}
+                                </button>
+                            </div>
+                            <Controller
+                                control={control}
+                                name="tr_why"
+                                render={({ field }) => (
+                                    <RichTextEditor value={field.value} onChange={field.onChange} placeholder="De ce funcționează în română…" />
+                                )}
+                            />
+                        </div>
+                    </section>
+                </div>
 
                 {/* ─── Footer actions ────────────────────────────────────── */}
                 <div className="flex items-center justify-between pb-8">

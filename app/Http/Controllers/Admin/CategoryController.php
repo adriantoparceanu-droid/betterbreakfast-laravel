@@ -24,6 +24,7 @@ class CategoryController extends Controller
                 'name'         => $c->name,
                 'slug'         => $c->slug,
                 'description'  => $c->description,
+                'translations' => $c->translations ?: null,
                 'price'        => $c->price,
                 'sortOrder'    => $c->sort_order,
                 'isActive'     => $c->is_active,
@@ -65,7 +66,16 @@ class CategoryController extends Controller
             'description' => 'nullable|string|max:500',
             'price'       => 'required|numeric|min:0',
             'sort_order'  => 'integer|min:0',
+            'translations'                => 'nullable|array',
+            'translations.ro'             => 'nullable|array',
+            'translations.ro.name'        => 'nullable|string',
+            'translations.ro.description' => 'nullable|string',
         ]);
+
+        if (array_key_exists('translations', $data)) {
+            $ro = array_filter($data['translations']['ro'] ?? [], fn ($v) => $v !== null && $v !== '');
+            $data['translations'] = $ro ? ['ro' => $ro] : null;
+        }
 
         RecipeCategory::findOrFail($id)->update($data);
 

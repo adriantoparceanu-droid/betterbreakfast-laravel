@@ -82,6 +82,7 @@ class RecipeController extends Controller
                 'steps'         => $r->steps,
                 'substitutions' => $r->substitutions ?? '',
                 'whyThisWorks'  => $r->why_this_works ?? '',
+                'translations'  => $r->translations ?: null,
                 'nutrition'     => $r->nutrition,
                 'tags'          => $r->tags ?? [],
                 'isActive'      => (bool) $r->is_active,
@@ -186,11 +187,26 @@ class RecipeController extends Controller
             'steps.*'                => 'required|string',
             'substitutions'          => 'nullable|string',
             'why_this_works'         => 'nullable|string',
+            'translations'                  => 'nullable|array',
+            'translations.ro'               => 'nullable|array',
+            'translations.ro.name'          => 'nullable|string',
+            'translations.ro.steps'         => 'nullable|array',
+            'translations.ro.steps.*'       => 'nullable|string',
+            'translations.ro.ingredients'   => 'nullable|array',
+            'translations.ro.ingredients.*.name' => 'nullable|string',
+            'translations.ro.substitutions' => 'nullable|string',
+            'translations.ro.whyThisWorks'  => 'nullable|string',
+            'translations.ro.tags'          => 'nullable|array',
+            'translations.ro.tags.*'        => 'nullable|string',
         ]);
 
         $data['image']       = $data['image'] ?? '';
         $data['module_id']   = $data['module_id'] ?: null;
         $data['category_id'] = ($data['category_id'] ?? null) ?: null;
+
+        // Drop an empty RO block so we don't persist `{"ro":{}}`.
+        $ro = array_filter($data['translations']['ro'] ?? [], fn ($v) => $v !== null && $v !== '' && $v !== []);
+        $data['translations'] = $ro ? ['ro' => $ro] : null;
 
         return $data;
     }

@@ -21,6 +21,7 @@ class ModuleController extends Controller
                 'name'        => $m->name,
                 'slug'        => $m->slug,
                 'description' => $m->description,
+                'translations'=> $m->translations ?: null,
                 'price'       => $m->price,
                 'isActive'    => (bool) $m->is_active,
                 'usersCount'  => $m->users_count,
@@ -36,7 +37,16 @@ class ModuleController extends Controller
             'description' => 'sometimes|string|max:500',
             'price'       => 'sometimes|numeric|min:0',
             'is_active'   => 'sometimes|boolean',
+            'translations'             => 'nullable|array',
+            'translations.ro'          => 'nullable|array',
+            'translations.ro.name'     => 'nullable|string',
+            'translations.ro.description' => 'nullable|string',
         ]);
+
+        if (array_key_exists('translations', $data)) {
+            $ro = array_filter($data['translations']['ro'] ?? [], fn ($v) => $v !== null && $v !== '');
+            $data['translations'] = $ro ? ['ro' => $ro] : null;
+        }
 
         Module::findOrFail($id)->update($data);
         return back();

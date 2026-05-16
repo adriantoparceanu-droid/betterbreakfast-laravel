@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Input } from '@/Components/ui/Input';
+import { translateContent } from '@/lib/translate';
 
 interface CategoryRow {
     id: string;
@@ -14,6 +15,7 @@ interface CategoryRow {
     isActive: boolean;
     recipesCount: number;
     module: { id: string; name: string } | null;
+    translations?: { ro?: { name?: string; description?: string } } | null;
 }
 
 interface ModuleOption { id: string; name: string; }
@@ -77,20 +79,42 @@ function AddModal({ modules, onClose }: { modules: ModuleOption[]; onClose: () =
 export default function AdminCategories({ categories, modules }: Props) {
     const [adding, setAdding] = useState(false);
     const [editing, setEditing] = useState<string | null>(null);
-    const [editForm, setEditForm] = useState({ name: '', description: '', price: '', sort_order: '' });
+    const [editForm, setEditForm] = useState({ name: '', description: '', price: '', sort_order: '', trName: '', trDescription: '' });
+    const [translating, setTranslating] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     const startEdit = (c: CategoryRow) => {
         setEditing(c.id);
-        setEditForm({ name: c.name, description: c.description ?? '', price: String(c.price), sort_order: String(c.sortOrder) });
+        setEditForm({
+            name: c.name, description: c.description ?? '', price: String(c.price), sort_order: String(c.sortOrder),
+            trName: c.translations?.ro?.name ?? '',
+            trDescription: c.translations?.ro?.description ?? '',
+        });
+    };
+
+    const generateRo = async () => {
+        setTranslating(true);
+        const res = await translateContent<{ name?: string; description?: string }>('category', {
+            name: editForm.name, description: editForm.description,
+        });
+        setTranslating(false);
+        if (res.ok) {
+            setEditForm((f) => ({ ...f, trName: res.translation.name ?? '', trDescription: res.translation.description ?? '' }));
+        } else {
+            alert(res.error);
+        }
     };
 
     const saveEdit = (id: string) => {
+        const ro: Record<string, string> = {};
+        if (editForm.trName.trim()) ro.name = editForm.trName.trim();
+        if (editForm.trDescription.trim()) ro.description = editForm.trDescription.trim();
         router.patch(route('admin.categories.update', { id }), {
             name: editForm.name,
             description: editForm.description,
             price: parseFloat(editForm.price),
             sort_order: parseInt(editForm.sort_order, 10),
+            translations: Object.keys(ro).length ? { ro } : null,
         }, { onSuccess: () => setEditing(null) });
     };
 
@@ -130,6 +154,21 @@ export default function AdminCategories({ categories, modules }: Props) {
                                     <input value={editForm.sort_order} onChange={e => setEditForm({ ...editForm, sort_order: e.target.value })}
                                         type="number" min="0" className="border border-gray-200 rounded-xl px-3 py-2 text-sm" placeholder="Sort order" />
                                 </div>
+
+                                <div className="border-t border-gray-100 pt-3 mt-1">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Translation · RO</p>
+                                        <button type="button" onClick={generateRo} disabled={translating}
+                                            className="text-xs px-3 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">
+                                            {translating ? 'Generating…' : 'Generate with AI'}
+                                        </button>
+                                    </div>
+                                    <input value={editForm.trName} onChange={e => setEditForm({ ...editForm, trName: e.target.value })}
+                                        className="border border-gray-200 rounded-xl px-3 py-2 text-sm w-full mb-2" placeholder="Nume (RO)" />
+                                    <textarea value={editForm.trDescription} onChange={e => setEditForm({ ...editForm, trDescription: e.target.value })}
+                                        className="border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none w-full" rows={2} placeholder="Descriere (RO)" />
+                                </div>
+
                                 <div className="flex gap-2">
                                     <button onClick={() => saveEdit(c.id)} className="px-4 py-1.5 bg-brand-500 text-white text-xs font-medium rounded-lg hover:bg-brand-600 transition-colors">Save</button>
                                     <button onClick={() => setEditing(null)} className="px-4 py-1.5 border border-gray-200 text-xs font-medium rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>

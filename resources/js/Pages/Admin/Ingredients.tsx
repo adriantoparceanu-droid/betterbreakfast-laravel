@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { translateContent } from '@/lib/translate';
 
 const INGREDIENT_CATEGORIES = [
     'Proteins', 'Grains & Legumes', 'Dairy', 'Fruits',
@@ -16,6 +17,7 @@ interface IngredientRow {
     fatPer100g:      number | null;
     carbsPer100g:    number | null;
     fiberPer100g:    number | null;
+    translationRo:   string | null;
 }
 
 type NutritionKey = 'caloriesPer100g' | 'proteinPer100g' | 'fatPer100g' | 'carbsPer100g' | 'fiberPer100g';
@@ -30,7 +32,7 @@ const NUTRITION_COLS: { key: NutritionKey; label: string; server: string }[] = [
 
 interface Props { ingredients: IngredientRow[]; }
 
-const EMPTY_ADD = { name: '', category: 'Grains & Legumes' as string, calories_per_100g: '', protein_per_100g: '', fat_per_100g: '', carbs_per_100g: '', fiber_per_100g: '' };
+const EMPTY_ADD = { name: '', category: 'Grains & Legumes' as string, translation_ro_name: '', calories_per_100g: '', protein_per_100g: '', fat_per_100g: '', carbs_per_100g: '', fiber_per_100g: '' };
 
 const INPUT_CLS = 'w-full h-8 border border-gray-200 rounded-lg px-2 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-400';
 const NUM_CLS   = `${INPUT_CLS} text-center`;
@@ -53,6 +55,17 @@ export default function AdminIngredients({ ingredients }: Props) {
     const [lookupLoading, setLookupLoading] = useState<'add' | number | null>(null);
     const [lookupError,   setLookupError]   = useState<{ ctx: 'add' | number; msg: string } | null>(null);
     const [bulkProgress,  setBulkProgress]  = useState<{ done: number; total: number; skipped: number } | null>(null);
+    const [trLoading,     setTrLoading]     = useState<'add' | number | null>(null);
+
+    const generateRo = async (name: string, ctx: 'add' | number) => {
+        if (!name.trim()) return;
+        setTrLoading(ctx);
+        const res = await translateContent<{ name?: string }>('ingredient', { name: name.trim() });
+        setTrLoading(null);
+        if (!res.ok) { alert(res.error); return; }
+        if (ctx === 'add') setNewForm(prev => ({ ...prev, translation_ro_name: res.translation.name ?? '' }));
+        else setEditForm(prev => ({ ...prev, translation_ro_name: res.translation.name ?? '' }));
+    };
 
     const filtered = ingredients.filter((i) =>
         i.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -164,6 +177,7 @@ export default function AdminIngredients({ ingredients }: Props) {
         setEditForm({
             name:               i.name,
             category:           i.category,
+            translation_ro_name: i.translationRo ?? '',
             calories_per_100g:  i.caloriesPer100g?.toString() ?? '',
             protein_per_100g:   i.proteinPer100g?.toString()  ?? '',
             fat_per_100g:       i.fatPer100g?.toString()      ?? '',
@@ -261,6 +275,18 @@ export default function AdminIngredients({ ingredients }: Props) {
                             {lookupError?.ctx === 'add' && (
                                 <p className="text-xs text-red-500 mt-1">{lookupError.msg}</p>
                             )}
+                            <div className="flex gap-1 mt-1">
+                                <input
+                                    value={newForm.translation_ro_name}
+                                    onChange={e => setNewForm({ ...newForm, translation_ro_name: e.target.value })}
+                                    className={INPUT_CLS}
+                                    placeholder="Nume (RO)"
+                                />
+                                <button type="button" onClick={() => generateRo(newForm.name, 'add')} disabled={trLoading === 'add'}
+                                    className="shrink-0 px-2 h-8 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+                                    {trLoading === 'add' ? '…' : 'AI'}
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label className="text-xs font-medium text-gray-500 block mb-1">Category</label>
@@ -344,6 +370,18 @@ export default function AdminIngredients({ ingredients }: Props) {
                                         {lookupError?.ctx === i.id && (
                                             <p className="text-xs text-red-500 mt-1">{lookupError.msg}</p>
                                         )}
+                                        <div className="flex gap-1 mt-1">
+                                            <input
+                                                value={editForm.translation_ro_name ?? ''}
+                                                onChange={e => setEditForm({ ...editForm, translation_ro_name: e.target.value })}
+                                                className={INPUT_CLS}
+                                                placeholder="Nume (RO)"
+                                            />
+                                            <button type="button" onClick={() => generateRo(editForm.name ?? '', i.id)} disabled={trLoading === i.id}
+                                                className="shrink-0 px-2 h-8 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+                                                {trLoading === i.id ? '…' : 'AI'}
+                                            </button>
+                                        </div>
                                     </td>
                                     <td className="px-5 py-2">
                                         <select

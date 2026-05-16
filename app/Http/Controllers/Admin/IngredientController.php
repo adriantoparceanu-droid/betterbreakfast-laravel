@@ -21,6 +21,7 @@ class IngredientController extends Controller
                 'id'               => $i->id,
                 'name'             => $i->name,
                 'category'         => $i->category,
+                'translationRo'    => $i->translations['ro']['name'] ?? null,
                 'caloriesPer100g'  => $i->calories_per_100g,
                 'proteinPer100g'   => $i->protein_per_100g,
                 'fatPer100g'       => $i->fat_per_100g,
@@ -36,12 +37,16 @@ class IngredientController extends Controller
         $data = $request->validate([
             'name'              => 'required|string|max:100|unique:master_ingredients,name',
             'category'          => 'required|string|max:50',
+            'translation_ro_name' => 'nullable|string|max:100',
             'calories_per_100g' => 'nullable|numeric|min:0',
             'protein_per_100g'  => 'nullable|numeric|min:0',
             'fat_per_100g'      => 'nullable|numeric|min:0',
             'carbs_per_100g'    => 'nullable|numeric|min:0',
             'fiber_per_100g'    => 'nullable|numeric|min:0',
         ]);
+
+        $data['translations'] = $this->roName($data);
+        unset($data['translation_ro_name']);
 
         MasterIngredient::create($data);
         return back();
@@ -52,6 +57,7 @@ class IngredientController extends Controller
         $data = $request->validate([
             'name'              => 'sometimes|string|max:100',
             'category'          => 'sometimes|string|max:50',
+            'translation_ro_name' => 'nullable|string|max:100',
             'calories_per_100g' => 'nullable|numeric|min:0',
             'protein_per_100g'  => 'nullable|numeric|min:0',
             'fat_per_100g'      => 'nullable|numeric|min:0',
@@ -59,8 +65,19 @@ class IngredientController extends Controller
             'fiber_per_100g'    => 'nullable|numeric|min:0',
         ]);
 
+        if (array_key_exists('translation_ro_name', $data)) {
+            $data['translations'] = $this->roName($data);
+        }
+        unset($data['translation_ro_name']);
+
         MasterIngredient::findOrFail($id)->update($data);
         return back();
+    }
+
+    private function roName(array $data): ?array
+    {
+        $ro = trim((string) ($data['translation_ro_name'] ?? ''));
+        return $ro !== '' ? ['ro' => ['name' => $ro]] : null;
     }
 
     public function destroy(int $id): RedirectResponse

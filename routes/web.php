@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\RecipeController as AdminRecipe;
 use App\Http\Controllers\Admin\ModuleController as AdminModule;
 use App\Http\Controllers\Admin\IngredientController as AdminIngredient;
 use App\Http\Controllers\Admin\NutritionController as AdminNutrition;
+use App\Http\Controllers\Admin\TranslationController as AdminTranslation;
 use App\Http\Controllers\Admin\StatsController as AdminStats;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\ExploreRecipeController;
@@ -85,6 +86,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/recipes/{id}/toggle',       [AdminRecipe::class, 'toggleActive'])->name('recipes.toggle');
     Route::post('/recipes/upload-image',       [AdminRecipe::class, 'uploadImage'])->name('recipes.upload-image');
     Route::post('/recipes/calculate-nutrition', [AdminNutrition::class, 'calculate'])->name('recipes.calculate-nutrition');
+    Route::post('/translate',                  [AdminTranslation::class, 'translate'])->name('translate');
 
     Route::get('/ingredients',                        [AdminIngredient::class, 'index'])->name('ingredients');
     Route::get('/ingredients/nutrition-lookup',       [AdminIngredient::class, 'nutritionLookup'])->name('ingredients.nutrition_lookup');
