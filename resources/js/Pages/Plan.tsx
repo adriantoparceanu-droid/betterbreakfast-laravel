@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import {
     DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors,
@@ -11,22 +11,12 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';
-import { useRecipes, useRecipesLoaded } from '@/hooks/useRecipes';
+import { useRecipes } from '@/hooks/useRecipes';
 import { cn, formatQty, convertUnit } from '@/lib/utils';
 import { useT } from '@/hooks/useT';
 import { localizeRecipe } from '@/lib/localize';
 import AppLayout from '@/Layouts/AppLayout';
 import type { Recipe } from '@/types/app';
-
-// Unbiased Fisher-Yates shuffle (Array.sort(() => Math.random() - 0.5) is biased).
-function shuffle<T>(arr: T[]): T[] {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-}
 
 // ─── Sortable future day card ─────────────────────────────────────────────────
 
@@ -205,46 +195,15 @@ function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
 
 export default function PlanPage() {
     const { t, locale } = useT();
-    const { progress, updateProgress, isHydrated } = useUserStore();
+    const { progress, updateProgress } = useUserStore();
     const { currentDay, completedDays, selectedRecipes, checkIns, foundationDone, foundationChecked, defaultServings } = progress;
     const rawRecipes = useRecipes();
-    const recipesLoaded = useRecipesLoaded();
     const recipes = rawRecipes.map((r) => localizeRecipe(r, locale));
     const recipeMap = new Map(recipes.map((r) => [r.id, r]));
     const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
 
-    // Defensive auto-fill ONLY: never runs against the hardcoded fallback set,
-    // never reshuffles existing valid assignments, never touches completed /
-    // today / past days. Fills only empty-or-stale FUTURE days. Canonical
-    // assignment happens at onboarding / reset, not here.
-    useEffect(() => {
-        if (!isHydrated || !recipesLoaded || !recipes.length) return;
-
-        const validIds = new Set(recipes.map(r => r.id));
-        const futureDays = Array.from({ length: 10 }, (_, i) => i + 1).filter(d => d > currentDay);
-
-        const needsAssign = futureDays.filter(d => {
-            const id = selectedRecipes[d];
-            return !id || !validIds.has(id);
-        });
-        if (needsAssign.length === 0) return;
-
-        // Preserve every recipe already locked into a day with a valid id.
-        const taken = new Set(
-            Object.values(selectedRecipes).filter(id => validIds.has(id)),
-        );
-
-        const pool = shuffle(recipes.filter(r => !taken.has(r.id)));
-        if (pool.length === 0) return;
-
-        const newSelected = { ...selectedRecipes };
-        let i = 0;
-        for (const d of needsAssign) {
-            if (i >= pool.length) break;
-            newSelected[d] = pool[i++].id;
-        }
-        updateProgress({ selectedRecipes: newSelected });
-    }, [isHydrated, recipesLoaded, recipes.length, recipes[0]?.id, currentDay, Object.keys(selectedRecipes).length]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Plan is a pure preview/reorder screen — recipe assignment is owned by
+    // useEnsurePlanAssigned() (AppLayout). Drag-to-reorder below is a user action.
 
     // DnD
     const sensors = useSensors(

@@ -5,6 +5,16 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+// Unbiased Fisher-Yates shuffle (Array.sort(() => Math.random() - 0.5) is biased).
+export function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
 export function scaleIngredient(quantity: number, servings: number, baseServings: number): number {
     const scaled = (quantity / baseServings) * servings;
     return Math.round(scaled * 10) / 10;
