@@ -73,33 +73,31 @@ class IngredientController extends Controller
     {
         $name = $request->validate(['name' => 'required|string|max:100'])['name'];
 
-        $response = Http::get('https://api.nal.usda.gov/fdc/v1/foods/search', [
-            'query'    => $name,
-            'dataType' => 'Foundation,SR Legacy',
-            'pageSize' => 1,
-            'api_key'  => config('services.usda_fdc.key'),
+        $response = Http::withHeaders([
+            'X-Api-Key' => config('services.calorie_ninjas.key'),
+        ])->get('https://api.calorieninjas.com/v1/nutrition', [
+            'query' => $name,
         ]);
 
         if (!$response->ok()) {
             return response()->json(['error' => 'API request failed'], 502);
         }
 
-        $foods = $response->json('foods', []);
+        $items = $response->json('items', []);
 
-        if (empty($foods)) {
+        if (empty($items)) {
             return response()->json(['error' => 'Not found'], 404);
         }
 
-        $nutrients = collect($foods[0]['foodNutrients'] ?? []);
-        $get = fn (int $id) => round($nutrients->firstWhere('nutrientId', $id)['value'] ?? 0, 1);
+        $item = $items[0];
 
         return response()->json([
-            'foundName' => $foods[0]['description'] ?? null,
-            'calories'  => $get(1008),
-            'protein'   => $get(1003),
-            'fat'       => $get(1004),
-            'carbs'     => $get(1005),
-            'fiber'     => $get(1079),
+            'foundName' => $item['name'] ?? null,
+            'calories'  => round($item['calories']               ?? 0, 1),
+            'protein'   => round($item['protein_g']              ?? 0, 1),
+            'fat'       => round($item['fat_total_g']            ?? 0, 1),
+            'carbs'     => round($item['carbohydrates_total_g']  ?? 0, 1),
+            'fiber'     => round($item['fiber_g']                ?? 0, 1),
         ]);
     }
 

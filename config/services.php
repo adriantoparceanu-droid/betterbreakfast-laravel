@@ -40,8 +40,8 @@ return [
         'secret'   => env('HCAPTCHA_SECRET_KEY'),
     ],
 
-    'usda_fdc' => [
-        'key' => env('USDA_FDC_API_KEY'),
+    'calorie_ninjas' => [
+        'key' => env('CALORIE_NINJAS_API_KEY'),
     ],
 
     'stripe' => [

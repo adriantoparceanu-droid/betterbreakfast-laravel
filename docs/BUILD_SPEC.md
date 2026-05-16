@@ -765,6 +765,7 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Fix: Webhook — adăugat logging complet (Log::info/error) pentru diagnoză; backward compat cu sesiuni vechi (module_id fără type)
 - [x] (2026-05-16) Refactor: Eliminat logica de conversie unități (TO_GRAMS, WHOLE_GRAMS, toGrams) din units.ts și butonul "Calculate from ingredients" din RecipeForm — valorile nutriționale se completează manual sau via USDA Lookup
 - [x] (2026-05-16) Feature: Admin Ingredients — buton "Lookup All" bulk: apelează USDA FoodData Central pentru toate ingredientele secvențial, suprascrie valorile, arată progress bar; nutrienți lipsă din API primesc valoare 0
+- [x] (2026-05-16) Refactor: Înlocuit USDA FoodData Central cu CalorieNinjas API pentru lookup nutrițional — răspunsuri mai precise pentru ingrediente de bază
 
 ### In Progress / Planned
 
