@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 
 interface Module {
+    id: string;
     name: string;
     description: string;
     price: number;
@@ -34,7 +35,7 @@ export default function Purchase({ module, stripeStatus }: Props) {
 
     const handleCheckout = () => {
         setLoading(true);
-        router.post(route('purchase.checkout'), {}, {
+        router.post(route('purchase.checkout'), { type: 'module', id: module.id }, {
             onError: () => setLoading(false),
         });
     };

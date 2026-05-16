@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 
 interface Recipe {
@@ -32,6 +33,15 @@ function LockIcon() {
 }
 
 function UnlockModal({ category, onClose }: { category: Category; onClose: () => void }) {
+    const [loading, setLoading] = useState(false);
+
+    const handleCheckout = () => {
+        setLoading(true);
+        router.post(route('purchase.checkout'), { type: 'category', id: category.id }, {
+            onError: () => setLoading(false),
+        });
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
             <div
@@ -52,15 +62,25 @@ function UnlockModal({ category, onClose }: { category: Category; onClose: () =>
                     <p className="text-sm text-gray-500 mb-4">{category.description}</p>
                 )}
                 <p className="text-sm text-gray-500 mb-6">
-                    This collection includes <strong>{category.recipe_count} recipes</strong> available after purchase.
-                    To unlock, contact us and we'll activate your access.
+                    This collection includes <strong>{category.recipe_count} recipes</strong> available instantly after purchase.
                 </p>
-                <a
-                    href={`mailto:hello@betterbreakfast.eu?subject=Unlock: ${encodeURIComponent(category.name)}&body=Hi, I'd like to purchase access to the ${encodeURIComponent(category.name)} category (€${category.price.toFixed(2)}).`}
-                    className="block w-full text-center py-3.5 rounded-2xl bg-brand-500 text-white font-semibold text-sm hover:bg-brand-600 transition-colors mb-3"
+                <button
+                    onClick={handleCheckout}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center py-3.5 rounded-2xl bg-brand-500 text-white font-semibold text-sm hover:bg-brand-600 active:scale-[0.98] transition-all disabled:opacity-60 disabled:pointer-events-none gap-2 mb-3"
                 >
-                    Contact to unlock — €{category.price.toFixed(2)}
-                </a>
+                    {loading ? (
+                        <>
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Redirecting to Stripe…
+                        </>
+                    ) : (
+                        `Unlock ${category.name} — €${category.price.toFixed(2)}`
+                    )}
+                </button>
+                <p className="text-xs text-gray-400 text-center mb-4">
+                    Secure payment via Stripe. One-time charge, no subscription.
+                </p>
                 <button onClick={onClose} className="block w-full text-center py-3 rounded-2xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
                     Maybe later
                 </button>
@@ -106,23 +126,56 @@ function RecipeCard({ recipe, locked }: { recipe: Recipe; locked: boolean }) {
     );
 }
 
+function detectStripeStatus(): 'success' | 'canceled' | null {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('stripe_success')) return 'success';
+    if (params.has('stripe_canceled')) return 'canceled';
+    return null;
+}
+
 export default function Explore() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [unlockTarget, setUnlockTarget] = useState<Category | null>(null);
+    const [stripeStatus, setStripeStatus] = useState<'success' | 'canceled' | null>(null);
+    const unlockedAtStart = useRef(0);
 
-    useEffect(() => {
-        fetch('/api/explore', { credentials: 'same-origin' })
+    const fetchCategories = (isInitial = false) => {
+        return fetch('/api/explore', { credentials: 'same-origin' })
             .then(r => r.json())
             .then(data => {
-                if (data.ok) {
-                    setCategories(data.categories);
-                    if (data.categories.length > 0) setSelectedId(data.categories[0].id);
+                if (!data.ok) return;
+                const cats: Category[] = data.categories;
+                setCategories(cats);
+                if (isInitial) {
+                    if (cats.length > 0) setSelectedId(cats[0].id);
+                    unlockedAtStart.current = cats.filter(c => c.has_access).length;
+
+                    // detect stripe_success only after we know the initial access state
+                    const status = detectStripeStatus();
+                    setStripeStatus(status);
+                } else {
+                    // check if a new category was unlocked since start
+                    const nowUnlocked = cats.filter(c => c.has_access).length;
+                    if (nowUnlocked > unlockedAtStart.current) {
+                        setStripeStatus(null);
+                        window.history.replaceState({}, '', window.location.pathname);
+                    }
                 }
-            })
-            .finally(() => setLoading(false));
+            });
+    };
+
+    useEffect(() => {
+        fetchCategories(true).finally(() => setLoading(false));
     }, []);
+
+    // poll every 3s while activating
+    useEffect(() => {
+        if (stripeStatus !== 'success') return;
+        const id = setInterval(() => fetchCategories(false), 3000);
+        return () => clearInterval(id);
+    }, [stripeStatus]);
 
     const selected = categories.find(c => c.id === selectedId) ?? null;
 
@@ -133,6 +186,23 @@ export default function Explore() {
                 <h1 className="text-xl font-bold text-gray-900">Explore</h1>
                 <p className="text-sm text-gray-400 mt-0.5">Premium recipe collections</p>
             </div>
+
+            {/* Stripe status banners */}
+            {stripeStatus === 'success' && (
+                <div className="mx-4 mb-3 bg-green-50 border border-green-200 rounded-2xl px-5 py-4 text-center">
+                    <div className="flex justify-center mb-2">
+                        <span className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                    <p className="text-sm font-semibold text-green-700 mb-1">Payment confirmed!</p>
+                    <p className="text-xs text-green-600">Activating your access, please wait…</p>
+                </div>
+            )}
+
+            {stripeStatus === 'canceled' && (
+                <div className="mx-4 mb-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 text-center">
+                    <p className="text-sm text-amber-700">Payment was canceled. You can try again below.</p>
+                </div>
+            )}
 
             {loading && (
                 <div className="flex-1 flex items-center justify-center">

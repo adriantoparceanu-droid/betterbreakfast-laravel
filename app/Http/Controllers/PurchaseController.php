@@ -29,6 +29,7 @@ class PurchaseController extends Controller
 
         return Inertia::render('Purchase', [
             'module' => [
+                'id'          => $module->id,
                 'name'        => $module->name,
                 'description' => $module->description,
                 'price'       => $module->price,
