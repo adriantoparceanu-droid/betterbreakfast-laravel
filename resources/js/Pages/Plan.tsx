@@ -82,22 +82,23 @@ interface RecipeModalProps {
     onClose: () => void;
 }
 
-const SECTION_CLS = 'group rounded-xl border border-gray-100 overflow-hidden';
-const SUMMARY_CLS = [
-    'flex items-center justify-between px-4 py-3',
-    'cursor-pointer select-none [list-style:none] [&::-webkit-details-marker]:hidden',
-    'font-semibold text-sm text-gray-700',
-].join(' ');
-const CHEVRON_CLS = 'text-gray-400 text-xs transition-transform duration-200 group-open:rotate-180';
+const SECTION_CLS = 'rounded-xl border border-gray-100 overflow-hidden';
+const ROW_CLS = 'w-full flex items-center justify-between px-4 py-3 text-left cursor-pointer select-none font-semibold text-sm text-gray-700';
+const CHEVRON_CLS = 'text-gray-400 text-xs transition-transform duration-200';
+
+type ModalSection = 'ing' | 'steps' | 'subs' | 'why' | null;
 
 function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
     const { t } = useT();
     const scale = defaultServings / (recipe.baseServings || 1);
+    // Accordion: opening one section collapses the others.
+    const [open, setOpen] = useState<ModalSection>('ing');
+    const toggle = (s: Exclude<ModalSection, null>) => setOpen(prev => (prev === s ? null : s));
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-            <div className="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-xl">
+            <div className="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl max-h-[88dvh] flex flex-col overflow-hidden shadow-xl">
 
                 {/* Header */}
                 <div className="px-5 pt-5 pb-4 border-b border-gray-100 flex items-start justify-between gap-3 shrink-0">
@@ -115,75 +116,83 @@ function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
                 </div>
 
                 {/* Scrollable body */}
-                <div className="overflow-y-auto flex flex-col gap-2 px-5 py-4 pb-8">
+                <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 px-5 py-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
 
-                    {/* Ingredients — open by default */}
-                    <details open className={SECTION_CLS}>
-                        <summary className={SUMMARY_CLS}>
+                    {/* Ingredients */}
+                    <div className={SECTION_CLS}>
+                        <button type="button" onClick={() => toggle('ing')} className={ROW_CLS}>
                             {t('common.ingredients')}
-                            <span className={CHEVRON_CLS}>▾</span>
-                        </summary>
-                        <div className="px-4 pb-4 pt-1 flex flex-col gap-2.5">
-                            {recipe.ingredients.map((ing, i) => {
-                                const { qty, unit } = convertUnit(ing.quantity * scale, ing.unit, 'metric');
-                                return (
-                                    <div key={i} className="flex items-baseline gap-2 text-sm">
-                                        <span className="font-semibold text-gray-900 tabular-nums shrink-0">
-                                            {formatQty(qty)} {unit}
-                                        </span>
-                                        <span className="text-gray-600">{ing.name}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </details>
-
-                    {/* Steps — closed by default */}
-                    <details className={SECTION_CLS}>
-                        <summary className={SUMMARY_CLS}>
-                            {t('common.steps')}
-                            <span className={CHEVRON_CLS}>▾</span>
-                        </summary>
-                        <div className="px-4 pb-4 pt-1 flex flex-col gap-3">
-                            {recipe.steps.map((step, i) => (
-                                <div key={i} className="flex gap-3 text-sm">
-                                    <span className="font-bold text-brand-600 shrink-0 tabular-nums">{i + 1}.</span>
-                                    <p className="text-gray-700 leading-relaxed">{step}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </details>
-
-                    {/* Substitutions — closed, only if present */}
-                    {recipe.substitutions && (
-                        <details className={SECTION_CLS}>
-                            <summary className={SUMMARY_CLS}>
-                                {t('common.substitutions')}
-                                <span className={CHEVRON_CLS}>▾</span>
-                            </summary>
-                            <div className="px-4 pb-4 pt-1">
-                                <div
-                                    className="text-sm text-gray-700 leading-relaxed rte-display"
-                                    dangerouslySetInnerHTML={{ __html: recipe.substitutions }}
-                                />
+                            <span className={`${CHEVRON_CLS} ${open === 'ing' ? 'rotate-180' : ''}`}>▾</span>
+                        </button>
+                        {open === 'ing' && (
+                            <div className="px-4 pb-4 pt-1 flex flex-col gap-2.5">
+                                {recipe.ingredients.map((ing, i) => {
+                                    const { qty, unit } = convertUnit(ing.quantity * scale, ing.unit, 'metric');
+                                    return (
+                                        <div key={i} className="flex items-baseline gap-2 text-sm">
+                                            <span className="font-semibold text-gray-900 tabular-nums shrink-0">
+                                                {formatQty(qty)} {unit}
+                                            </span>
+                                            <span className="text-gray-600">{ing.name}</span>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                        </details>
+                        )}
+                    </div>
+
+                    {/* Steps */}
+                    <div className={SECTION_CLS}>
+                        <button type="button" onClick={() => toggle('steps')} className={ROW_CLS}>
+                            {t('common.steps')}
+                            <span className={`${CHEVRON_CLS} ${open === 'steps' ? 'rotate-180' : ''}`}>▾</span>
+                        </button>
+                        {open === 'steps' && (
+                            <div className="px-4 pb-4 pt-1 flex flex-col gap-3">
+                                {recipe.steps.map((step, i) => (
+                                    <div key={i} className="flex gap-3 text-sm">
+                                        <span className="font-bold text-brand-600 shrink-0 tabular-nums">{i + 1}.</span>
+                                        <p className="text-gray-700 leading-relaxed">{step}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Substitutions — only if present */}
+                    {recipe.substitutions && (
+                        <div className={SECTION_CLS}>
+                            <button type="button" onClick={() => toggle('subs')} className={ROW_CLS}>
+                                {t('common.substitutions')}
+                                <span className={`${CHEVRON_CLS} ${open === 'subs' ? 'rotate-180' : ''}`}>▾</span>
+                            </button>
+                            {open === 'subs' && (
+                                <div className="px-4 pb-4 pt-1">
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed rte-display"
+                                        dangerouslySetInnerHTML={{ __html: recipe.substitutions }}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     )}
 
-                    {/* Why this works — closed, only if present */}
+                    {/* Why this works — only if present */}
                     {recipe.whyThisWorks && (
-                        <details className={SECTION_CLS}>
-                            <summary className={SUMMARY_CLS}>
+                        <div className={SECTION_CLS}>
+                            <button type="button" onClick={() => toggle('why')} className={ROW_CLS}>
                                 {t('common.whyThisWorks')}
-                                <span className={CHEVRON_CLS}>▾</span>
-                            </summary>
-                            <div className="px-4 pb-4 pt-1">
-                                <div
-                                    className="text-sm text-gray-700 leading-relaxed rte-display"
-                                    dangerouslySetInnerHTML={{ __html: recipe.whyThisWorks }}
-                                />
-                            </div>
-                        </details>
+                                <span className={`${CHEVRON_CLS} ${open === 'why' ? 'rotate-180' : ''}`}>▾</span>
+                            </button>
+                            {open === 'why' && (
+                                <div className="px-4 pb-4 pt-1">
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed rte-display"
+                                        dangerouslySetInnerHTML={{ __html: recipe.whyThisWorks }}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
