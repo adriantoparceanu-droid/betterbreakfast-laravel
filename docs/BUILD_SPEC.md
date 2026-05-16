@@ -794,6 +794,7 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Test: ExploreRecipeTest — 11 teste pentru pagina de rețetă (acces, made_count, EXPLORE_MADE_THIS, 404)
 - [x] (2026-05-16) Test: RecipesPageTest + CategoryTest — 28 teste pentru pagina unificată admin (CRUD categorii, filtrare, recipe count)
 - [x] (2026-05-16) Fix: Plan — re-asignare automată rețete când sursa comută din fallback (recipe-01) în DB (UUID); `recipes[0]?.id` în dependency array + curățare ID-uri stale
+- [x] (2026-05-16) UI: Staples + FoundationDay — text secundar din header uniformizat la text-gray-500; buton "Skip for now" adăugat pe FoundationDay sub "Go to today's recipe"
 
 ### In Progress / Planned
 

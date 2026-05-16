@@ -117,7 +117,7 @@ export default function FoundationDayPage() {
                         <p className="text-sm text-gray-500 leading-relaxed">
                             Prep your basics now to ensure you save time later in the week. Getting this done today means you won't skip a recipe when you are short on time.
                         </p>
-                        <p className="text-sm text-gray-400 leading-relaxed">
+                        <p className="text-sm text-gray-500 leading-relaxed">
                             Follow the steps in order, especially storage instructions — they determine how well the week runs.
                         </p>
                     </div>
@@ -187,6 +187,12 @@ export default function FoundationDayPage() {
                             className="w-full py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold transition-colors hover:bg-brand-600 active:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             Go to today's recipe
+                        </button>
+                        <button
+                            onClick={() => router.visit(route('today'))}
+                            className="text-xs text-gray-400 hover:text-gray-600 transition-colors duration-150"
+                        >
+                            Skip for now
                         </button>
                     </div>
                 )}

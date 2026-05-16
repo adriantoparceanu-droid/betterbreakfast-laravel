@@ -75,7 +75,7 @@ export default function StaplesPage() {
                         <p className="text-sm text-gray-500 leading-relaxed">
                             This is your ingredient list for the next 10 breakfasts, adjusted to the number of people you cook for. Check what you already have and buy the rest.
                         </p>
-                        <p className="text-sm text-gray-400 leading-relaxed">
+                        <p className="text-sm text-gray-500 leading-relaxed">
                             When you're ready, go to <span className="font-semibold text-brand-600">Foundation Day</span> — a short prep session for the week ahead.
                         </p>
                     </div>
