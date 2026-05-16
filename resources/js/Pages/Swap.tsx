@@ -6,6 +6,7 @@ import { track } from '@/lib/analytics';
 import { Button } from '@/Components/ui/Button';
 import { cn } from '@/lib/utils';
 import { useT } from '@/hooks/useT';
+import { localizeRecipe } from '@/lib/localize';
 import AppLayout from '@/Layouts/AppLayout';
 import type { Recipe } from '@/types/app';
 
@@ -13,13 +14,14 @@ interface Props { day: number; }
 
 export default function SwapPage({ day }: Props) {
     const dayNumber = Number(day);
-    const { t } = useT();
+    const { t, locale } = useT();
     const { progress, userId, updateProgress } = useUserStore();
     const { selectedRecipes, completedDays } = progress;
 
     const currentRecipeId = selectedRecipes[dayNumber];
-    const currentRecipe = useRecipeById(currentRecipeId);
-    const allRecipes = useRecipes();
+    const rawCurrentRecipe = useRecipeById(currentRecipeId);
+    const currentRecipe = rawCurrentRecipe ? localizeRecipe(rawCurrentRecipe, locale) : undefined;
+    const allRecipes = useRecipes().map((r) => localizeRecipe(r, locale));
 
     // Available = recipes not locked in a completed day, excluding current day's recipe
     const completedRecipeIds = new Set(

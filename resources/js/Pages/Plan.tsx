@@ -14,6 +14,7 @@ import { useUserStore } from '@/store/userStore';
 import { useRecipes } from '@/hooks/useRecipes';
 import { cn, formatQty, convertUnit } from '@/lib/utils';
 import { useT } from '@/hooks/useT';
+import { localizeRecipe } from '@/lib/localize';
 import AppLayout from '@/Layouts/AppLayout';
 import type { Recipe } from '@/types/app';
 
@@ -193,10 +194,11 @@ function RecipeModal({ recipe, defaultServings, onClose }: RecipeModalProps) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PlanPage() {
-    const { t } = useT();
+    const { t, locale } = useT();
     const { progress, updateProgress, isHydrated } = useUserStore();
     const { currentDay, completedDays, selectedRecipes, checkIns, foundationDone, foundationChecked, defaultServings } = progress;
-    const recipes = useRecipes();
+    const rawRecipes = useRecipes();
+    const recipes = rawRecipes.map((r) => localizeRecipe(r, locale));
     const recipeMap = new Map(recipes.map((r) => [r.id, r]));
     const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
 

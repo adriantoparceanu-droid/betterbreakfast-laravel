@@ -39,10 +39,12 @@ class ExploreRecipeController extends Controller
                 'tags'          => $recipe->tags,
                 'substitutions' => $recipe->substitutions,
                 'why_this_works'=> $recipe->why_this_works,
+                'translations'  => $recipe->translations ?: null,
             ],
             'category' => [
-                'id'   => $recipe->category->id,
-                'name' => $recipe->category->name,
+                'id'           => $recipe->category->id,
+                'name'         => $recipe->category->name,
+                'translations' => $recipe->category->translations ?: null,
             ],
             'made_count' => $madeCount,
         ]);

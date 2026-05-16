@@ -17,6 +17,18 @@ export interface Nutrition {
     fiber: number;
 }
 
+export interface RecipeTranslation {
+    name?: string;
+    steps?: string[];
+    // Positional, parallel to Recipe.ingredients — only the name is translated.
+    ingredients?: { name: string }[];
+    substitutions?: string;
+    whyThisWorks?: string;
+    tags?: string[];
+}
+
+export type Translations = { ro?: RecipeTranslation };
+
 export interface Recipe {
     id: string;
     name: string;
@@ -28,6 +40,7 @@ export interface Recipe {
     tags: string[];
     substitutions?: string;
     whyThisWorks?: string;
+    translations?: Translations | null;
 }
 
 export type CheckInMood = 'energized' | 'full' | 'hungry';

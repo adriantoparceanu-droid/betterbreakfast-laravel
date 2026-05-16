@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/Button';
+import { useT } from '@/hooks/useT';
+import { localized } from '@/lib/localize';
+
+type SimpleTr = Record<string, Record<string, string | undefined> | undefined> | null;
 
 interface Recipe {
     id: string;
@@ -12,6 +16,7 @@ interface Recipe {
     tags?: string[];
     locked?: boolean;
     made_count?: number;
+    translations?: SimpleTr;
 }
 
 interface Category {
@@ -23,6 +28,7 @@ interface Category {
     has_access: boolean;
     recipe_count: number;
     recipes: Recipe[];
+    translations?: SimpleTr;
 }
 
 function LockIcon() {
@@ -35,7 +41,10 @@ function LockIcon() {
 }
 
 function UnlockModal({ category, onClose }: { category: Category; onClose: () => void }) {
+    const { locale } = useT();
     const [loading, setLoading] = useState(false);
+    const catName = localized(locale, category.name, category.translations ?? null, 'name');
+    const catDesc = localized(locale, category.description ?? '', category.translations ?? null, 'description');
 
     const handleCheckout = () => {
         setLoading(true);
@@ -56,12 +65,12 @@ function UnlockModal({ category, onClose }: { category: Category; onClose: () =>
                         <LockIcon />
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-gray-900">{category.name}</h2>
+                        <h2 className="text-lg font-bold text-gray-900">{catName}</h2>
                         <p className="text-sm text-brand-600 font-semibold">€{category.price.toFixed(2)}</p>
                     </div>
                 </div>
-                {category.description && (
-                    <p className="text-sm text-gray-500 mb-4">{category.description}</p>
+                {catDesc && (
+                    <p className="text-sm text-gray-500 mb-4">{catDesc}</p>
                 )}
                 <p className="text-sm text-gray-500 mb-6">
                     This collection includes <strong>{category.recipe_count} recipes</strong> available instantly after purchase.
@@ -77,7 +86,7 @@ function UnlockModal({ category, onClose }: { category: Category; onClose: () =>
                             Redirecting to Stripe…
                         </>
                     ) : (
-                        `Unlock ${category.name} — €${category.price.toFixed(2)}`
+                        `Unlock ${catName} — €${category.price.toFixed(2)}`
                     )}
                 </button>
                 <p className="text-xs text-gray-500 text-center mb-4">
@@ -92,11 +101,13 @@ function UnlockModal({ category, onClose }: { category: Category; onClose: () =>
 }
 
 function RecipeCard({ recipe, locked }: { recipe: Recipe; locked: boolean }) {
+    const { locale } = useT();
+    const recipeName = localized(locale, recipe.name, recipe.translations ?? null, 'name');
     if (locked) {
         return (
             <div className="relative bg-white border border-gray-100 rounded-2xl p-4 overflow-hidden">
                 <div className="blur-sm select-none pointer-events-none">
-                    <p className="font-medium text-gray-900 text-sm mb-1">{recipe.name}</p>
+                    <p className="font-medium text-gray-900 text-sm mb-1">{recipeName}</p>
                     <p className="text-xs text-gray-400">•••</p>
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center bg-white/60">
@@ -112,7 +123,7 @@ function RecipeCard({ recipe, locked }: { recipe: Recipe; locked: boolean }) {
     return (
         <div className="bg-white border border-gray-100 rounded-2xl p-4">
             <div className="flex items-start justify-between gap-3 mb-2">
-                <p className="font-medium text-gray-900 text-sm">{recipe.name}</p>
+                <p className="font-medium text-gray-900 text-sm">{recipeName}</p>
                 <Button
                     variant="secondary"
                     size="sm"
@@ -146,6 +157,7 @@ function RecipeCard({ recipe, locked }: { recipe: Recipe; locked: boolean }) {
 }
 
 export default function Explore() {
+    const { locale } = useT();
     const [categories, setCategories] = useState<Category[]>([]);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -233,7 +245,7 @@ export default function Explore() {
                                             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                         </svg>
                                     )}
-                                    {cat.name}
+                                    {localized(locale, cat.name, cat.translations ?? null, 'name')}
                                 </button>
                             ))}
                         </div>
@@ -244,8 +256,8 @@ export default function Explore() {
                         <div className="flex-1 overflow-y-auto px-4 pb-6">
                             {/* Category header */}
                             <div className="mb-4">
-                                {selected.description && (
-                                    <p className="text-sm text-gray-500 mb-3">{selected.description}</p>
+                                {localized(locale, selected.description ?? '', selected.translations ?? null, 'description') && (
+                                    <p className="text-sm text-gray-500 mb-3">{localized(locale, selected.description ?? '', selected.translations ?? null, 'description')}</p>
                                 )}
                                 {!selected.has_access && (
                                     <button
@@ -253,7 +265,7 @@ export default function Explore() {
                                         className="w-full py-3 rounded-2xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors flex items-center justify-center gap-2"
                                     >
                                         <LockIcon />
-                                        Unlock {selected.name} — €{selected.price.toFixed(2)}
+                                        Unlock {localized(locale, selected.name, selected.translations ?? null, 'name')} — €{selected.price.toFixed(2)}
                                     </button>
                                 )}
                             </div>

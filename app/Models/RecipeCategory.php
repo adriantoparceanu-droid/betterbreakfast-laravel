@@ -9,14 +9,15 @@ class RecipeCategory extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'module_id', 'name', 'slug', 'description', 'price', 'sort_order', 'is_active'];
+    protected $fillable = ['id', 'module_id', 'name', 'slug', 'description', 'price', 'sort_order', 'is_active', 'translations'];
 
     protected function casts(): array
     {
         return [
-            'price'      => 'float',
-            'is_active'  => 'boolean',
-            'sort_order' => 'integer',
+            'price'        => 'float',
+            'is_active'    => 'boolean',
+            'sort_order'   => 'integer',
+            'translations' => 'array',
         ];
     }
 

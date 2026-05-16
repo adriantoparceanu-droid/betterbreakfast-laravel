@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
+import { useT } from '@/hooks/useT';
+import { localized } from '@/lib/localize';
 
 interface Module {
     id: string;
     name: string;
     description: string;
     price: number;
+    translations?: Record<string, Record<string, string | undefined> | undefined> | null;
 }
 
 interface Props {
@@ -22,8 +25,11 @@ const INCLUDED = [
 ];
 
 export default function Purchase({ module, stripeStatus }: Props) {
+    const { locale } = useT();
     const [loading, setLoading] = useState(false);
     const activating = stripeStatus === 'success';
+    const moduleName = localized(locale, module.name, module.translations ?? null, 'name');
+    const moduleDesc = localized(locale, module.description, module.translations ?? null, 'description');
 
     useEffect(() => {
         if (!activating) return;
@@ -74,8 +80,8 @@ export default function Purchase({ module, stripeStatus }: Props) {
 
                     {/* Header */}
                     <div className="px-6 pt-6 pb-5 border-b border-gray-50">
-                        <h1 className="text-xl font-bold text-gray-900 mb-1">{module.name}</h1>
-                        <p className="text-sm text-gray-500">{module.description}</p>
+                        <h1 className="text-xl font-bold text-gray-900 mb-1">{moduleName}</h1>
+                        <p className="text-sm text-gray-500">{moduleDesc}</p>
                     </div>
 
                     {/* Included */}

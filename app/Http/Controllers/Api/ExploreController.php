@@ -27,7 +27,7 @@ class ExploreController extends Controller
             ->with(['recipes' => function ($q) {
                 $q->where('is_active', true)
                   ->orderBy('sort_order')
-                  ->select('id', 'name', 'image', 'base_servings', 'ingredients', 'steps', 'nutrition', 'tags', 'category_id', 'sort_order');
+                  ->select('id', 'name', 'image', 'base_servings', 'ingredients', 'steps', 'nutrition', 'tags', 'translations', 'category_id', 'sort_order');
             }])
             ->orderBy('sort_order')
             ->get()
@@ -39,6 +39,7 @@ class ExploreController extends Controller
                     'name'         => $cat->name,
                     'slug'         => $cat->slug,
                     'description'  => $cat->description,
+                    'translations' => $cat->translations ?: null,
                     'price'        => $cat->price,
                     'has_access'   => $hasAccess,
                     'recipe_count' => $cat->recipes->count(),

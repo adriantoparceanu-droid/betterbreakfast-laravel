@@ -6,6 +6,7 @@ import { enqueueSync } from '@/lib/sync/queue';
 import { Button } from '@/Components/ui/Button';
 import { cn, formatQty, convertUnit, type UnitSystem } from '@/lib/utils';
 import { useT } from '@/hooks/useT';
+import { localizeRecipe } from '@/lib/localize';
 import AppLayout from '@/Layouts/AppLayout';
 import type { PageProps } from '@/types/index.d';
 
@@ -18,12 +19,13 @@ function greetingKey(): string {
 
 export default function TodayPage() {
     const { auth } = usePage<PageProps>().props;
-    const { t } = useT();
+    const { t, locale } = useT();
     const { progress, userId, isHydrated, selectRecipe, resetProgress, updateProgress } = useUserStore();
     const { currentDay, selectedRecipes, completedDays, usedRecipeIds, defaultServings } = progress;
 
     const selectedId = selectedRecipes[currentDay];
-    const recipe = useRecipeById(selectedId);
+    const rawRecipe = useRecipeById(selectedId);
+    const recipe = rawRecipe ? localizeRecipe(rawRecipe, locale) : undefined;
     const firstAvailable = useFirstAvailable(usedRecipeIds);
 
     const allRecipes = useRecipes();

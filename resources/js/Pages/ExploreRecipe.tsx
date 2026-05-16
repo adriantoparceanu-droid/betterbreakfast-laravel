@@ -2,12 +2,23 @@ import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/Components/ui/Button';
 import { cn, formatQty, convertUnit, type UnitSystem } from '@/lib/utils';
+import { useT } from '@/hooks/useT';
+import { localized } from '@/lib/localize';
 import AppLayout from '@/Layouts/AppLayout';
 
 interface Ingredient {
     name: string;
     quantity: number;
     unit: string;
+}
+
+interface RecipeTr {
+    name?: string;
+    steps?: string[];
+    ingredients?: { name: string }[];
+    substitutions?: string;
+    whyThisWorks?: string;
+    tags?: string[];
 }
 
 interface Nutrition {
@@ -29,15 +40,23 @@ interface Recipe {
     tags: string[] | null;
     substitutions: string | null;
     why_this_works: string | null;
+    translations?: { ro?: RecipeTr } | null;
 }
 
 interface Props {
     recipe: Recipe;
-    category: { id: string; name: string };
+    category: { id: string; name: string; translations?: Record<string, Record<string, string | undefined> | undefined> | null };
     made_count: number;
 }
 
 export default function ExploreRecipe({ recipe, category, made_count }: Props) {
+    const { locale } = useT();
+    const tr = locale === 'ro' ? recipe.translations?.ro : undefined;
+    const recipeName = tr?.name || recipe.name;
+    const steps = tr?.steps && tr.steps.length ? tr.steps : recipe.steps;
+    const substitutions = tr?.substitutions || recipe.substitutions;
+    const whyThisWorks = tr?.whyThisWorks || recipe.why_this_works;
+    const categoryName = localized(locale, category.name, category.translations ?? null, 'name');
     const [servings, setServings] = useState(recipe.base_servings);
     const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
     const [openSubstitutions, setOpenSubstitutions] = useState(false);
@@ -79,8 +98,8 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
     return (
         <div className="flex flex-col pb-36">
             <div className="px-4 pt-5 pb-2">
-                <p className="text-xs text-brand-500 font-medium uppercase tracking-wide">{category.name}</p>
-                <h1 className="text-xl font-bold text-gray-900 mt-0.5">{recipe.name}</h1>
+                <p className="text-xs text-brand-500 font-medium uppercase tracking-wide">{categoryName}</p>
+                <h1 className="text-xl font-bold text-gray-900 mt-0.5">{recipeName}</h1>
                 {localMadeCount > 0 && (
                     <p className="text-xs text-gray-500 mt-1">
                         Made {localMadeCount} {localMadeCount === 1 ? 'time' : 'times'}
@@ -91,7 +110,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
             <div className="px-4 flex flex-col gap-5">
                 <div className="aspect-[4/3] bg-gradient-to-br from-brand-50 to-brand-100 rounded-3xl overflow-hidden flex items-center justify-center">
                     {recipe.image
-                        ? <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover" />
+                        ? <img src={recipe.image} alt={recipeName} className="w-full h-full object-cover" />
                         : <span className="text-7xl">🥣</span>
                     }
                 </div>
@@ -150,9 +169,10 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                     <div className="flex flex-col gap-0 divide-y divide-gray-100 bg-white rounded-2xl border border-gray-100 overflow-hidden">
                         {recipe.ingredients.map((ing, i) => {
                             const { qty, unit } = convertUnit(ing.quantity * scale, ing.unit, unitSystem);
+                            const ingName = tr?.ingredients?.[i]?.name || ing.name;
                             return (
                                 <div key={i} className="flex items-center justify-between px-4 py-2.5">
-                                    <span className="text-sm text-gray-800">{ing.name}</span>
+                                    <span className="text-sm text-gray-800">{ingName}</span>
                                     <span className="text-sm font-semibold text-gray-600 ml-4 shrink-0">{formatQty(qty)} {unit}</span>
                                 </div>
                             );
@@ -163,7 +183,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                 <div>
                     <h3 className="text-sm font-bold text-gray-900 mb-3">Steps</h3>
                     <div className="flex flex-col gap-3">
-                        {recipe.steps.map((step, i) => (
+                        {steps.map((step, i) => (
                             <div key={i} className="flex gap-3">
                                 <span className="w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
                                 <p className="text-sm text-gray-700 leading-relaxed">{step}</p>
@@ -172,7 +192,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                     </div>
                 </div>
 
-                {recipe.substitutions && (
+                {substitutions && (
                     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                         <button
                             onClick={() => setOpenSubstitutions(s => !s)}
@@ -185,14 +205,14 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                             <div className="px-5 pb-4">
                                 <div
                                     className="text-sm text-gray-700 leading-relaxed rte-display"
-                                    dangerouslySetInnerHTML={{ __html: recipe.substitutions }}
+                                    dangerouslySetInnerHTML={{ __html: substitutions }}
                                 />
                             </div>
                         )}
                     </div>
                 )}
 
-                {recipe.why_this_works && (
+                {whyThisWorks && (
                     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                         <button
                             onClick={() => setOpenWhyWorks(s => !s)}
@@ -205,7 +225,7 @@ export default function ExploreRecipe({ recipe, category, made_count }: Props) {
                             <div className="px-5 pb-4">
                                 <div
                                     className="text-sm text-gray-700 leading-relaxed rte-display"
-                                    dangerouslySetInnerHTML={{ __html: recipe.why_this_works }}
+                                    dangerouslySetInnerHTML={{ __html: whyThisWorks }}
                                 />
                             </div>
                         )}

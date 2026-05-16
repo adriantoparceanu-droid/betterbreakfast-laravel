@@ -13,6 +13,7 @@ class Recipe extends Model
         'id', 'name', 'image', 'base_servings',
         'ingredients', 'steps', 'substitutions', 'why_this_works',
         'nutrition', 'tags', 'is_active', 'sort_order', 'module_id', 'category_id',
+        'translations',
     ];
 
     protected function casts(): array
@@ -22,6 +23,7 @@ class Recipe extends Model
             'steps'        => 'array',
             'nutrition'    => 'array',
             'tags'         => 'array',
+            'translations' => 'array',
             'is_active'    => 'boolean',
         ];
     }

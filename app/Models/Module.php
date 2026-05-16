@@ -9,13 +9,14 @@ class Module extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'name', 'slug', 'description', 'price', 'is_active'];
+    protected $fillable = ['id', 'name', 'slug', 'description', 'price', 'is_active', 'translations'];
 
     protected function casts(): array
     {
         return [
-            'price'     => 'float',
-            'is_active' => 'boolean',
+            'price'        => 'float',
+            'is_active'    => 'boolean',
+            'translations' => 'array',
         ];
     }
 

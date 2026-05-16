@@ -4,6 +4,7 @@ import { useUserStore } from '@/store/userStore';
 import { useRecipes } from '@/hooks/useRecipes';
 import { scaleIngredient, formatQty, convertUnit, cn, type UnitSystem } from '@/lib/utils';
 import { useT } from '@/hooks/useT';
+import { buildIngredientNameMap } from '@/lib/localize';
 import AppLayout from '@/Layouts/AppLayout';
 import type { IngredientCategory, Recipe } from '@/types/app';
 
@@ -26,12 +27,13 @@ function gatherIngredients(recipes: Recipe[], servings: number): GatheredIngredi
 }
 
 export default function StaplesPage() {
-    const { t } = useT();
+    const { t, locale } = useT();
     const { progress, togglePantryItem, setDefaultServings } = useUserStore();
     const { pantryChecked, defaultServings: servings } = progress;
     const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
 
     const recipes = useRecipes();
+    const nameMap = buildIngredientNameMap(recipes, locale);
     const ingredients = gatherIngredients(recipes, servings);
     const checkKey = (ing: GatheredIngredient) => `${ing.name}|${ing.unit}`;
     const checkedCount = ingredients.filter((i) => pantryChecked.includes(checkKey(i))).length;
@@ -142,7 +144,7 @@ export default function StaplesPage() {
                                                 </svg>
                                             )}
                                         </span>
-                                        <span className={cn('flex-1 text-sm font-medium', isChecked ? 'text-gray-400 line-through' : 'text-gray-900')}>{ing.name}</span>
+                                        <span className={cn('flex-1 text-sm font-medium', isChecked ? 'text-gray-400 line-through' : 'text-gray-900')}>{nameMap.get(ing.name) ?? ing.name}</span>
                                         <span className={cn('text-sm tabular-nums', isChecked ? 'text-gray-400' : 'text-gray-500')}>{formatQty(qty)} {unit}</span>
                                     </button>
                                 );
