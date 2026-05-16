@@ -80,6 +80,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/recipes/{id}',                [AdminRecipe::class, 'update'])->name('recipes.update');
     Route::delete('/recipes/{id}',             [AdminRecipe::class, 'destroy'])->name('recipes.destroy');
     Route::patch('/recipes/{id}/toggle',       [AdminRecipe::class, 'toggleActive'])->name('recipes.toggle');
+    Route::post('/recipes/upload-image',       [AdminRecipe::class, 'uploadImage'])->name('recipes.upload-image');
 
     Route::get('/ingredients',                        [AdminIngredient::class, 'index'])->name('ingredients');
     Route::get('/ingredients/nutrition-lookup',       [AdminIngredient::class, 'nutritionLookup'])->name('ingredients.nutrition_lookup');

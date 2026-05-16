@@ -115,8 +115,11 @@ export default function TodayPage() {
 
             {recipe ? (
                 <div className="px-4 flex flex-col gap-5">
-                    <div className="aspect-[4/3] bg-gradient-to-br from-brand-50 to-brand-100 rounded-3xl flex items-center justify-center">
-                        <span className="text-7xl">🥣</span>
+                    <div className="aspect-[4/3] bg-gradient-to-br from-brand-50 to-brand-100 rounded-3xl overflow-hidden flex items-center justify-center">
+                        {recipe.image
+                            ? <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover" />
+                            : <span className="text-7xl">🥣</span>
+                        }
                     </div>
                     <div>
                         <h2 className="text-xl font-bold text-gray-900 mb-2">{recipe.name}</h2>

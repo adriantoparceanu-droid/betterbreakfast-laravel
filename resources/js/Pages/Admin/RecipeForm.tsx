@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm, useFieldArray, Controller, type SubmitHandler } from 'react-hook-form';
 import { router } from '@inertiajs/react';
 import {
@@ -179,6 +179,47 @@ function SortableIngredientRow({ id, children }: SortableRowProps) {
 export default function RecipeForm({ recipe, modules, categories, masterIngredients }: Props) {
     const isEdit = recipe !== null;
     const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Laravel sets XSRF-TOKEN cookie (URL-encoded); read it for fetch CSRF auth
+        const xsrf = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? '';
+        const csrf = decodeURIComponent(xsrf);
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        setUploading(true);
+        try {
+            const res = await fetch(route('admin.recipes.upload-image'), {
+                method:  'POST',
+                headers: {
+                    'X-XSRF-TOKEN':     csrf,
+                    'Accept':           'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData,
+            });
+            const json = await res.json() as { url?: string; message?: string; errors?: Record<string, string[]> };
+            if (res.ok && json.url) {
+                setValue('image', json.url);
+            } else {
+                const msg = json.errors
+                    ? Object.values(json.errors).flat().join(' ')
+                    : (json.message ?? 'Upload failed');
+                alert(msg);
+            }
+        } catch {
+            alert('Upload failed — check console for details');
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    }
 
     const {
         register, handleSubmit, control, watch, setValue,
@@ -294,7 +335,39 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
                             error={errors.name ? 'Required' : undefined}
                             {...register('name', { required: true })}
                         />
-                        <Input label="Image URL" placeholder="https://..." {...register('image')} />
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-medium text-gray-700">Image</label>
+                            <div className="flex gap-2">
+                                <Input
+                                    placeholder="https://... or browse to upload"
+                                    className="flex-1"
+                                    {...register('image')}
+                                />
+                                <button
+                                    type="button"
+                                    disabled={uploading}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="shrink-0 h-12 px-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors whitespace-nowrap"
+                                >
+                                    {uploading ? 'Uploading…' : 'Browse…'}
+                                </button>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/gif,image/webp"
+                                    className="hidden"
+                                    onChange={handleImageUpload}
+                                />
+                            </div>
+                            {watch('image') && (
+                                <img
+                                    src={watch('image')}
+                                    alt="preview"
+                                    className="mt-1 h-24 w-24 rounded-xl object-cover border border-gray-200"
+                                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                                />
+                            )}
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <Input label="Base Servings" type="number" min="1" {...register('base_servings', { required: true, min: 1 })} />
                             <Input label="Sort Order" type="number" min="0" {...register('sort_order')} />

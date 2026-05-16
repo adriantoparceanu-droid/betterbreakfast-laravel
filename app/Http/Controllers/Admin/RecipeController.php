@@ -96,6 +96,24 @@ class RecipeController extends Controller
         return redirect()->route('admin.recipes');
     }
 
+    public function uploadImage(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,gif,webp|max:5120',
+        ]);
+
+        $dir = public_path('imagini');
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $file     = $request->file('image');
+        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $file->move($dir, $filename);
+
+        return response()->json(['url' => '/imagini/' . $filename]);
+    }
+
     public function destroy(string $id): RedirectResponse
     {
         Recipe::findOrFail($id)->delete();

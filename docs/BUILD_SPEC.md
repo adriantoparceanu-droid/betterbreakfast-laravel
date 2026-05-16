@@ -781,6 +781,11 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Feature: Today + Complete — "Start again" apelează /api/user/reset-plan înainte de resetProgress local; 401 redirecționează la login
 - [x] (2026-05-16) Feature: Admin — buton "Reset device" pentru useri blocați (setează sentinel __admin_reset__); fix: OnboardingController nu mai setează foundation_done; PurchaseController verifică existența progress în loc de foundation_done
 - [x] (2026-05-16) Test: UserWorkflowTest — 20 teste E2E pentru workflow complet (register → onboarding → Foundation Day → ciclu 10 zile → restart × 2) + device enforcement
+- [x] (2026-05-16) Feature: Admin RecipeForm — upload imagine locală (Browse…) salvată în public/imagini/ cu UUID; fallback la URL extern; preview instant sub câmp
+- [x] (2026-05-16) Feature: Today + Swap — imaginea rețetei afișată în hero (4:3) și thumbnail (56px); fallback la emoji 🥣 dacă lipsește imaginea
+- [x] (2026-05-16) Fix: Upload imagine — CSRF citit din cookie XSRF-TOKEN (nu meta tag absent); header Accept: application/json pentru erori JSON de la Laravel
+- [x] (2026-05-16) Fix: Controller uploadImage — mkdir automat pentru public/imagini/ dacă nu există (funcționează atât local cât și pe server)
+- [x] (2026-05-16) Test: RecipeImageUploadTest — 9 teste pentru upload (admin/non-admin, validare tip/dimensiune, creare folder automat, URL accesibil)
 
 ### In Progress / Planned
 

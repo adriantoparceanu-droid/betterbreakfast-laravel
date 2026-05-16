@@ -79,7 +79,12 @@ function RecipeCard({ recipe, isCurrent, onPick }: CardProps) {
         <div className={cn('bg-white border rounded-2xl overflow-hidden transition-all duration-150',
             isCurrent ? 'border-brand-300 ring-1 ring-brand-200' : 'border-gray-100 hover:border-brand-200 hover:shadow-sm')}>
             <div className="flex items-center gap-3 px-4 py-3">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center shrink-0 text-2xl">🥣</div>
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-50 to-brand-100 overflow-hidden flex items-center justify-center shrink-0 text-2xl">
+                    {recipe.image
+                        ? <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover" />
+                        : '🥣'
+                    }
+                </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                         <p className="font-semibold text-gray-900 text-sm truncate">{recipe.name}</p>
