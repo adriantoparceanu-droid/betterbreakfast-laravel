@@ -28,6 +28,7 @@ export function SettingsModal({ isOpen, onClose }: Props) {
                 completedDays: [], currentDay: 1, selectedRecipes: {},
                 usedRecipeIds: [], checkIns: {}, pantryChecked: [],
                 defaultServings: progress.defaultServings,
+                foundationDone: false, foundationChecked: [],
             });
         }
         handleClose();

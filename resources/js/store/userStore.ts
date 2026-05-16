@@ -40,7 +40,11 @@ export const useUserStore = create<UserState>()(
                     const completedDays = s.progress.completedDays.includes(dayNumber)
                         ? s.progress.completedDays
                         : [...s.progress.completedDays, dayNumber];
-                    return { progress: { ...s.progress, completedDays, currentDay: Math.max(s.progress.currentDay, dayNumber + 1) } };
+                    const recipeId = s.progress.selectedRecipes[dayNumber];
+                    const usedRecipeIds = recipeId && !s.progress.usedRecipeIds.includes(recipeId)
+                        ? [...s.progress.usedRecipeIds, recipeId]
+                        : s.progress.usedRecipeIds;
+                    return { progress: { ...s.progress, completedDays, currentDay: Math.max(s.progress.currentDay, dayNumber + 1), usedRecipeIds } };
                 }),
 
             selectRecipe: (dayNumber, recipeId) =>
@@ -48,7 +52,6 @@ export const useUserStore = create<UserState>()(
                     progress: {
                         ...s.progress,
                         selectedRecipes: { ...s.progress.selectedRecipes, [dayNumber]: recipeId },
-                        usedRecipeIds: Array.from(new Set([...s.progress.usedRecipeIds, recipeId])),
                     },
                 })),
 
@@ -73,8 +76,7 @@ export const useUserStore = create<UserState>()(
                         ...DEFAULT_USER_PROGRESS,
                         defaultServings: s.progress.defaultServings,
                         onboardingDone: true,
-                        foundationDone: true,
-                        foundationChecked: s.progress.foundationChecked,
+                        // foundationDone and foundationChecked reset to defaults so user redoes the prep
                     },
                 })),
 

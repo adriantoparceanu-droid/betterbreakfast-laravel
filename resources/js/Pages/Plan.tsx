@@ -6,29 +6,27 @@ import { cn } from '@/lib/utils';
 import AppLayout from '@/Layouts/AppLayout';
 
 export default function PlanPage() {
-    const { progress, updateProgress } = useUserStore();
+    const { progress, updateProgress, isHydrated } = useUserStore();
     const { currentDay, completedDays, selectedRecipes, checkIns, foundationDone, foundationChecked } = progress;
     const recipes = useRecipes();
     const recipeMap = new Map(recipes.map((r) => [r.id, r]));
 
     useEffect(() => {
-        if (!recipes.length) return;
+        if (!isHydrated || !recipes.length) return;
         const unassigned = Array.from({ length: 10 }, (_, i) => i + 1).filter(day => !selectedRecipes[day]);
         if (!unassigned.length) return;
         const assignedIds = new Set(Object.values(selectedRecipes));
         const available = recipes.filter(r => !assignedIds.has(r.id));
         if (!available.length) return;
         const newSelected = { ...selectedRecipes };
-        const newUsed = new Set(progress.usedRecipeIds);
         let idx = 0;
         for (const day of unassigned) {
             if (idx >= available.length) break;
             newSelected[day] = available[idx].id;
-            newUsed.add(available[idx].id);
             idx++;
         }
-        updateProgress({ selectedRecipes: newSelected, usedRecipeIds: Array.from(newUsed) });
-    }, [recipes.length]); // eslint-disable-line react-hooks/exhaustive-deps
+        updateProgress({ selectedRecipes: newSelected });
+    }, [isHydrated, recipes.length, Object.keys(selectedRecipes).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const moodLabel: Record<string, string> = { energized: '⚡ Energized', full: '😊 Full', hungry: '😐 Still hungry' };
 

@@ -87,8 +87,11 @@ export default function FoundationDayPage() {
 
     const checkedCount = ALL_STEPS.filter((s) => foundationChecked.includes(s.id)).length;
     const total = ALL_STEPS.length;
+    const requiredSteps = ALL_STEPS.filter((s) => !s.optional);
+    const allRequiredChecked = requiredSteps.every((s) => foundationChecked.includes(s.id));
 
     function handleGoToToday() {
+        if (!allRequiredChecked) return;
         completeFoundation();
         router.visit(route('today'));
     }
@@ -112,7 +115,7 @@ export default function FoundationDayPage() {
                     </div>
                     <div className="mt-3 space-y-1.5">
                         <p className="text-sm text-gray-500 leading-relaxed">
-                            Taking the time to do this before you begin makes everything that follows easier. You prepare the core components in advance so breakfasts become quick assembly instead of daily decisions.
+                            Prep your basics now to ensure you save time later in the week. Getting this done today means you won't skip a recipe when you are short on time.
                         </p>
                         <p className="text-sm text-gray-400 leading-relaxed">
                             Follow the steps in order, especially storage instructions — they determine how well the week runs.
@@ -173,10 +176,15 @@ export default function FoundationDayPage() {
                     </div>
                 ) : (
                     <div className="bg-white border border-gray-100 rounded-2xl px-4 py-4 flex flex-col items-center gap-3">
-                        <p className="text-sm text-gray-500 text-center">You're ready to start your plan.</p>
+                        <p className="text-sm text-gray-500 text-center">
+                            {allRequiredChecked
+                                ? "You're ready to start your plan."
+                                : `${checkedCount} of ${total} steps done — mark all required steps to continue.`}
+                        </p>
                         <button
                             onClick={handleGoToToday}
-                            className="w-full py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold transition-colors hover:bg-brand-600 active:bg-brand-700"
+                            disabled={!allRequiredChecked}
+                            className="w-full py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold transition-colors hover:bg-brand-600 active:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             Go to today's recipe
                         </button>

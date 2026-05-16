@@ -6,7 +6,7 @@ import { enqueueSync } from '@/lib/sync/queue';
 import { track } from '@/lib/analytics';
 import type { CheckInMood } from '@/types/app';
 
-type Step = 'celebrate' | 'checkin';
+type Step = 'celebrate' | 'checkin' | 'done';
 
 const moods: { value: CheckInMood; label: string; emoji: string }[] = [
     { value: 'energized', label: 'Energized',   emoji: '⚡' },
@@ -18,7 +18,7 @@ interface Props { day: number; }
 
 export default function CompletePage({ day }: Props) {
     const dayNumber = Number(day);
-    const { progress, userId, isHydrated, completeDay, checkIn } = useUserStore();
+    const { progress, userId, isHydrated, completeDay, checkIn, resetProgress } = useUserStore();
     const [step, setStep] = useState<Step>('celebrate');
     const [loading, setLoading] = useState(false);
 
@@ -42,6 +42,7 @@ export default function CompletePage({ day }: Props) {
         const newCompletedDays = progress.completedDays.includes(dayNumber)
             ? progress.completedDays : [...progress.completedDays, dayNumber];
         const nextDay = Math.max(progress.currentDay, dayNumber + 1);
+        const isLastDay = newCompletedDays.length >= 10;
 
         completeDay(dayNumber);
         checkIn(dayNumber, mood);
@@ -55,7 +56,16 @@ export default function CompletePage({ day }: Props) {
             await track('COMPLETE_DAY', { dayNumber, fromRecipeId: recipeId });
         }
 
-        router.visit(route('today'), { replace: true });
+        if (isLastDay) {
+            setStep('done');
+        } else {
+            router.visit(route('today'), { replace: true });
+        }
+    };
+
+    const handleRestart = () => {
+        resetProgress();
+        router.visit(route('staples'), { replace: true });
     };
 
     return (
@@ -94,6 +104,28 @@ export default function CompletePage({ day }: Props) {
                                     </motion.button>
                                 ))}
                             </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+                {step === 'done' && (
+                    <motion.div key="done" initial={{ y: '100%' }} animate={{ y: 0 }} transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+                        className="absolute inset-0 bg-white flex flex-col items-center justify-center p-8">
+                        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.4 }}
+                            className="w-full max-w-sm flex flex-col items-center text-center">
+                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.3, stiffness: 260, damping: 18 }}
+                                className="w-24 h-24 rounded-full bg-brand-50 flex items-center justify-center mb-8">
+                                <span className="text-5xl">🏆</span>
+                            </motion.div>
+                            <h2 className="text-3xl font-bold text-gray-900 mb-3">Nice work!</h2>
+                            <p className="text-gray-500 text-base leading-relaxed mb-12">
+                                You've completed your 10-day cycle.
+                            </p>
+                            <motion.button
+                                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.35 }}
+                                onClick={handleRestart}
+                                className="w-full bg-brand-500 hover:bg-brand-600 active:scale-[0.97] text-white font-semibold text-base py-4 rounded-2xl transition-all duration-150">
+                                Start again
+                            </motion.button>
                         </motion.div>
                     </motion.div>
                 )}

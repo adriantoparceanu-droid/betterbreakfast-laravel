@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useUserStore } from '@/store/userStore';
-import { useRecipeById, useAvailableRecipes } from '@/hooks/useRecipes';
+import { useRecipeById, useRecipes } from '@/hooks/useRecipes';
 import { enqueueSync } from '@/lib/sync/queue';
 import { track } from '@/lib/analytics';
 import { Button } from '@/Components/ui/Button';
@@ -12,19 +12,34 @@ interface Props { day: number; }
 
 export default function SwapPage({ day }: Props) {
     const dayNumber = Number(day);
-    const { progress, userId, selectRecipe } = useUserStore();
-    const { selectedRecipes, usedRecipeIds } = progress;
+    const { progress, userId, updateProgress } = useUserStore();
+    const { selectedRecipes, completedDays } = progress;
 
     const currentRecipeId = selectedRecipes[dayNumber];
     const currentRecipe = useRecipeById(currentRecipeId);
-    const alternatives = useAvailableRecipes(usedRecipeIds.filter((id) => id !== currentRecipeId))
-        .filter((r) => r.id !== currentRecipeId);
+    const allRecipes = useRecipes();
+
+    // Available = recipes not locked in a completed day, excluding current day's recipe
+    const completedRecipeIds = new Set(
+        completedDays.map(d => selectedRecipes[d]).filter(Boolean)
+    );
+    const alternatives = allRecipes.filter(
+        r => !completedRecipeIds.has(r.id) && r.id !== currentRecipeId
+    );
 
     const handleSelect = async (recipeId: string) => {
         const fromRecipeId = currentRecipeId;
-        selectRecipe(dayNumber, recipeId);
+
+        // True swap: find the other day that currently holds this recipe and give it the displaced recipe
+        const otherDayKey = Object.keys(selectedRecipes).find(k => selectedRecipes[k] === recipeId);
+        const newSelectedRecipes: Record<string, string> = { ...selectedRecipes, [dayNumber]: recipeId };
+        if (otherDayKey && fromRecipeId) {
+            newSelectedRecipes[otherDayKey] = fromRecipeId;
+        }
+
+        updateProgress({ selectedRecipes: newSelectedRecipes });
         if (userId) {
-            enqueueSync(userId, 'PROGRESS_UPDATE', { selectedRecipes: { ...selectedRecipes, [dayNumber]: recipeId } });
+            enqueueSync(userId, 'PROGRESS_UPDATE', { selectedRecipes: newSelectedRecipes });
             await track('SWAP_RECIPE', { dayNumber, fromRecipeId, toRecipeId: recipeId });
         }
         window.history.back();

@@ -17,7 +17,7 @@ function greeting(): string {
 
 export default function TodayPage() {
     const { auth } = usePage<PageProps>().props;
-    const { progress, userId, isHydrated, selectRecipe } = useUserStore();
+    const { progress, userId, isHydrated, selectRecipe, resetProgress } = useUserStore();
     const { currentDay, selectedRecipes, completedDays, usedRecipeIds, defaultServings } = progress;
 
     const selectedId = selectedRecipes[currentDay];
@@ -33,15 +33,15 @@ export default function TodayPage() {
 
     useEffect(() => {
         if (!isHydrated || !firstAvailable) return;
-        // Auto-select when no recipe chosen, OR when the chosen recipe no longer exists in the recipe list
-        if (selectedId && recipe) return;
+        // Auto-select only when no recipe is chosen for today — don't overwrite if recipe is set but Dexie hasn't loaded yet
+        if (selectedId) return;
         selectRecipe(currentDay, firstAvailable.id);
         if (userId) {
             enqueueSync(userId, 'PROGRESS_UPDATE', {
                 selectedRecipes: { ...selectedRecipes, [currentDay]: firstAvailable.id },
             });
         }
-    }, [isHydrated, selectedId, recipe?.id, firstAvailable?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isHydrated, selectedId, firstAvailable?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (!isHydrated) return null;
 
@@ -50,10 +50,19 @@ export default function TodayPage() {
 
     if (allDone) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
-                <div className="text-6xl mb-4">🎉</div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">You did it!</h1>
-                <p className="text-gray-500 text-sm">10 days, 10 breakfasts. Habit unlocked.</p>
+            <div className="flex flex-col items-center justify-center min-h-[80vh] p-8 text-center">
+                <div className="w-24 h-24 rounded-full bg-brand-50 flex items-center justify-center mb-8">
+                    <span className="text-5xl">🏆</span>
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-3">Nice work!</h1>
+                <p className="text-gray-500 text-base leading-relaxed mb-12">
+                    You've completed your 10-day cycle.
+                </p>
+                <button
+                    onClick={() => { resetProgress(); router.visit(route('staples'), { replace: true }); }}
+                    className="w-full max-w-xs bg-brand-500 hover:bg-brand-600 active:scale-[0.97] text-white font-semibold text-base py-4 rounded-2xl transition-all duration-150">
+                    Start again
+                </button>
             </div>
         );
     }

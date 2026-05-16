@@ -766,6 +766,13 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Refactor: Eliminat logica de conversie unități (TO_GRAMS, WHOLE_GRAMS, toGrams) din units.ts și butonul "Calculate from ingredients" din RecipeForm — valorile nutriționale se completează manual sau via USDA Lookup
 - [x] (2026-05-16) Feature: Admin Ingredients — buton "Lookup All" bulk: apelează USDA FoodData Central pentru toate ingredientele secvențial, suprascrie valorile, arată progress bar; nutrienți lipsă din API primesc valoare 0
 - [x] (2026-05-16) Refactor: Înlocuit USDA FoodData Central cu CalorieNinjas API pentru lookup nutrițional — răspunsuri mai precise pentru ingrediente de bază
+- [x] (2026-05-16) Fix: Plan — auto-asignare rețete rulează după isHydrated (nu înainte), elimină suprascrierea de către SyncBootstrap; nu mai adaugă la usedRecipeIds pentru zile viitoare
+- [x] (2026-05-16) Fix: Swap — swap bilateral real (ziua X ia rețeta zilei Y, ziua Y ia rețeta zilei X); pool de alternative = rețete nedone (nu din completedDays)
+- [x] (2026-05-16) Fix: userStore — selectRecipe nu mai adaugă la usedRecipeIds; completeDay adaugă rețeta la usedRecipeIds (singurul moment corect)
+- [x] (2026-05-16) Fix: Today — auto-select se declanșează DOAR când selectedId e falsy, nu când recipe e undefined (Dexie încă se încarcă) — elimina race condition cu swap
+- [x] (2026-05-16) Feature: Complete — ecran final după ziua 10: "Nice work! You've completed your 10-day cycle." + buton "Start again" → resetProgress + redirect /staples
+- [x] (2026-05-16) Fix: Today allDone — înlocuit placeholder "You did it!" cu același ecran de final + buton "Start again"
+- [x] (2026-05-16) Fix: Foundation Day — butonul "Go to today's recipe" blocat până când toate pașii obligatorii sunt bifați; text actualizat; resetProgress resetează și foundationDone/foundationChecked
 
 ### In Progress / Planned
 
