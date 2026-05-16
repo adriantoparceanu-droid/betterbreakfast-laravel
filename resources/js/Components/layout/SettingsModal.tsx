@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { router, usePage } from '@inertiajs/react';
 import { useUserStore } from '@/store/userStore';
+import { useRecipes } from '@/hooks/useRecipes';
 import { enqueueSync } from '@/lib/sync/queue';
 import type { PageProps } from '@/types/index.d';
 
@@ -12,7 +13,8 @@ export function SettingsModal({ isOpen, onClose }: Props) {
     const [step, setStep] = useState<Step>('menu');
     const [loading, setLoading] = useState(false);
     const { auth } = usePage<PageProps>().props;
-    const { resetProgress, userId, progress } = useUserStore();
+    const { resetProgress, updateProgress, userId, progress } = useUserStore();
+    const allRecipes = useRecipes();
 
     function handleClose() {
         onClose();
@@ -22,17 +24,27 @@ export function SettingsModal({ isOpen, onClose }: Props) {
     async function handleRestart() {
         if (loading) return;
         setLoading(true);
-        resetProgress();
-        if (userId) {
-            enqueueSync(userId, 'PROGRESS_UPDATE', {
-                completedDays: [], currentDay: 1, selectedRecipes: {},
-                usedRecipeIds: [], checkIns: {}, pantryChecked: [],
-                defaultServings: progress.defaultServings,
-                foundationDone: false, foundationChecked: [],
+        try {
+            const res = await fetch('/api/user/reset-plan', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
             });
+            if (res.status === 401) { router.visit(route('login')); return; }
+            resetProgress();
+            const shuffled = [...allRecipes].sort(() => Math.random() - 0.5);
+            const newSelected: Record<string, string> = {};
+            for (let i = 0; i < Math.min(10, shuffled.length); i++) {
+                newSelected[String(i + 1)] = shuffled[i].id;
+            }
+            updateProgress({ selectedRecipes: newSelected });
+            if (userId) enqueueSync(userId, 'PROGRESS_UPDATE', { selectedRecipes: newSelected });
+        } catch {
+            resetProgress();
+        } finally {
+            setLoading(false);
         }
         handleClose();
-        router.visit(route('today'));
+        router.visit(route('staples'));
     }
 
     function handleSignOut() {

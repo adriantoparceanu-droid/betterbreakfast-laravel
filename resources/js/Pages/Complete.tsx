@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserStore } from '@/store/userStore';
+import { useRecipes } from '@/hooks/useRecipes';
 import { enqueueSync } from '@/lib/sync/queue';
 import { track } from '@/lib/analytics';
 import type { CheckInMood } from '@/types/app';
@@ -18,7 +19,8 @@ interface Props { day: number; }
 
 export default function CompletePage({ day }: Props) {
     const dayNumber = Number(day);
-    const { progress, userId, isHydrated, completeDay, checkIn, resetProgress } = useUserStore();
+    const { progress, userId, isHydrated, completeDay, checkIn, resetProgress, updateProgress } = useUserStore();
+    const allRecipes = useRecipes();
     const [step, setStep] = useState<Step>('celebrate');
     const [loading, setLoading] = useState(false);
     const [resetting, setResetting] = useState(false);
@@ -72,9 +74,20 @@ export default function CompletePage({ day }: Props) {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
             });
             if (res.status === 401) { router.visit(route('login')); return; }
-            if (res.ok) { resetProgress(); router.visit(route('staples'), { replace: true }); }
+            if (res.ok) {
+                resetProgress();
+                const shuffled = [...allRecipes].sort(() => Math.random() - 0.5);
+                const newSelected: Record<string, string> = {};
+                for (let i = 0; i < Math.min(10, shuffled.length); i++) {
+                    newSelected[String(i + 1)] = shuffled[i].id;
+                }
+                updateProgress({ selectedRecipes: newSelected });
+                if (userId) enqueueSync(userId, 'PROGRESS_UPDATE', { selectedRecipes: newSelected });
+                router.visit(route('staples'), { replace: true });
+            }
         } catch {
-            resetProgress(); router.visit(route('staples'), { replace: true });
+            resetProgress();
+            router.visit(route('staples'), { replace: true });
         } finally {
             setResetting(false);
         }

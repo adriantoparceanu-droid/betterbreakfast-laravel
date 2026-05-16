@@ -16,7 +16,7 @@ export default function PlanPage() {
         const unassigned = Array.from({ length: 10 }, (_, i) => i + 1).filter(day => !selectedRecipes[day]);
         if (!unassigned.length) return;
         const assignedIds = new Set(Object.values(selectedRecipes));
-        const available = recipes.filter(r => !assignedIds.has(r.id));
+        const available = [...recipes.filter(r => !assignedIds.has(r.id))].sort(() => Math.random() - 0.5);
         if (!available.length) return;
         const newSelected = { ...selectedRecipes };
         let idx = 0;

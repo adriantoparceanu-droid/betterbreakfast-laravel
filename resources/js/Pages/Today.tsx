@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import { useUserStore } from '@/store/userStore';
-import { useRecipeById, useFirstAvailable } from '@/hooks/useRecipes';
+import { useRecipes, useRecipeById, useFirstAvailable } from '@/hooks/useRecipes';
 import { enqueueSync } from '@/lib/sync/queue';
 import { Button } from '@/Components/ui/Button';
 import { cn, formatQty, convertUnit, type UnitSystem } from '@/lib/utils';
@@ -17,20 +17,24 @@ function greeting(): string {
 
 export default function TodayPage() {
     const { auth } = usePage<PageProps>().props;
-    const { progress, userId, isHydrated, selectRecipe, resetProgress } = useUserStore();
+    const { progress, userId, isHydrated, selectRecipe, resetProgress, updateProgress } = useUserStore();
     const { currentDay, selectedRecipes, completedDays, usedRecipeIds, defaultServings } = progress;
 
     const selectedId = selectedRecipes[currentDay];
     const recipe = useRecipeById(selectedId);
     const firstAvailable = useFirstAvailable(usedRecipeIds);
 
+    const allRecipes = useRecipes();
     const [servings, setServings] = useState(defaultServings);
     const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
     const [resetting, setResetting] = useState(false);
+    const [openSubstitutions, setOpenSubstitutions] = useState(false);
+    const [openWhyWorks, setOpenWhyWorks] = useState(false);
     const isCompleted = completedDays.includes(currentDay);
     const allDone = completedDays.length >= 10;
 
     useEffect(() => { setServings(defaultServings); }, [defaultServings]);
+    useEffect(() => { setOpenSubstitutions(false); setOpenWhyWorks(false); }, [selectedId]);
 
     useEffect(() => {
         if (!isHydrated || !firstAvailable) return;
@@ -69,7 +73,17 @@ export default function TodayPage() {
                                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                             });
                             if (res.status === 401) { router.visit(route('login')); return; }
-                            if (res.ok) { resetProgress(); router.visit(route('staples'), { replace: true }); }
+                            if (res.ok) {
+                                resetProgress();
+                                const shuffled = [...allRecipes].sort(() => Math.random() - 0.5);
+                                const newSelected: Record<string, string> = {};
+                                for (let i = 0; i < Math.min(10, shuffled.length); i++) {
+                                    newSelected[String(i + 1)] = shuffled[i].id;
+                                }
+                                updateProgress({ selectedRecipes: newSelected });
+                                if (userId) enqueueSync(userId, 'PROGRESS_UPDATE', { selectedRecipes: newSelected });
+                                router.visit(route('staples'), { replace: true });
+                            }
                         } catch {
                             resetProgress(); router.visit(route('staples'), { replace: true });
                         } finally {
@@ -173,22 +187,42 @@ export default function TodayPage() {
                     </div>
 
                     {recipe.substitutions && (
-                        <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4">
-                            <h3 className="text-sm font-bold text-gray-900 mb-2">Substitutions</h3>
-                            <div
-                                className="text-sm text-gray-700 leading-relaxed rte-display"
-                                dangerouslySetInnerHTML={{ __html: recipe.substitutions }}
-                            />
+                        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                            <button
+                                onClick={() => setOpenSubstitutions(s => !s)}
+                                className="w-full flex items-center justify-between px-5 py-4 text-left"
+                            >
+                                <h3 className="text-sm font-bold text-gray-900">Substitutions</h3>
+                                <span className={cn('text-gray-400 text-xs transition-transform duration-200', openSubstitutions ? 'rotate-180' : '')}>▼</span>
+                            </button>
+                            {openSubstitutions && (
+                                <div className="px-5 pb-4">
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed rte-display"
+                                        dangerouslySetInnerHTML={{ __html: recipe.substitutions }}
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
 
                     {recipe.whyThisWorks && (
-                        <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4">
-                            <h3 className="text-sm font-bold text-gray-900 mb-2">Why this works</h3>
-                            <div
-                                className="text-sm text-gray-700 leading-relaxed rte-display"
-                                dangerouslySetInnerHTML={{ __html: recipe.whyThisWorks }}
-                            />
+                        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                            <button
+                                onClick={() => setOpenWhyWorks(s => !s)}
+                                className="w-full flex items-center justify-between px-5 py-4 text-left"
+                            >
+                                <h3 className="text-sm font-bold text-gray-900">Why this works</h3>
+                                <span className={cn('text-gray-400 text-xs transition-transform duration-200', openWhyWorks ? 'rotate-180' : '')}>▼</span>
+                            </button>
+                            {openWhyWorks && (
+                                <div className="px-5 pb-4">
+                                    <div
+                                        className="text-sm text-gray-700 leading-relaxed rte-display"
+                                        dangerouslySetInnerHTML={{ __html: recipe.whyThisWorks }}
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

@@ -775,6 +775,9 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Fix: Foundation Day — butonul "Go to today's recipe" blocat până când toate pașii obligatorii sunt bifați; text actualizat; resetProgress resetează și foundationDone/foundationChecked
 - [x] (2026-05-16) Feature: Single-device enforcement — coloana current_session_id pe users, middleware EnsureSingleDevice cu cookie bb_device_id (UUID, 10 ani, exclus din criptare), blocaj pe device diferit sau sesiune resetată
 - [x] (2026-05-16) Feature: POST /api/user/reset-plan — endpoint dedicat reset ciclu (păstrează default_servings), protejat de single.device
+- [x] (2026-05-16) Fix: Complete/Today/SettingsModal — pre-asignare rețete random la toate 10 zilele imediat după reset; elimina flash "Not set" în Plan
+- [x] (2026-05-16) Fix: SettingsModal "Restart plan" — înlocuit enqueueSync cu POST /api/user/reset-plan; navigare spre /staples (nu /today); same workflow ca "Start again"
+- [x] (2026-05-16) Feature: Today — secțiunile Substitutions și Why this works sunt acum collapsable (colapsate implicit, se deschid la tap)
 - [x] (2026-05-16) Feature: Today + Complete — "Start again" apelează /api/user/reset-plan înainte de resetProgress local; 401 redirecționează la login
 - [x] (2026-05-16) Feature: Admin — buton "Reset device" pentru useri blocați (setează sentinel __admin_reset__); fix: OnboardingController nu mai setează foundation_done; PurchaseController verifică existența progress în loc de foundation_done
 - [x] (2026-05-16) Test: UserWorkflowTest — 20 teste E2E pentru workflow complet (register → onboarding → Foundation Day → ciclu 10 zile → restart × 2) + device enforcement
