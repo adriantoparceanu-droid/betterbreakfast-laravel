@@ -9,6 +9,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,8 +25,15 @@ class RegisteredUserController extends Controller
     {
         $captchaRules = app()->environment('testing') ? [] : ['required', new ValidHCaptcha];
 
+        // Normalizăm email + username la lowercase înainte de validare
+        // Parola rămâne case-sensitive (nu o atingem)
+        $request->merge([
+            'email'    => Str::lower(trim($request->string('email')->value())),
+            'username' => Str::lower(trim($request->string('username')->value())),
+        ]);
+
         $request->validate([
-            'email'          => 'required|string|lowercase|email|max:255|unique:users',
+            'email'          => 'required|string|email|max:255|unique:users',
             'username'       => 'required|string|min:2|max:30|unique:users|alpha_dash',
             'password'       => ['required', 'confirmed', Rules\Password::defaults()],
             'hcaptcha_token' => $captchaRules,
