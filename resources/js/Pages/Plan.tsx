@@ -11,12 +11,22 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';
-import { useRecipes } from '@/hooks/useRecipes';
+import { useRecipes, useRecipesLoaded } from '@/hooks/useRecipes';
 import { cn, formatQty, convertUnit } from '@/lib/utils';
 import { useT } from '@/hooks/useT';
 import { localizeRecipe } from '@/lib/localize';
 import AppLayout from '@/Layouts/AppLayout';
 import type { Recipe } from '@/types/app';
+
+// Unbiased Fisher-Yates shuffle (Array.sort(() => Math.random() - 0.5) is biased).
+function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
 
 // ─── Sortable future day card ─────────────────────────────────────────────────
 
@@ -198,42 +208,43 @@ export default function PlanPage() {
     const { progress, updateProgress, isHydrated } = useUserStore();
     const { currentDay, completedDays, selectedRecipes, checkIns, foundationDone, foundationChecked, defaultServings } = progress;
     const rawRecipes = useRecipes();
+    const recipesLoaded = useRecipesLoaded();
     const recipes = rawRecipes.map((r) => localizeRecipe(r, locale));
     const recipeMap = new Map(recipes.map((r) => [r.id, r]));
     const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
 
+    // Defensive auto-fill ONLY: never runs against the hardcoded fallback set,
+    // never reshuffles existing valid assignments, never touches completed /
+    // today / past days. Fills only empty-or-stale FUTURE days. Canonical
+    // assignment happens at onboarding / reset, not here.
     useEffect(() => {
-        if (!isHydrated || !recipes.length) return;
+        if (!isHydrated || !recipesLoaded || !recipes.length) return;
 
         const validIds = new Set(recipes.map(r => r.id));
+        const futureDays = Array.from({ length: 10 }, (_, i) => i + 1).filter(d => d > currentDay);
 
-        // Remove stale assignments (fallback IDs like "recipe-01" that differ from DB UUIDs)
-        const cleanedSelected: Record<string, string> = {};
-        for (const [day, id] of Object.entries(selectedRecipes)) {
-            if (validIds.has(id)) cleanedSelected[day] = id;
-        }
+        const needsAssign = futureDays.filter(d => {
+            const id = selectedRecipes[d];
+            return !id || !validIds.has(id);
+        });
+        if (needsAssign.length === 0) return;
 
-        const unassigned = Array.from({ length: 10 }, (_, i) => i + 1).filter(day => !cleanedSelected[day]);
+        // Preserve every recipe already locked into a day with a valid id.
+        const taken = new Set(
+            Object.values(selectedRecipes).filter(id => validIds.has(id)),
+        );
 
-        // Nothing to do: all days assigned with valid IDs
-        if (
-            unassigned.length === 0 &&
-            Object.keys(cleanedSelected).length === Object.keys(selectedRecipes).length
-        ) return;
+        const pool = shuffle(recipes.filter(r => !taken.has(r.id)));
+        if (pool.length === 0) return;
 
-        const assignedIds = new Set(Object.values(cleanedSelected));
-        const available = [...recipes.filter(r => !assignedIds.has(r.id))].sort(() => Math.random() - 0.5);
-        if (!available.length) return;
-
-        const newSelected = { ...cleanedSelected };
-        let idx = 0;
-        for (const day of unassigned) {
-            if (idx >= available.length) break;
-            newSelected[day] = available[idx].id;
-            idx++;
+        const newSelected = { ...selectedRecipes };
+        let i = 0;
+        for (const d of needsAssign) {
+            if (i >= pool.length) break;
+            newSelected[d] = pool[i++].id;
         }
         updateProgress({ selectedRecipes: newSelected });
-    }, [isHydrated, recipes.length, recipes[0]?.id, Object.keys(selectedRecipes).length]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isHydrated, recipesLoaded, recipes.length, recipes[0]?.id, currentDay, Object.keys(selectedRecipes).length]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // DnD
     const sensors = useSensors(

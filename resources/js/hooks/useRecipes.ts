@@ -9,6 +9,15 @@ export function useRecipes(): Recipe[] {
     return dbRecipes;
 }
 
+// True only once Dexie has resolved with real recipes. `useLiveQuery`
+// returns `undefined` on the first synchronous render even when Dexie
+// holds data, so this distinguishes the real DB set from the hardcoded
+// fallback — callers that mutate persisted state must gate on it.
+export function useRecipesLoaded(): boolean {
+    const dbRecipes = useLiveQuery(() => db.recipes.toArray(), []);
+    return Array.isArray(dbRecipes) && dbRecipes.length > 0;
+}
+
 export function useRecipeById(id: string | undefined): Recipe | undefined {
     const recipes = useRecipes();
     if (!id) return undefined;
