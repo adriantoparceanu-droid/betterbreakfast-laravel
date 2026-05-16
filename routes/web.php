@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ModuleController as AdminModule;
 use App\Http\Controllers\Admin\IngredientController as AdminIngredient;
 use App\Http\Controllers\Admin\StatsController as AdminStats;
 use App\Http\Controllers\ExploreController;
+use App\Http\Controllers\ExploreRecipeController;
 use App\Http\Controllers\FoundationDayController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\PrivacyPolicyController;
@@ -47,6 +48,7 @@ Route::middleware(['auth', 'single.device'])->group(function () {
 
     // Explore — accessible without module access (premium category browser)
     Route::get('/explore', [ExploreController::class, 'show'])->name('explore');
+    Route::get('/explore/recipe/{id}', [ExploreRecipeController::class, 'show'])->name('explore.recipe');
 
     // Module-gated routes
     Route::middleware('module.access')->group(function () {
@@ -92,7 +94,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/modules',                     [AdminModule::class, 'index'])->name('modules');
     Route::patch('/modules/{id}',              [AdminModule::class, 'update'])->name('modules.update');
 
-    Route::get('/categories',                  [AdminCategory::class, 'index'])->name('categories');
+    Route::get('/categories',                  fn () => redirect()->route('admin.recipes'))->name('categories');
     Route::post('/categories',                 [AdminCategory::class, 'store'])->name('categories.store');
     Route::patch('/categories/{id}',           [AdminCategory::class, 'update'])->name('categories.update');
     Route::patch('/categories/{id}/toggle',    [AdminCategory::class, 'toggleActive'])->name('categories.toggle');

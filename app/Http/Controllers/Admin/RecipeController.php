@@ -39,8 +39,22 @@ class RecipeController extends Controller
                     : null,
             ]);
 
-        $modules    = Module::orderBy('name')->get(['id', 'name']);
-        $categories = RecipeCategory::where('is_active', true)->orderBy('sort_order')->get(['id', 'name', 'module_id']);
+        $modules = Module::orderBy('name')->get(['id', 'name']);
+
+        $categories = RecipeCategory::withCount('recipes')
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn ($c) => [
+                'id'           => $c->id,
+                'name'         => $c->name,
+                'slug'         => $c->slug,
+                'description'  => $c->description,
+                'price'        => (float) $c->price,
+                'sortOrder'    => $c->sort_order,
+                'isActive'     => (bool) $c->is_active,
+                'recipesCount' => $c->recipes_count,
+                'moduleId'     => $c->module_id,
+            ]);
 
         return Inertia::render('Admin/Recipes', [
             'recipes'    => $recipes,

@@ -255,6 +255,41 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
         if (from !== -1 && to !== -1) moveStep(from, to);
     }
 
+    // ─── Calculate nutrition from ingredients ─────────────────────────────────
+
+    function calculateNutrition() {
+        const ingredients = watch('ingredients');
+        const servings    = Number(watch('base_servings')) || 1;
+        const masterMap   = new Map(masterIngredients.map(m => [m.name.toLowerCase(), m]));
+
+        let totalCals = 0, totalProt = 0, totalFat = 0, totalCarbs = 0, totalFiber = 0;
+
+        for (const ing of ingredients) {
+            const master = masterMap.get(ing.name.toLowerCase());
+            if (!master || master.caloriesPer100g === null) continue;
+
+            const qty = Number(ing.quantity);
+            let grams: number;
+            if (ing.unit === 'g')  grams = qty;
+            else if (ing.unit === 'kg') grams = qty * 1000;
+            else continue;
+
+            const factor = grams / 100;
+            totalCals  += (master.caloriesPer100g ?? 0) * factor;
+            totalProt  += (master.proteinPer100g  ?? 0) * factor;
+            totalFat   += (master.fatPer100g      ?? 0) * factor;
+            totalCarbs += (master.carbsPer100g    ?? 0) * factor;
+            totalFiber += (master.fiberPer100g    ?? 0) * factor;
+        }
+
+        const round = (n: number) => Math.round((n / servings) * 10) / 10;
+        setValue('nutrition.calories', round(totalCals));
+        setValue('nutrition.protein',  round(totalProt));
+        setValue('nutrition.fat',      round(totalFat));
+        setValue('nutrition.carbs',    round(totalCarbs));
+        setValue('nutrition.fiber',    round(totalFiber));
+    }
+
     // ─── Unit system toggle ───────────────────────────────────────────────────
 
     function switchUnitSystem(next: UnitSystem) {
@@ -531,7 +566,16 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
 
                 {/* ─── Nutrition ─────────────────────────────────────────── */}
                 <section className="bg-white rounded-2xl border border-gray-200 p-6">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Nutrition (per serving)</p>
+                    <div className="flex items-center justify-between mb-4">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Nutrition (per serving)</p>
+                        <button
+                            type="button"
+                            onClick={calculateNutrition}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-50 text-brand-700 text-xs font-semibold hover:bg-brand-100 transition-colors"
+                        >
+                            <span>⚡</span> Calculate from ingredients
+                        </button>
+                    </div>
 
                     <div className="grid grid-cols-5 gap-3">
                         {(['calories', 'protein', 'fat', 'carbs', 'fiber'] as const).map(key => (

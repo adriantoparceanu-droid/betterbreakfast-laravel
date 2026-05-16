@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { Button } from '@/Components/ui/Button';
 
 interface Recipe {
     id: string;
@@ -10,6 +11,7 @@ interface Recipe {
     nutrition?: { calories: number; protein: number; fat: number; carbs: number; fiber: number };
     tags?: string[];
     locked?: boolean;
+    made_count?: number;
 }
 
 interface Category {
@@ -109,7 +111,17 @@ function RecipeCard({ recipe, locked }: { recipe: Recipe; locked: boolean }) {
 
     return (
         <div className="bg-white border border-gray-100 rounded-2xl p-4">
-            <p className="font-medium text-gray-900 text-sm mb-2">{recipe.name}</p>
+            <div className="flex items-start justify-between gap-3 mb-2">
+                <p className="font-medium text-gray-900 text-sm">{recipe.name}</p>
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => router.visit(route('explore.recipe', { id: recipe.id }))}
+                >
+                    View
+                </Button>
+            </div>
             {recipe.tags && recipe.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-2">
                     {recipe.tags.map(tag => (
@@ -117,11 +129,18 @@ function RecipeCard({ recipe, locked }: { recipe: Recipe; locked: boolean }) {
                     ))}
                 </div>
             )}
-            {recipe.nutrition && (
-                <p className="text-xs text-gray-400">
-                    {recipe.nutrition.calories} kcal · {recipe.nutrition.protein}g protein
-                </p>
-            )}
+            <div className="flex items-center justify-between gap-2">
+                {recipe.nutrition && (
+                    <p className="text-xs text-gray-400">
+                        {recipe.nutrition.calories} kcal · {recipe.nutrition.protein}g protein
+                    </p>
+                )}
+                {recipe.made_count != null && recipe.made_count > 0 && (
+                    <p className="text-xs text-brand-500 font-medium shrink-0">
+                        Made {recipe.made_count} {recipe.made_count === 1 ? 'time' : 'times'}
+                    </p>
+                )}
+            </div>
         </div>
     );
 }

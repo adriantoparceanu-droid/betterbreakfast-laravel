@@ -42,13 +42,42 @@ class StatsController extends Controller
         $topSwappedTo   = $this->topN($recipeSwapsTo,      $nameOf, 10);
         $topSwappedFrom = $this->topN($recipeSwapsFrom,    $nameOf, 10);
 
+        // Explore stats
+        $exploreEvents       = AnalyticsEvent::where('event', 'EXPLORE_MADE_THIS')->get(['properties']);
+        $exploreByCategoryId = [];
+        $exploreByRecipeId   = [];
+
+        foreach ($exploreEvents as $e) {
+            $props = is_array($e->properties) ? $e->properties : (json_decode($e->properties, true) ?? []);
+            if ($rid = $props['recipeId']   ?? null) $exploreByRecipeId[$rid]   = ($exploreByRecipeId[$rid]   ?? 0) + 1;
+            if ($cid = $props['categoryId'] ?? null) {
+                $catName = $props['categoryName'] ?? $cid;
+                $exploreByCategoryId[$cid] = [
+                    'name'  => $catName,
+                    'count' => (($exploreByCategoryId[$cid]['count'] ?? 0) + 1),
+                ];
+            }
+        }
+
+        arsort($exploreByRecipeId);
+        $topExploreRecipes = [];
+        foreach (array_slice($exploreByRecipeId, 0, 10, true) as $id => $count) {
+            $topExploreRecipes[] = ['id' => $id, 'name' => $nameOf[$id] ?? $id, 'count' => $count];
+        }
+
+        usort($exploreByCategoryId, fn ($a, $b) => $b['count'] - $a['count']);
+        $exploreByCategory = array_values($exploreByCategoryId);
+
         return Inertia::render('Admin/Stats', [
-            'completionsByDay'  => $completionsByDay,
-            'topCompleted'      => $topCompleted,
-            'topSwappedTo'      => $topSwappedTo,
-            'topSwappedFrom'    => $topSwappedFrom,
-            'totalCompletions'  => count($completionEvents),
-            'totalSwaps'        => count($swapEvents),
+            'completionsByDay'   => $completionsByDay,
+            'topCompleted'       => $topCompleted,
+            'topSwappedTo'       => $topSwappedTo,
+            'topSwappedFrom'     => $topSwappedFrom,
+            'totalCompletions'   => count($completionEvents),
+            'totalSwaps'         => count($swapEvents),
+            'totalExploreMades'  => count($exploreEvents),
+            'topExploreRecipes'  => $topExploreRecipes,
+            'exploreByCategory'  => $exploreByCategory,
         ]);
     }
 

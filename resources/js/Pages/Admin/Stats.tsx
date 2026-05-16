@@ -2,6 +2,8 @@ import AdminLayout from '@/Layouts/AdminLayout';
 
 interface RecipeCount { id: string; name: string; count: number; }
 
+interface CategoryCount { name: string; count: number; }
+
 interface Props {
     completionsByDay: Record<number, number>;
     topCompleted: RecipeCount[];
@@ -9,10 +11,15 @@ interface Props {
     topSwappedFrom: RecipeCount[];
     totalCompletions: number;
     totalSwaps: number;
+    totalExploreMades: number;
+    topExploreRecipes: RecipeCount[];
+    exploreByCategory: CategoryCount[];
 }
 
 export default function AdminStats({
-    completionsByDay, topCompleted, topSwappedTo, topSwappedFrom, totalCompletions, totalSwaps,
+    completionsByDay, topCompleted, topSwappedTo, topSwappedFrom,
+    totalCompletions, totalSwaps,
+    totalExploreMades, topExploreRecipes, exploreByCategory,
 }: Props) {
     return (
         <div className="p-8 space-y-8">
@@ -51,6 +58,32 @@ export default function AdminStats({
                 </Section>
                 <Section title="Most replaced" sub="Recipes users swapped away from">
                     <RecipeTable rows={topSwappedFrom} label="replacements" />
+                </Section>
+            </div>
+
+            <div>
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Explore Activity</h2>
+                <p className="text-sm text-gray-400 mb-4">{totalExploreMades} "I Made This" from premium categories</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+                <Section title="Most cooked from Explore" sub="Top recipes made by users">
+                    <RecipeTable rows={topExploreRecipes} label="times made" />
+                </Section>
+                <Section title="By category" sub="Total makes per premium category">
+                    {exploreByCategory.length === 0
+                        ? <p className="text-xs text-gray-400">No data yet.</p>
+                        : (
+                            <div className="space-y-2">
+                                {exploreByCategory.map(({ name, count }) => (
+                                    <div key={name} className="flex items-center justify-between gap-2">
+                                        <p className="text-xs text-gray-700 truncate flex-1">{name}</p>
+                                        <span className="text-xs font-semibold text-gray-500 shrink-0">{count} times</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    }
                 </Section>
             </div>
         </div>

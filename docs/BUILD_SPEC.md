@@ -786,6 +786,13 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Fix: Upload imagine — CSRF citit din cookie XSRF-TOKEN (nu meta tag absent); header Accept: application/json pentru erori JSON de la Laravel
 - [x] (2026-05-16) Fix: Controller uploadImage — mkdir automat pentru public/imagini/ dacă nu există (funcționează atât local cât și pe server)
 - [x] (2026-05-16) Test: RecipeImageUploadTest — 9 teste pentru upload (admin/non-admin, validare tip/dimensiune, creare folder automat, URL accesibil)
+- [x] (2026-05-16) Feature: Explore — buton "View" pe cardurile de rețete deblocate; pagină detaliată /explore/recipe/{id} cu bottom bar "← Back" + "I Made This"
+- [x] (2026-05-16) Feature: Explore — contor "Made X times" per rețetă pe carduri; eveniment EXPLORE_MADE_THIS în analytics (separat de planul 10 zile)
+- [x] (2026-05-16) Feature: Admin Stats — secțiune "Explore Activity" cu total made-this, top rețete și breakdown pe categorii
+- [x] (2026-05-16) Feature: Admin — pagina Recipes + Categories unificate; editare categorii inline în panoul principal; filtrare pe grup via ?group= URL param
+- [x] (2026-05-16) Feature: AdminLayout — navigare Recipes colapsabilă în sidebar (10-Day Plan, categorii dinamice, Modules); Modules mutat sub Recipes
+- [x] (2026-05-16) Test: ExploreRecipeTest — 11 teste pentru pagina de rețetă (acces, made_count, EXPLORE_MADE_THIS, 404)
+- [x] (2026-05-16) Test: RecipesPageTest + CategoryTest — 28 teste pentru pagina unificată admin (CRUD categorii, filtrare, recipe count)
 
 ### In Progress / Planned
 

@@ -14,7 +14,7 @@ class AnalyticsController extends Controller
         $request->validate([
             'events'               => 'required|array',
             'events.*.anonymousId' => 'required|string',
-            'events.*.event'       => 'required|in:COMPLETE_DAY,SWAP_RECIPE',
+            'events.*.event'       => 'required|in:COMPLETE_DAY,SWAP_RECIPE,EXPLORE_MADE_THIS',
             'events.*.properties'  => 'sometimes|array',
         ]);
 
