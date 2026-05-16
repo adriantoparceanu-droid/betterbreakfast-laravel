@@ -798,6 +798,13 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Fix: Staples — controlul Servings salvează acum în `defaultServings` (Zustand persist) în loc de state local; suprascrie setarea de la onboarding
 - [x] (2026-05-16) UI: AdminLayout — butonul "Recipes" din sidebar nu mai navighează; click extinde/colapsează doar meniul, chevron integrat în același buton
 - [x] (2026-05-16) Feature: Calcul nutrițional via Gemini 2.5 Flash — `NutritionController` apelează API cu `responseSchema` strict; buton "✨ Calculate with AI" în RecipeForm; breakdown per ingredient colapsabil; valorile sunt per porție (total ÷ baseServings)
+- [x] (2026-05-16) UI: Accesibilitate tipografie — contrast WCAG AA pe text secundar (gray-400→500 conținut + stări inactive, gray-300→400 checked, empty-state Swap →500); glyph-uri decorative neatinse
+- [x] (2026-05-16) Feature: i18n EN/RO — toggle per-device (Zustand persist `bb-settings`), dicționare bundle-uite `locales/en.ts`+`ro.ts`, hook `useT` cu interpolare + fallback RO→EN; string-uri extrase pe toate ecranele user-facing + nav + Settings
+- [x] (2026-05-16) Feature: i18n conținut — coloană `translations` JSON nullable pe recipes/master_ingredients/recipe_categories/modules (EN sursă de adevăr, RO overlay); `lib/localize` cu fallback EN per câmp + chei pantry EN-stabile
+- [x] (2026-05-16) Feature: Traducere AI admin — `TranslationController` (Gemini 2.5 Flash, responseSchema per tip + field/list); RecipeForm cu tab-uri EN/RO și buton "Tradu cu AI" per câmp; Modules/Categories/Ingredients persistă translations
+- [x] (2026-05-16) Test: suită i18n — 24 teste PHP (TranslationController, persistență, serializare) + setup Vitest/RTL cu 21 teste frontend (useT, localize, settingsStore)
+- [x] (2026-05-16) Fix: Plan — nu mai reșuflează rețetele la fiecare vizită; `useRecipesLoaded()` blochează rularea pe fallback-ul hardcodat
+- [x] (2026-05-16) Refactor: asignare rețete — sursă unică `useEnsurePlanAssigned()` montat în AppLayout (rulează după onboarding pe orice ecran); Plan devine pur preview + drag-reorder; Fisher-Yates în loc de sort biasat
 
 ### In Progress / Planned
 
