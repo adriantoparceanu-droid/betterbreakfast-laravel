@@ -18,6 +18,9 @@
 - **Animații:** Framer Motion v11
 - **Forms:** React Hook Form v7 + Zod v3
 - **Plăți:** Stripe Checkout (hosted) — `stripe/stripe-php` v20
+- **i18n:** EN/RO — soluție proprie (dicționare bundle-uite + `useT`), fără librărie i18n
+- **Testare FE:** Vitest 4 + React Testing Library (jsdom)
+- **AI:** Google Gemini 2.5 Flash (`GEMINI_API_KEY`) — calcul nutrițional + traduceri admin
 
 ## Dev
 
@@ -128,15 +131,61 @@ resources/js/
     PrivacyPolicy.tsx       # Pagină publică, conținut din site_settings
     Admin/                  # Dashboard, Users, Recipes, Ingredients, Modules, Categories, Stats
   Layouts/
-    AppLayout.tsx           # Bottom nav (Today/Plan/Staples/Explore) + header cu ⚙
+    AppLayout.tsx           # Bottom nav + header ⚙ + <PlanInitializer/> (asignare rețete)
     AdminLayout.tsx         # Sidebar admin
   Components/
-  store/                    # Zustand stores
-  db/                       # Dexie schema
+  locales/
+    en.ts                   # Dicționar UI EN (sursă de adevăr — typeof en = Dictionary)
+    ro.ts                   # Dicționar UI RO (tipat Dictionary → tsc impune paritatea)
+    index.ts                # getDictionary(locale)
+  hooks/
+    useT.ts                 # t('cheie', {param}) — interpolare + fallback ro→en→cheie
+    useRecipes.ts           # useRecipes / useRecipesLoaded / useRecipeById / ...
+    useEnsurePlanAssigned.ts # Asignare canonică rețete (montat în AppLayout)
+  lib/
+    localize.ts             # localizeRecipe / buildIngredientNameMap / localized
+    translate.ts            # client helper → POST /admin/translate (Gemini)
+    utils.ts                # cn, formatQty, convertUnit, shuffle (Fisher-Yates)
+  store/
+    userStore.ts            # progres user (Zustand persist `bb-user-progress`, sync server)
+    settingsStore.ts        # locale EN/RO (Zustand persist `bb-settings`, per-device)
+    syncStore.ts
+  db/                       # Dexie schema (`bb` IndexedDB)
+  __tests__/                # Teste Vitest (useT, localize, settingsStore)
 ```
 
 Paginile app folosesc `PageComponent.layout = AppLayout` (persistent layout Inertia).  
 `Purchase.tsx` nu are layout — este o pagină standalone de gate.
+
+## Internaționalizare (i18n EN/RO)
+
+Două sisteme distincte. Contract complet în memoria de proiect `i18n-contract`.
+
+### 1. Texte UI — dicționare bundle-uite
+- `locales/en.ts` e sursa de adevăr; `Dictionary = typeof en`. `ro.ts` e tipat `const ro: Dictionary` → **`tsc`/`npm run build` PICĂ dacă o cheie lipsește în RO** (paritate impusă de compilator).
+- `useT()` → `{ t, dict, locale }`. `t('namespace.cheie', { param })` cu interpolare `{param}` și fallback `ro → en → cheia brută` (app-ul nu crapă la cheie lipsă, afișează EN).
+- Locale persistat **per-device** în `settingsStore` (Zustand persist `bb-settings`) — NU se sincronizează cu serverul, NU e în `UserProgress`. Toggle EN/RO în `SettingsModal` (⚙).
+- **Regulă:** orice text vizibil userului trece prin `t()`, niciodată hardcodat. La schimbarea textului EN, actualizează și valoarea RO (tsc prinde cheia lipsă, NU valoarea nesincronizată).
+
+### 2. Conținut (rețete/ingrediente/categorii/module) — coloană DB
+- Coloană `translations` JSON nullable pe `recipes`, `master_ingredients`, `recipe_categories`, `modules`. **EN = sursă de adevăr** în coloanele existente; RO trăiește în `translations.ro`.
+- Frontend: `lib/localize.ts` — `localizeRecipe(recipe, locale)` (fallback EN per câmp), `buildIngredientNameMap` (chei pantry EN-stabile, ca bifele din Staples să nu se desincronizeze la schimbarea limbii), `localized()` (name/description generic).
+- Serializare: `translations` e inclus în `/api/recipes`, `/api/explore`, props Inertia `ExploreRecipe` + `Purchase`.
+- **Editarea EN din admin NU propagă în RO** — adminul re-traduce manual (revizuit de om).
+
+### Traducere AI în admin
+- `Admin\TranslationController` → `POST /admin/translate` (auth+admin). Gemini 2.5 Flash, `responseSchema` per tip: `recipe | ingredient | category | module | field | list`. Păstrează numere/unități/HTML.
+- `lib/translate.ts` — helper client `translateContent(type, payload)`.
+- `RecipeForm.tsx` are tab-uri **English / Română**; în tab-ul RO fiecare câmp (nume, fiecare ingredient, fiecare pas, substituții, why-this-works) are buton **„Tradu cu AI"** individual. Save scrie tot în `recipes.translations.ro`.
+- Modules/Categories/Ingredients: câmp RO + buton AI; controllerele curăță blocul RO gol → `null`.
+
+## Plan & asignare rețete
+
+**Sursă unică:** rețetele se asignează exclusiv prin `useEnsurePlanAssigned()`, montat o singură dată în `AppLayout` printr-un `<PlanInitializer/>` (return null) în `SyncBootstrap`. Rulează pe orice ecran din app, deci garantează asignarea după onboarding (redirect → `/staples` → AppLayout, layout persistent, re-rulează când `recipesLoaded` devine true).
+
+- **`Plan.tsx` NU mai asignează** — e pur preview + drag-reorder (`handleDragEnd`, acțiune user).
+- Hook-ul: gated obligatoriu pe `useRecipesLoaded()` (`useLiveQuery` e `undefined` la primul render chiar dacă Dexie are date → fără gate s-ar asigna pe fallback-ul hardcodat). Completează doar zile `d >= currentDay` necompletate; **NU atinge** `completedDays`/zile trecute (istoricul nu se rescrie); păstrează asignările valide (fără reșuflare); shuffle = Fisher-Yates (`shuffle()` din `lib/utils.ts`).
+- Reset/Restart asignează explicit toate 10 → hook-ul face early-return.
 
 ## Rute
 
@@ -264,6 +313,9 @@ Pagina `/foundation-day` este un checklist de prep înainte ca userul să încea
 | `user_categories` | Acces user la categorie (pivot: user_id, category_id, purchased_at) |
 | `users` | Coloana relevantă: `current_session_id` (string nullable) — folosit de `EnsureSingleDevice` pentru single-device enforcement |
 | `site_settings` | Setări cheie/valoare — ex: `privacy_policy` (HTML din TipTap) |
+| `master_ingredients` | Listă master ingrediente (name unique, category, nutriție/100g) |
+
+**Coloana `translations` (JSON nullable)** există pe `recipes`, `master_ingredients`, `recipe_categories`, `modules` — overlay RO `{ "ro": {...} }`; EN rămâne în coloanele existente. Migrații: `2026_05_16_120001..120004`.
 
 ## Auth — normalizare email și username
 
@@ -331,12 +383,16 @@ Evenimente tracked via `track()` helper (`lib/analytics/index.ts`): `COMPLETE_DA
 
 ## Testare
 
-**Regula:** după fiecare modificare se rulează `php artisan test` și `npx tsc --noEmit`. Ambele trebuie să treacă.
+**Regula:** după fiecare modificare se rulează `php artisan test` și `npx tsc --noEmit`. Ambele trebuie să treacă. La modificări frontend, rulează și `npm test` (Vitest).
 
 ```bash
-php artisan test          # toate testele PHP (104 teste)
-npx tsc --noEmit          # verificare TypeScript
+php artisan test          # toate testele PHP (128 teste)
+npx tsc --noEmit          # verificare TypeScript (include și fișierele de test)
+npm test                  # Vitest — teste frontend (21 teste)
+npm run test:watch        # Vitest watch
 ```
+
+Config Vitest: `vitest.config.ts` + `vitest.setup.ts` (jsdom, alias `@/`, stub `route()`). Tipuri în `resources/js/vitest-env.d.ts`.
 
 ### Convenții importante pentru teste
 
@@ -359,8 +415,19 @@ tests/
       RegistrationTest.php        # register, unicitate email/username
       PasswordResetTest.php       # forgot password flow complet
       PasswordConfirmationTest.php
+    I18nTest.php                  # TranslationController + persistență translations + serializare
+    ExploreRecipeTest.php         # acces rețetă premium, made_count
+    UserWorkflowTest.php          # E2E register→onboarding→ciclu 10 zile→restart
     Admin/
       RecipeTest.php              # CRUD rețete + toggle activ
+      CategoryTest.php            # CRUD categorii premium
+      RecipeImageUploadTest.php   # upload imagine
+      RecipesPageTest.php         # pagina admin unificată
+
+resources/js/__tests__/         # Vitest
+  useT.test.tsx                  # switch EN/RO, interpolare, fallback, chei nested
+  localize.test.ts               # localizeRecipe, buildIngredientNameMap, localized
+  settingsStore.test.ts          # default EN, persist bb-settings
 ```
 
 ### Gotcha: coloana `image` NOT NULL
@@ -395,3 +462,11 @@ resources/js/Pages/Auth/
   Register.tsx
   VerifyEmail.tsx
 ```
+
+### Gotcha: câmpuri de parolă la register (iOS)
+
+**NU** reintroduce trucul `readOnly` + `onTouchStart` + `unlock()` — era fragil și bloca complet desktop-ul. Câmpurile `password` și `password_confirmation` din `RegisterForm` folosesc atribute HTML standard: `autoComplete="new-password"` + `autoCorrect="off"` + `autoCapitalize="off"` + `spellCheck={false}`, cu `{...register(...)}` direct (RHF dă `name` distinct). iOS oferă sugestia „Strong Password" dar nu blochează tastarea manuală — userul poate scrie propria parolă.
+
+### Mesaje de validare Zod (i18n)
+
+Schemele Zod din `Login.tsx` se construiesc prin factory cu `t`: `makeLoginSchema(t)` / `makeRegisterSchema(t)`, memoizate cu `useMemo`. Orice mesaj de validare nou trece prin `t('auth.errX')`, nu string hardcodat.

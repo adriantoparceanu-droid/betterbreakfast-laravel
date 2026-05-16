@@ -688,7 +688,37 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 
 ---
 
-## 16. Project Progress
+## 16. Internationalization (i18n EN/RO)
+
+App-ul e bilingv EN/RO. Implementare proprie (fără librărie i18n). Două sisteme separate.
+
+### 16.1 Texte UI
+- Dicționare bundle-uite: `resources/js/locales/en.ts` (sursă de adevăr) + `ro.ts`. `ro.ts` e tipat `const ro: Dictionary` (`Dictionary = typeof en`) → **TypeScript impune paritatea cheilor** (`npm run build` pică dacă o cheie lipsește în RO).
+- Hook `useT()` → `t('namespace.cheie', { param })`, interpolare `{param}`, fallback `ro → en → cheia brută` (nu crapă la cheie lipsă).
+- Locale persistat **per-device** în `settingsStore` (Zustand persist `bb-settings`) — nu se sincronizează cu serverul, nu e în `UserProgress`. Toggle EN/RO în SettingsModal (⚙).
+
+### 16.2 Conținut (rețete / ingrediente / categorii / module)
+- Coloană `translations` JSON nullable pe `recipes`, `master_ingredients`, `recipe_categories`, `modules`. **EN = sursă de adevăr** în coloanele existente; RO în `translations.ro`.
+- `lib/localize.ts`: `localizeRecipe` (fallback EN per câmp), `buildIngredientNameMap` (chei pantry EN-stabile — bifele Staples nu se desincronizează la schimbarea limbii), `localized` (name/description).
+- `translations` serializat în `/api/recipes`, `/api/explore`, props Inertia ExploreRecipe + Purchase.
+- Editarea EN din admin **nu** propagă în RO — re-traducere manuală (revizuită de om).
+
+### 16.3 Traducere AI (admin)
+- `Admin\TranslationController` → `POST /admin/translate` (auth+admin), Gemini 2.5 Flash, `responseSchema` per tip: `recipe | ingredient | category | module | field | list`. Păstrează numere/unități/HTML.
+- RecipeForm: tab-uri **English / Română**; în RO fiecare câmp are buton „Tradu cu AI" individual. Modules/Categories/Ingredients: câmp RO + buton AI.
+
+---
+
+## 17. Frontend Testing (Vitest)
+
+- Vitest 4 + React Testing Library (jsdom). Config: `vitest.config.ts` + `vitest.setup.ts` (alias `@/`, stub global `route()`).
+- Comenzi: `npm test` (run), `npm run test:watch`.
+- Teste în `resources/js/__tests__/`: `useT.test.tsx` (switch EN/RO, interpolare, fallback, chei nested), `localize.test.ts` (localizeRecipe / buildIngredientNameMap / localized), `settingsStore.test.ts`.
+- Backend: vezi §18 — suita PHP curentă **128 teste** (inclusiv `I18nTest.php`).
+
+---
+
+## 18. Project Progress
 
 ### Completed
 
@@ -805,10 +835,11 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Test: suită i18n — 24 teste PHP (TranslationController, persistență, serializare) + setup Vitest/RTL cu 21 teste frontend (useT, localize, settingsStore)
 - [x] (2026-05-16) Fix: Plan — nu mai reșuflează rețetele la fiecare vizită; `useRecipesLoaded()` blochează rularea pe fallback-ul hardcodat
 - [x] (2026-05-16) Refactor: asignare rețete — sursă unică `useEnsurePlanAssigned()` montat în AppLayout (rulează după onboarding pe orice ecran); Plan devine pur preview + drag-reorder; Fisher-Yates în loc de sort biasat
+- [x] (2026-05-16) Fix: Register — eliminat trucul fragil readOnly/onTouchStart/unlock (bloca desktop-ul); câmpuri parolă cu `autoComplete="new-password"` + autoCorrect/autoCapitalize/spellCheck off
+- [x] (2026-05-16) Deploy: producție betterbreakfast.eu — push + webhook deploy.php (git pull + composer + migrate --force + optimize); 4 migrații translations aplicate pe MySQL
+- [x] (2026-05-16) Docs: CLAUDE.md + BUILD_SPEC actualizate cu i18n, Plan single-source, testare Vitest. Suita PHP: **128 teste** (referința istorică „32 tests" e depășită)
 
 ### In Progress / Planned
 
 - [ ] Real recipe images (Module 1 + Module 2)
-- [ ] Production deploy to betterbreakfast.eu (cPanel via FTP + webhook)
 - [ ] Explore: fetch and cache Module 2 recipe data in Dexie for offline access
-- [ ] Privacy policy page
