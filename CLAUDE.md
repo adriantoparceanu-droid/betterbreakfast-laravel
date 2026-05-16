@@ -77,18 +77,37 @@ Register → /purchase → Stripe Checkout → plată card
 - `POST /purchase/checkout` → `createCheckoutSession()` → redirect Stripe via `Inertia::location()`
 - `POST /webhook/stripe` → `webhook()` — fără auth, fără CSRF (exclus în `bootstrap/app.php`)
 
+**Checkout session — request body:**
+```json
+{ "type": "module",   "id": "module-breakfast-10-day" }
+{ "type": "category", "id": "cat-highprotein" }
+```
+`type` determină în ce tabelă se inserează accesul după plată.
+
+**Webhook metadata stocat în Stripe:**
+```json
+{ "user_id": 42, "type": "module", "item_id": "module-breakfast-10-day" }
+{ "user_id": 42, "type": "category", "item_id": "cat-highprotein" }
+```
+
+**Logica webhook `checkout.session.completed`:**
+- `type=module` → inserează în `user_modules` (`user_id`, `module_id`, `purchased_at`)
+- `type=category` → inserează în `user_categories` (`user_id`, `category_id`, `purchased_at`)
+- Backward compat: sesiuni vechi cu `module_id` direct (fără `type`) → tratate ca `type=module`
+- Toate operațiile sunt logate cu `Log::info` / `Log::error`
+
 **Webhook local (dev):**
 ```bash
 stripe listen --forward-to betterbreakfast.test/webhook/stripe
 ```
 `STRIPE_WEBHOOK_SECRET` local (whsec_...) e diferit de cel de producție — se actualizează la fiecare sesiune `stripe listen`.
 
-**Eveniment webhook relevant:** `checkout.session.completed`
-- Verifică semnătura cu `Stripe\Webhook::constructEvent()`
-- Citește `metadata.user_id` și `metadata.module_id`
-- Inserează în `user_modules` cu `insertOrIgnore`
+**⚠️ Gotcha critic — semnătură webhook:**
+`STRIPE_WEBHOOK_SECRET` de pe server trebuie să fie signing secret-ul din **același mod** (Test sau Live) cu cheile Stripe folosite. Dacă apare eroarea `No signatures found matching the expected signature`, secretul e greșit sau din modul greșit.
 
 **Card de test Stripe:** `4242 4242 4242 4242`, orice dată viitoare, orice CVC.
+
+**Ghid trecere pe Live:** `docs/Stripe_live.md`
 
 ## Structura frontend
 
@@ -188,6 +207,13 @@ Ambele sunt definite în `resources/css/app.css` și partajează aceleași regul
 
 Pagina `/explore` afișează categoriile premium ca tab-uri orizontale + un panou de detalii cu buton de unlock.
 
+### Flux unlock categorie
+
+Butonul Unlock din `UnlockModal` face `POST /purchase/checkout` cu `{ type: 'category', id: category.id }` — același endpoint ca Module 1, nu mailto. După plată:
+- Stripe redirecționează la `/explore?stripe_success=1`
+- Pagina detectează query param, afișează banner **"Thank you!"** și îl șterge după 5 secunde
+- Categoria apare imediat deblocată (webhook procesează înainte de redirect)
+
 ### Convenție obligatorie pentru butoanele de categorie
 
 - **Tab-urile mici** (selector categorie, sus) — afișează **doar numele** categoriei, fără preț.
@@ -212,6 +238,18 @@ Prețul apare o singură dată, în contextul acțiunii de cumpărare (butonul m
 | `recipes` | Rețete cu module_id și category_id (nullable) |
 | `recipe_categories` | Categorii premium (id, module_id, name, slug, price, sort_order) |
 | `user_categories` | Acces user la categorie (pivot: user_id, category_id, purchased_at) |
+
+## Auth — normalizare email și username
+
+Email și username sunt **case-insensitive**: userul poate introduce `Test@Example.COM` sau `ADRIAN` și se salvează automat ca `test@example.com` / `adrian`.
+
+**Implementare:**
+- `RegisteredUserController::store()` face `$request->merge(['email' => Str::lower(...), 'username' => Str::lower(...)])` **înainte** de validare — regula `unique:users` rulează pe valoarea normalizată
+- `ProfileUpdateRequest::prepareForValidation()` face același lucru pentru update profil
+- `LoginRequest::authenticate()` face `->lower()` pe câmpul `login` înainte de query
+- **Parola nu se atinge** — rămâne case-sensitive
+
+Nu folosi regula `lowercase` în validare — ea aruncă eroare. Normalizează întotdeauna cu `Str::lower()` înainte de validare.
 
 ## Middleware custom
 
