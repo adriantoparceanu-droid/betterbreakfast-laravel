@@ -117,14 +117,13 @@ EOF
 
 ### Pas 8 — Declanșează webhook-ul de deploy
 
-Webhook-ul returnează JSON. Rulează și salvează răspunsul:
+Salvează răspunsul JSON în fișier temp (evită `RESPONSE=$(...)` care blochează permisiunile):
 
 ```bash
-RESPONSE=$(curl -s --max-time 180 "https://betterbreakfast.eu/deploy.php?token=5973e6f510716f1e4a35bc5b298d34f370a1ad9454d95fc6cfe0d1aee4096d8c")
-echo "$RESPONSE"
+curl -s --max-time 180 "https://betterbreakfast.eu/deploy.php?token=5973e6f510716f1e4a35bc5b298d34f370a1ad9454d95fc6cfe0d1aee4096d8c" -o /tmp/bb_deploy.json
 ```
 
-Dacă răspunsul e gol sau timeout → verifică HTTP code:
+Dacă fișierul e gol sau comanda a dat timeout → verifică HTTP code:
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" "https://betterbreakfast.eu/deploy.php?token=5973e6f510716f1e4a35bc5b298d34f370a1ad9454d95fc6cfe0d1aee4096d8c"
 ```
@@ -143,12 +142,14 @@ Pașii executați de deploy.php pe server (în ordine):
 5. `php artisan config:clear`
 6. `php artisan optimize`
 
-Parsează JSON-ul și identifică pașii eșuați:
+Parsează JSON-ul (strippuind codurile ANSI color din output-ul artisan înainte de parse):
 
 ```bash
-echo "$RESPONSE" | python3 -c "
-import json, sys
-d = json.load(sys.stdin)
+python3 -c "
+import json, re
+raw = open('/tmp/bb_deploy.json').read()
+ansi = re.compile(r'\x1b\[[0-9;]*[a-zA-Z]|\x1b\][^\x07]*\x07|[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
+d = json.loads(ansi.sub('', raw))
 steps = d.get('steps', [])
 failed = [s for s in steps if s.get('code', -1) != 0]
 if not steps:

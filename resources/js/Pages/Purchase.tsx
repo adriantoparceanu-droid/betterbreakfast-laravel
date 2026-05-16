@@ -27,7 +27,7 @@ export default function Purchase({ module, stripeStatus }: Props) {
     useEffect(() => {
         if (!activating) return;
         const id = setInterval(() => {
-            router.visit(route('purchase'), { preserveState: false });
+            router.visit(route('purchase') + '?stripe_success=1', { preserveState: false });
         }, 3000);
         return () => clearInterval(id);
     }, [activating]);
