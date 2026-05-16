@@ -98,36 +98,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     ))}
 
                     {/* ── Recipes section ─────────────────────────────── */}
-                    {/* Header row: label navigates, chevron toggles */}
-                    <div className={cn(
-                        'flex items-center rounded-xl transition-colors',
-                        onRecipesSection && group === 'all' && urlPath.startsWith('/admin/recipes')
-                            ? 'bg-brand-50'
-                            : 'hover:bg-gray-50',
-                    )}>
-                        <button
-                            onClick={() => visitGroup('all')}
-                            className={cn(
-                                'flex-1 flex items-center gap-2 px-3 py-2 text-sm font-medium text-left transition-colors',
-                                onRecipesSection && group === 'all' && urlPath.startsWith('/admin/recipes')
-                                    ? 'text-brand-700'
-                                    : 'text-gray-600 hover:text-gray-900',
-                            )}
-                        >
-                            <span className="text-base leading-none">🥣</span>
-                            Recipes
-                        </button>
-                        <button
-                            onClick={() => setRecipesOpen(o => !o)}
-                            className="pr-3 pl-1 py-2 text-gray-400 hover:text-gray-600 transition-colors"
-                            aria-label={recipesOpen ? 'Collapse recipes' : 'Expand recipes'}
-                        >
-                            <span className={cn(
-                                'inline-block text-[10px] transition-transform duration-200',
-                                recipesOpen ? 'rotate-180' : '',
-                            )}>▼</span>
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => setRecipesOpen(o => !o)}
+                        className={cn(
+                            'w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-left rounded-xl transition-colors',
+                            onRecipesSection
+                                ? 'bg-brand-50 text-brand-700'
+                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                        )}
+                    >
+                        <span className="text-base leading-none">🥣</span>
+                        <span className="flex-1">Recipes</span>
+                        <span className={cn(
+                            'text-[10px] transition-transform duration-200',
+                            recipesOpen ? 'rotate-180' : '',
+                        )}>▼</span>
+                    </button>
 
                     {recipesOpen && (
                         <>

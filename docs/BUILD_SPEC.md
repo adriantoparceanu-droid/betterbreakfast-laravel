@@ -795,6 +795,9 @@ The recipe form is a **dedicated Inertia page** (not a modal). Accessed via "+ A
 - [x] (2026-05-16) Test: RecipesPageTest + CategoryTest — 28 teste pentru pagina unificată admin (CRUD categorii, filtrare, recipe count)
 - [x] (2026-05-16) Fix: Plan — re-asignare automată rețete când sursa comută din fallback (recipe-01) în DB (UUID); `recipes[0]?.id` în dependency array + curățare ID-uri stale
 - [x] (2026-05-16) UI: Staples + FoundationDay — text secundar din header uniformizat la text-gray-500; buton "Skip for now" adăugat pe FoundationDay sub "Go to today's recipe"
+- [x] (2026-05-16) Fix: Staples — controlul Servings salvează acum în `defaultServings` (Zustand persist) în loc de state local; suprascrie setarea de la onboarding
+- [x] (2026-05-16) UI: AdminLayout — butonul "Recipes" din sidebar nu mai navighează; click extinde/colapsează doar meniul, chevron integrat în același buton
+- [x] (2026-05-16) Feature: Calcul nutrițional via Gemini 2.5 Flash — `NutritionController` apelează API cu `responseSchema` strict; buton "✨ Calculate with AI" în RecipeForm; breakdown per ingredient colapsabil; valorile sunt per porție (total ÷ baseServings)
 
 ### In Progress / Planned
 

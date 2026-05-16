@@ -25,9 +25,8 @@ function gatherIngredients(recipes: Recipe[], servings: number): GatheredIngredi
 }
 
 export default function StaplesPage() {
-    const { progress, togglePantryItem } = useUserStore();
-    const { pantryChecked, defaultServings } = progress;
-    const [servings, setServings] = useState(defaultServings);
+    const { progress, togglePantryItem, setDefaultServings } = useUserStore();
+    const { pantryChecked, defaultServings: servings } = progress;
     const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
 
     const recipes = useRecipes();
@@ -100,11 +99,11 @@ export default function StaplesPage() {
                 <div className="bg-white border border-gray-100 rounded-2xl px-4 py-3 flex items-center gap-3">
                     <span className="text-sm font-medium text-gray-700 shrink-0">Servings</span>
                     <div className="flex items-center gap-2">
-                        <button onClick={() => setServings((s) => Math.max(1, s - 1))} disabled={servings <= 1}
+                        <button onClick={() => setDefaultServings(Math.max(1, servings - 1))} disabled={servings <= 1}
                             className={cn('w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-colors',
                                 servings <= 1 ? 'text-gray-200 bg-gray-50' : 'text-brand-600 bg-brand-50 hover:bg-brand-100')}>−</button>
                         <span className="w-5 text-center font-semibold text-gray-900 tabular-nums text-sm">{servings}</span>
-                        <button onClick={() => setServings((s) => Math.min(8, s + 1))} disabled={servings >= 8}
+                        <button onClick={() => setDefaultServings(Math.min(8, servings + 1))} disabled={servings >= 8}
                             className={cn('w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-colors',
                                 servings >= 8 ? 'text-gray-200 bg-gray-50' : 'text-brand-600 bg-brand-50 hover:bg-brand-100')}>+</button>
                     </div>

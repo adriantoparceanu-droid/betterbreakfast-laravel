@@ -180,6 +180,12 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
     const isEdit = recipe !== null;
     const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
     const [uploading, setUploading] = useState(false);
+    const [aiCalculating, setAiCalculating] = useState(false);
+    const [aiBreakdown, setAiBreakdown] = useState<{
+        name: string; original: string; grams: number;
+        calories: number; protein: number; fat: number; carbs: number; fiber: number;
+    }[] | null>(null);
+    const [aiError, setAiError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -255,39 +261,55 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
         if (from !== -1 && to !== -1) moveStep(from, to);
     }
 
-    // ─── Calculate nutrition from ingredients ─────────────────────────────────
+    // ─── Calculate nutrition via Gemini AI ────────────────────────────────────
 
-    function calculateNutrition() {
-        const ingredients = watch('ingredients');
-        const servings    = Number(watch('base_servings')) || 1;
-        const masterMap   = new Map(masterIngredients.map(m => [m.name.toLowerCase(), m]));
+    async function calculateWithAI() {
+        const ingredients  = watch('ingredients').filter(i => i.name.trim());
+        const baseServings = Number(watch('base_servings')) || 1;
 
-        let totalCals = 0, totalProt = 0, totalFat = 0, totalCarbs = 0, totalFiber = 0;
+        if (ingredients.length === 0) return;
 
-        for (const ing of ingredients) {
-            const master = masterMap.get(ing.name.toLowerCase());
-            if (!master || master.caloriesPer100g === null) continue;
+        const xsrf = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? '';
+        const csrf = decodeURIComponent(xsrf);
 
-            const qty = Number(ing.quantity);
-            let grams: number;
-            if (ing.unit === 'g')  grams = qty;
-            else if (ing.unit === 'kg') grams = qty * 1000;
-            else continue;
+        setAiCalculating(true);
+        setAiError(null);
+        setAiBreakdown(null);
 
-            const factor = grams / 100;
-            totalCals  += (master.caloriesPer100g ?? 0) * factor;
-            totalProt  += (master.proteinPer100g  ?? 0) * factor;
-            totalFat   += (master.fatPer100g      ?? 0) * factor;
-            totalCarbs += (master.carbsPer100g    ?? 0) * factor;
-            totalFiber += (master.fiberPer100g    ?? 0) * factor;
+        try {
+            const res = await fetch(route('admin.recipes.calculate-nutrition'), {
+                method:  'POST',
+                headers: {
+                    'Content-Type':     'application/json',
+                    'Accept':           'application/json',
+                    'X-XSRF-TOKEN':     csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ ingredients, base_servings: baseServings }),
+            });
+
+            const json = await res.json() as {
+                per_serving?: { calories: number; protein: number; fat: number; carbs: number; fiber: number };
+                ingredients_detail?: typeof aiBreakdown;
+                error?: string;
+            };
+
+            if (!res.ok || !json.per_serving) {
+                setAiError(json.error ?? 'Calculation failed.');
+                return;
+            }
+
+            setValue('nutrition.calories', json.per_serving.calories);
+            setValue('nutrition.protein',  json.per_serving.protein);
+            setValue('nutrition.fat',      json.per_serving.fat);
+            setValue('nutrition.carbs',    json.per_serving.carbs);
+            setValue('nutrition.fiber',    json.per_serving.fiber);
+            setAiBreakdown(json.ingredients_detail ?? null);
+        } catch {
+            setAiError('Network error — could not reach the server.');
+        } finally {
+            setAiCalculating(false);
         }
-
-        const round = (n: number) => Math.round((n / servings) * 10) / 10;
-        setValue('nutrition.calories', round(totalCals));
-        setValue('nutrition.protein',  round(totalProt));
-        setValue('nutrition.fat',      round(totalFat));
-        setValue('nutrition.carbs',    round(totalCarbs));
-        setValue('nutrition.fiber',    round(totalFiber));
     }
 
     // ─── Unit system toggle ───────────────────────────────────────────────────
@@ -570,10 +592,12 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
                         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Nutrition (per serving)</p>
                         <button
                             type="button"
-                            onClick={calculateNutrition}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-50 text-brand-700 text-xs font-semibold hover:bg-brand-100 transition-colors"
+                            onClick={calculateWithAI}
+                            disabled={aiCalculating}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-50 text-brand-700 text-xs font-semibold hover:bg-brand-100 disabled:opacity-60 disabled:cursor-wait transition-colors"
                         >
-                            <span>⚡</span> Calculate from ingredients
+                            <span>{aiCalculating ? '⏳' : '✨'}</span>
+                            {aiCalculating ? 'Calculating…' : 'Calculate with AI'}
                         </button>
                     </div>
 
@@ -594,6 +618,49 @@ export default function RecipeForm({ recipe, modules, categories, masterIngredie
                             </div>
                         ))}
                     </div>
+
+                    {aiError && (
+                        <p className="mt-3 text-xs text-red-500 bg-red-50 rounded-xl px-3 py-2">{aiError}</p>
+                    )}
+
+                    {aiBreakdown && aiBreakdown.length > 0 && (
+                        <details className="mt-4 group">
+                            <summary className="text-xs font-semibold text-gray-400 cursor-pointer select-none hover:text-gray-600 flex items-center gap-1">
+                                <span className="transition-transform duration-150 group-open:rotate-90">▶</span>
+                                AI breakdown per ingredient
+                            </summary>
+                            <div className="mt-2 overflow-x-auto rounded-xl border border-gray-100">
+                                <table className="w-full text-xs">
+                                    <thead>
+                                        <tr className="bg-gray-50 text-gray-400 uppercase tracking-wide">
+                                            <th className="text-left px-3 py-2 font-semibold">Ingredient</th>
+                                            <th className="text-right px-3 py-2 font-semibold">Original</th>
+                                            <th className="text-right px-3 py-2 font-semibold">≈ g</th>
+                                            <th className="text-right px-3 py-2 font-semibold">kcal</th>
+                                            <th className="text-right px-3 py-2 font-semibold">Prot</th>
+                                            <th className="text-right px-3 py-2 font-semibold">Fat</th>
+                                            <th className="text-right px-3 py-2 font-semibold">Carbs</th>
+                                            <th className="text-right px-3 py-2 font-semibold">Fiber</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {aiBreakdown.map((row, i) => (
+                                            <tr key={i} className="hover:bg-gray-50">
+                                                <td className="px-3 py-2 font-medium text-gray-800">{row.name}</td>
+                                                <td className="px-3 py-2 text-right text-gray-500">{row.original}</td>
+                                                <td className="px-3 py-2 text-right text-gray-500">{row.grams}</td>
+                                                <td className="px-3 py-2 text-right text-gray-700">{row.calories}</td>
+                                                <td className="px-3 py-2 text-right text-gray-500">{row.protein}g</td>
+                                                <td className="px-3 py-2 text-right text-gray-500">{row.fat}g</td>
+                                                <td className="px-3 py-2 text-right text-gray-500">{row.carbs}g</td>
+                                                <td className="px-3 py-2 text-right text-gray-500">{row.fiber}g</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </details>
+                    )}
                 </section>
 
                 {/* ─── Steps ─────────────────────────────────────────────── */}
