@@ -3,7 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Models\RecipeCategory;
+use App\Models\UiTranslation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -36,6 +38,13 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'hcaptcha_site_key' => config('services.hcaptcha.site_key'),
+            'uiTranslations' => static function () {
+                return Cache::remember('ui_translations', 3600, function () {
+                    return UiTranslation::all()
+                        ->mapWithKeys(fn ($t) => ["{$t->locale}.{$t->key}" => $t->value])
+                        ->all();
+                });
+            },
             'adminNavCategories' => static function () use ($request) {
                 if (! $request->user()?->isAdmin()) {
                     return [];

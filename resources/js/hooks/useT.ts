@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { usePage } from '@inertiajs/react';
 import { useSettingsStore } from '@/store/settingsStore';
 import { getDictionary, en, type Dictionary } from '@/locales';
 
@@ -23,16 +24,19 @@ function interpolate(str: string, params?: Params): string {
 export function useT() {
     const locale = useSettingsStore((s) => s.locale);
     const dict = getDictionary(locale);
+    const uiTranslations = (usePage().props as Record<string, unknown>).uiTranslations as Record<string, string> | undefined;
 
-    // t resolves a dot-path; falls back to English, then to the raw key.
+    // DB overrides take priority; falls back to bundled dict, then English, then raw key.
     const t = useCallback(
         (path: string, params?: Params): string => {
+            const dbVal = uiTranslations?.[`${locale}.${path}`];
+            if (typeof dbVal === 'string') return interpolate(dbVal, params);
             let val = resolve(dict, path);
             if (typeof val !== 'string') val = resolve(en, path);
             if (typeof val !== 'string') return path;
-            return interpolate(val, params);
+            return interpolate(val as string, params);
         },
-        [dict],
+        [dict, uiTranslations, locale],
     );
 
     return { t, dict, locale } as { t: typeof t; dict: Dictionary; locale: typeof locale };

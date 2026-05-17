@@ -22,6 +22,7 @@ use App\Http\Controllers\FoundationDayController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\PrivacyPolicyController;
 use App\Http\Controllers\Admin\PagesController as AdminPages;
+use App\Http\Controllers\Admin\UiTranslationController as AdminUiTranslation;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -108,6 +109,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/pages',                       [AdminPages::class, 'index'])->name('pages');
     Route::put('/pages',                       [AdminPages::class, 'update'])->name('pages.update');
+
+    Route::get('/ui-translations',             [AdminUiTranslation::class, 'index'])->name('ui-translations');
+    Route::patch('/ui-translations/{uiTranslation}', [AdminUiTranslation::class, 'update'])->name('ui-translations.update');
 });
 
 // Stripe webhook — no auth, no CSRF (excluded in bootstrap/app.php)

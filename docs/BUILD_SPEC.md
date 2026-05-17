@@ -840,6 +840,8 @@ App-ul e bilingv EN/RO. Implementare proprie (fără librărie i18n). Două sist
 - [x] (2026-05-16) Docs: CLAUDE.md + BUILD_SPEC actualizate cu i18n, Plan single-source, testare Vitest. Suita PHP: **128 teste** (referința istorică „32 tests" e depășită)
 - [x] (2026-05-17) Fix: Plan — modalul de rețetă pe mobil: scroll real (`flex-1 min-h-0`), `z-[60]` peste BottomNav, `max-h-[88dvh]` + safe-area; secțiunile devin accordion (o singură deschisă odată, deschiderea uneia le închide pe celelalte)
 - [x] (2026-05-17) UI: Paleta brand actualizată — brand-100 și brand-200 unificate la `#DAEADB` (verde pastelat, înlocuiesc `#dcfce7` / `#b9f5cf`)
+- [x] (2026-05-17) UI: Staples + Foundation Day — texte intro actualizate (copy mai scurt și mai clar)
+- [x] (2026-05-17) Feature: UI Translations admin — tabel `ui_translations` (404 rânduri EN+RO), shared prop `uiTranslations` via Inertia (cache 1h), `useT` citește DB override înainte de bundle, pagină `/admin/ui-translations` cu search, accordion per namespace, tab EN/RO, Save + ✨ Translate with AI per cheie
 
 ### In Progress / Planned
 

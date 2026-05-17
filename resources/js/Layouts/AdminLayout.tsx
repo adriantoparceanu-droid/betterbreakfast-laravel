@@ -17,9 +17,10 @@ const topNavItems = [
 ];
 
 const bottomNavItems = [
-    { label: 'Ingredients', routeName: 'admin.ingredients', icon: '🧂' },
-    { label: 'Stats',       routeName: 'admin.stats',       icon: '📊' },
-    { label: 'Pages',       routeName: 'admin.pages',       icon: '📄' },
+    { label: 'Ingredients',  routeName: 'admin.ingredients',    icon: '🧂' },
+    { label: 'Stats',        routeName: 'admin.stats',          icon: '📊' },
+    { label: 'Pages',        routeName: 'admin.pages',          icon: '📄' },
+    { label: 'Translations', routeName: 'admin.ui-translations', icon: '🌐' },
 ];
 
 function NavBtn({

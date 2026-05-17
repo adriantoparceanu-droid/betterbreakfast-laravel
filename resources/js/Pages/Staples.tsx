@@ -79,6 +79,9 @@ export default function StaplesPage() {
                             {t('staples.intro1')}
                         </p>
                         <p className="text-sm text-gray-500 leading-relaxed">
+                            {t('staples.introNote')}
+                        </p>
+                        <p className="text-sm text-gray-500 leading-relaxed">
                             {t('staples.intro2pre')}<span className="font-semibold text-brand-600">{t('plan.foundationDay')}</span>{t('staples.intro2post')}
                         </p>
                     </div>
