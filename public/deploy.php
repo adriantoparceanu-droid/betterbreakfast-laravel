@@ -190,6 +190,7 @@ $commands = [
     "$php $root/artisan migrate --force",
     "$php $root/artisan config:clear",
     "$php $root/artisan optimize",
+    "$php $root/artisan db:seed --class=UiTranslationSeeder --force",
 ];
 
 $output = [
