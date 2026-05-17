@@ -839,6 +839,7 @@ App-ul e bilingv EN/RO. Implementare proprie (fără librărie i18n). Două sist
 - [x] (2026-05-16) Deploy: producție betterbreakfast.eu — push + webhook deploy.php (git pull + composer + migrate --force + optimize); 4 migrații translations aplicate pe MySQL
 - [x] (2026-05-16) Docs: CLAUDE.md + BUILD_SPEC actualizate cu i18n, Plan single-source, testare Vitest. Suita PHP: **128 teste** (referința istorică „32 tests" e depășită)
 - [x] (2026-05-17) Fix: Plan — modalul de rețetă pe mobil: scroll real (`flex-1 min-h-0`), `z-[60]` peste BottomNav, `max-h-[88dvh]` + safe-area; secțiunile devin accordion (o singură deschisă odată, deschiderea uneia le închide pe celelalte)
+- [x] (2026-05-17) UI: Paleta brand actualizată — brand-100 și brand-200 unificate la `#DAEADB` (verde pastelat, înlocuiesc `#dcfce7` / `#b9f5cf`)
 
 ### In Progress / Planned
 
