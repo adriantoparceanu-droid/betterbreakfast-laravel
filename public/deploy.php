@@ -6,8 +6,9 @@
  * GitHub Actions:  POST with header X-Deploy-Token: SECRET
  *
  * Optional params:
- *   ?log=1    — view last 150 lines of laravel.log
- *   ?info=1   — phpinfo() for diagnostics
+ *   ?log=1              — view last 150 lines of laravel.log
+ *   ?info=1             — phpinfo() for diagnostics
+ *   ?uitranslations=1   — seed UiTranslationSeeder (EN/RO UI strings)
  *
  * DEPLOY_TOKEN must be set in .env
  */
@@ -134,6 +135,18 @@ if (isset($_GET['seed'])) {
     }
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (isset($_GET['uitranslations'])) {
+    $php = findPhp();
+    $r   = run("$php $root/artisan db:seed --class=UiTranslationSeeder --force");
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'seeder' => 'UiTranslationSeeder',
+        'out'    => $r['out'],
+        'code'   => $r['code'],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     exit;
 }
 
